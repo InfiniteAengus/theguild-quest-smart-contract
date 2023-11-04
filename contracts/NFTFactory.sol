@@ -4,7 +4,7 @@ pragma solidity 0.8.4;
 import "./interfaces/IMembershipNFT.sol";
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/IDepositBox.sol";
-import "./interfaces/IRebaserNew.sol";
+//import "./interfaces/IRebaserNew.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
@@ -22,7 +22,7 @@ contract NFTFactory {
     mapping(address => uint256) HandlerToNFT;
     mapping(uint256 => address) NFTToDepositBox;
     mapping(address => bool) handlerStorage;
-    mapping(address => uint256) claimedEpoch;
+    mapping(address => uint256) claimedAt;
     IMembershipNFT public NFT;
     string public tokenURI;
 
@@ -81,7 +81,7 @@ contract NFTFactory {
         emit LevelChange(msg.sender, oldTier, newTier);
     }
 
-    function alertSelfTaxClaimed(uint256 amount, uint256 timestamp) external { // All the handlers notify the Factory when the claim self tax
+    function alertSelfTaxClaimed(uint256 amount, uint256 timestamp) external { // All the handlers notify the Factory when they claim self tax
         require(isHandler(msg.sender) == true);
         emit SelfTaxClaimed(msg.sender, amount, timestamp);
     }
@@ -91,7 +91,7 @@ contract NFTFactory {
         emit RewardClaimed(msg.sender, amount, timestamp);
     }
 
-    function alertDepositClaimed(uint256 amount, uint256 timestamp) external { // All the handlers notify the Factory when the claim referral Reward
+    function alertDepositClaimed(uint256 amount, uint256 timestamp) external { // All the handlers notify the Factory when they deposit
         require(isHandler(msg.sender) == true);
         emit DepositClaimed(msg.sender, amount, timestamp);
     }
@@ -122,7 +122,7 @@ contract NFTFactory {
     }
 
     function getEpoch(address user) external view returns (uint256) {
-        return claimedEpoch[user];
+        return claimedAt[user];
     }
 
     function setAdmin(address account) public onlyAdmin {
@@ -176,13 +176,13 @@ contract NFTFactory {
     function registerUserEpoch(address user) external {
         require(msg.sender == address(NFT));
         uint256 epoch = IRebaser(rebaser).getPositiveEpochCount();
-        if(claimedEpoch[user] == 0)
-            claimedEpoch[user] = epoch;
+        if(claimedAt[user] == 0)
+            claimedAt[user] = epoch;
     }
 
     function updateUserEpoch(address user, uint256 epoch) external {
         require(msg.sender == rewarder);
-        claimedEpoch[user] = epoch;
+        claimedAt[user] = epoch;
     }
 
     function mint(address referrer) external returns (address) { //Referrer is address of NFT handler of the guy above
@@ -192,8 +192,8 @@ contract NFTFactory {
         require(address(handler) != referrer, "Cannot be its own referrer");
         require(handlerStorage[referrer] == true || referrer == address(0), "Referrer should be a valid handler");
         handler.initialize(token, referrer, address(NFT), nftID);
-        if(claimedEpoch[msg.sender] == 0)
-            claimedEpoch[msg.sender] = epoch;
+        if(claimedAt[msg.sender] == 0)
+            claimedAt[msg.sender] = epoch;
         IDepositBox depositBox =  IDepositBox(Clones.clone(depositBoxImplementation));
         depositBox.initialize(address(handler), nftID, token);
         handler.setDepositBox(address(depositBox));
@@ -215,8 +215,8 @@ contract NFTFactory {
         require(address(handler) != referrer, "Cannot be its own referrer");
         require(handlerStorage[referrer] == true || referrer == address(0), "Referrer should be a valid handler");
         handler.initialize(token, referrer, address(NFT), nftID);
-        if(claimedEpoch[recipient] == 0)
-            claimedEpoch[recipient] = epoch;
+        if(claimedAt[recipient] == 0)
+            claimedAt[recipient] = epoch;
         IDepositBox depositBox =  IDepositBox(Clones.clone(depositBoxImplementation));
         depositBox.initialize(address(handler), nftID, token);
         handler.setDepositBox(address(depositBox));
@@ -231,7 +231,7 @@ contract NFTFactory {
         return address(handler);
     }
 
-    function addToReferrersAbove(uint256 _tier, address _handler) internal {
+    function addToReferrersAbove(uint256 _tier, address _handler) internal { // maybe rewritten better 
         if(_handler != address(0)) {
             address first_ref = IReferralHandler(_handler).referredBy();
             if(first_ref != address(0)) {
