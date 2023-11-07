@@ -5,26 +5,26 @@ import "./interfaces/IMembershipNFT.sol";
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/ITierManager.sol";
 //import "./interfaces/IRebaserNew.sol";
-import "./interfaces/IETFNew.sol";
+//import "./interfaces/IETFNew.sol";
 import "./interfaces/ITaxManager.sol";
 import "./interfaces/INFTFactory.sol";
 import "./interfaces/IPoolEscrow.sol";
 import "./interfaces/IRewarder.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+//import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+//import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract ReferralHandler {
 
-    using SafeERC20 for IERC20;
-    using SafeMath for uint256;
+    //using SafeERC20 for IERC20;
+    //using SafeMath for uint256;
     address public factory;
     IMembershipNFT public NFTContract;
     IETF public token;
     uint256 public nftID;
     uint256 public mintTime;
     address public referredBy; // NFT address of the referrer's ID
-    address[] public referrals;
+    address[] public referrals;  // ? all of the referred? not used anywhere in the code 
     address public depositBox;
     uint256 private tier;
     bool private canLevel;
@@ -34,8 +34,8 @@ contract ReferralHandler {
     address[] public thirdLevelAddress;
     address[] public fourthLevelAddress;
     bool public initialized = false;
-    // Mapping of the above Address list and their corresponding NFT tiers
-    mapping (address => uint256) public first_level;
+    // Mapping of the above Address list and their corresponding NFT tiers, tiers are public (tier + 1)
+    mapping (address => uint256) public first_level; // add/change "tier" here (is it silver tier)
     mapping (address => uint256) public second_level;
     mapping (address => uint256) public third_level;
     mapping (address => uint256) public fourth_level;
