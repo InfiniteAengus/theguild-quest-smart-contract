@@ -282,7 +282,7 @@ contract ReferralHandler {
         token.mintForReferral(recipient, amount);
     }
 
-    function alertFactory(uint256 reward, uint256 timestamp) external onlyRewarder {
+    function alertFactory(uint256 reward, uint256 timestamp) external onlyRewarder { 
         INFTFactory(factory).alertSelfTaxClaimed(reward, timestamp);
     }
 
@@ -292,8 +292,8 @@ contract ReferralHandler {
         address _handler = address(this);
         address [5] memory referral; // Used to store above referrals, saving variable space
         // User Distribution
-        // Block Scoping to reduce local Variables spillage
-        {
+        // Block Scoping to reduce local Variables spillage (leak)
+        { 
         uint256 taxedAmount = currentClaimable.mul(protocolTaxRate).div(taxDivisor);
         uint256 userReward = currentClaimable.sub(taxedAmount);
         token.transferForRewards(owner, userReward);
