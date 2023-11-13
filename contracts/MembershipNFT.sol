@@ -61,7 +61,7 @@ contract MembershipNFT is ERC721URIStorage {
         return IReferralHandler(handler).getTier();
     }
 
-    function _transfer(
+    function _transfer( // internal + is never used 
         address from,
         address to,
         uint256 tokenId
