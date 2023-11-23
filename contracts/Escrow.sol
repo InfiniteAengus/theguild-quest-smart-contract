@@ -9,7 +9,7 @@ contract Escrow {
 
   using SafeERC20 for IERC20;
   address public token;
-  address public governance;
+  address public governance; // who is it?
 
   modifier onlyGov() {
     require(msg.sender == governance, "only gov");

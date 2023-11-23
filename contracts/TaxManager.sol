@@ -29,12 +29,12 @@ contract TaxManager {
         uint256 third;
         uint256 fourth;
     }
-    mapping(uint256 => TaxRates) referralRate;
+    mapping(uint256 => TaxRates) referralRate;  // tier to refferal rates 
     uint256 public tierPoolRate;
 
     modifier onlyAdmin() {
         // Change this to a list with ROLE library
-        require(msg.sender == admin, "only admin");
+        require(msg.sender == admin, "only admin"); // need multiple admins 
         _;
     }
 

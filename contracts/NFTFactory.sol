@@ -187,6 +187,7 @@ contract NFTFactory {
 
     function mint(address referrer) external returns (address) { //Referrer is address of NFT handler of the guy above
         uint256 nftID = NFT.issueNFT(msg.sender, tokenURI);
+        // is positive epoch for unix overflow?
         uint256 epoch = IRebaser(rebaser).getPositiveEpochCount(); // The handlers need to only track positive rebases
         IReferralHandler handler = IReferralHandler(Clones.clone(handlerImplementation));
         require(address(handler) != referrer, "Cannot be its own referrer");

@@ -278,10 +278,11 @@ contract ReferralHandler {
         levelUp();
     }
 
-    function mintForRewarder(address recipient, uint256 amount ) external onlyRewarder {
+    function mintForRewarder(address recipient, uint256 amount ) external onlyRewarder {  // should be changed, no token mints
         token.mintForReferral(recipient, amount);
     }
 
+// should be changed to notify 
     function alertFactory(uint256 reward, uint256 timestamp) external onlyRewarder { 
         INFTFactory(factory).alertSelfTaxClaimed(reward, timestamp);
     }

@@ -103,7 +103,7 @@ contract Rewarder {
         );
         uint256 reward = taxedAmountReward.sub(protocolTaxed);
         IReferralHandler(handler).mintForRewarder(owner, reward);
-        IReferralHandler(handler).alertFactory(reward, block.timestamp);
+        IReferralHandler(handler).alertFactory(reward, block.timestamp); // change to notify 
         IReferralHandler(handler).mintForRewarder(
             taxManager.getSelfTaxPool(),
             protocolTaxed
