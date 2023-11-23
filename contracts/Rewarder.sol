@@ -3,14 +3,12 @@ pragma solidity 0.8.4;
 
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/INFTFactory.sol";
-import "./interfaces/IRebaserNew.sol";
-import "./interfaces/IETFNew.sol";
+import "./interfaces/IRebaser.sol";
+//import "./interfaces/IETFNew.sol";
 import "./interfaces/ITaxManager.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract Rewarder {
-    using SafeMath for uint256;
     uint256 public BASE = 1e18;
     address public admin;
 
@@ -41,11 +39,13 @@ contract Rewarder {
         ITaxManager taxManager = getTaxManager(factory);
         uint256 protocolTaxRate = taxManager.getProtocolTaxRate();
         uint256 taxDivisor = taxManager.getTaxBaseDivisor();
+        // needs to be deleted (?)
         uint256 rebaseRate = getRebaser(factory).getDeltaForPositiveEpoch(
             claimedEpoch
         );
         address handler = msg.sender;
         address owner = IReferralHandler(handler).ownedBy();
+        // need to figure out the epochs 
         INFTFactory(factory).updateUserEpoch(owner, claimedEpoch);
         if (rebaseRate != 0) {
             uint256 blockForRebase = getRebaser(factory)
