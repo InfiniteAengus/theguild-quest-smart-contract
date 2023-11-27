@@ -2,12 +2,10 @@
 pragma solidity 0.8.4;
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/IETFNew.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./interfaces/IStakingPoolAggregator.sol";
+//import "./interfaces/IStakingPoolAggregator.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TierManager {
-    using SafeMath for uint256;
 
     struct TierParamaters {
         uint256 stakedTokens;
