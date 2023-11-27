@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./NFT/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "./Nft/ERC721URIStorage.sol";
+
 import "./interfaces/INFTFactory.sol";
 import "./interfaces/IReferralHandler.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract MembershipNFT is ERC721URIStorage {
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
+    uint32 private _tokenIds;
     mapping(uint256 => address) public tokenMinter;
     address public admin;
     address public factory;
@@ -24,10 +23,10 @@ contract MembershipNFT is ERC721URIStorage {
         _;
     }
 
-    constructor(address _factory) ERC721("Quota Membership NFT", "QuotaNFT") {
+    constructor(address _factory) ERC721("Guild embership NFT", "GuildNFT") {
         admin = msg.sender;
         factory = _factory;
-        _tokenIds.increment(); // Start Token IDs from 1 instead of 0, we use 0 to indicate absense of NFT on a wallet
+        _tokenIds++; // Start Token IDs from 1 instead of 0, we use 0 to indicate absense of NFT on a wallet
     }
 
     function setAdmin(address account) public onlyAdmin {
@@ -42,11 +41,11 @@ contract MembershipNFT is ERC721URIStorage {
         address user,
         string memory tokenURI
     ) public onlyFactory returns (uint256) {
-        uint256 newNFTId = _tokenIds.current();
+        uint256 newNFTId = _tokenIds;
         _mint(user, newNFTId);
         _setTokenURI(newNFTId, tokenURI);
         tokenMinter[newNFTId] = user;
-        _tokenIds.increment();
+        _tokenIds++;
         return newNFTId;
     }
 
