@@ -10,8 +10,33 @@ const env = load({
   ETHERSCAN_API_KEY: String
 });
 
+// To enable forking, turn one of these booleans on, and then run your tasks/scripts using ``--network hardhat``
+// For more information go to the hardhat guide
+// https://hardhat.org/hardhat-network/
+// https://hardhat.org/guides/mainnet-forking.html
+const FORK_FUJI = false;
+const FORK_MAINNET = false;
+const forkingData = FORK_FUJI
+  ? {
+      url: "https://api.avax-test.network/ext/bc/C/rpc",
+    }
+  : FORK_MAINNET
+  ? {
+      url: "https://api.avax.network/ext/bc/C/rpc",
+    }
+  : undefined;
+
 const config: HardhatUserConfig = {
-  solidity: "0.8.20",
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.0",
+      },
+      {
+        version: "0.8.20",
+      },
+    ],
+  },
 
   networks: {
     sepolia: {
@@ -41,7 +66,11 @@ const config: HardhatUserConfig = {
     //   accounts: [env.WALLET_PRIVATE_KEY], 
     //   chainId: 43114
     // }
-
+    hardhat: {
+      gasPrice: 225000000000,
+      chainId: !forkingData ? 43112 : undefined, //Only specify a chainId if we are not forking
+      forking: forkingData,
+    }
   },
 
   etherscan: {
