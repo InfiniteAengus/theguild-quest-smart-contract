@@ -26,29 +26,31 @@ const config: HardhatUserConfig = {
       url: `https://spicy-rpc.chiliz.com/`,
       accounts: [env.WALLET_PRIVATE_KEY]
     },
-    chiliz: {
-      url: "https://rpc.ankr.com/chiliz",
-      accounts: [env.WALLET_PRIVATE_KEY], 
-      chainId: 88888
-    },
+    // chiliz: {
+    //   url: "https://rpc.ankr.com/chiliz",
+    //   accounts: [env.WALLET_PRIVATE_KEY], 
+    //   chainId: 88888
+    // },
     fuji: {
       url: "https://api.avax-test.network/ext/bc/C/rpc",
       accounts: [env.WALLET_PRIVATE_KEY], 
       chainId: 43113
     },
-    avalanche:{
-      url: "https://api.avax.network/ext/bc/C/rpc",
-      accounts: [env.WALLET_PRIVATE_KEY], 
-      chainId: 43114
-    }
+    // avalanche:{
+    //   url: "https://api.avax.network/ext/bc/C/rpc",
+    //   accounts: [env.WALLET_PRIVATE_KEY], 
+    //   chainId: 43114
+    // }
 
   },
 
   etherscan: {
     apiKey: {
       sepolia: env.ETHERSCAN_API_KEY,
-      spicy: env.ETHERSCAN_API_KEY
+      spicy: env.ETHERSCAN_API_KEY,
+      snowtrace: "snowtrace"
     },
+    
     customChains: [
       {
         network: "spicy",
@@ -56,6 +58,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "",
           browserURL: "http://spicy-explorer.chiliz.com/"
+        }
+      },
+      {
+        network: "fuji",
+        chainId: 43113,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan",
+          browserURL: "https://avalanche.testnet.routescan.io"
         }
       }
     ]
