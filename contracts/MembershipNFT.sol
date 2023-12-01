@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract MembershipNFT is ERC721URIStorage {
     using SafeERC20 for IERC20;
+    
     uint32 private _tokenIds;
     mapping(uint256 => address) public tokenMinter;
     address public admin;
