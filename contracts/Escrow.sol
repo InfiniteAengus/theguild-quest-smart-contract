@@ -15,7 +15,7 @@ contract Escrow {
     _;
   }
 
-  constructor (address[] _tokens) public {
+  constructor (address[] storage _tokens) public {
     tokens = _tokens;
     governance = msg.sender;
   }
@@ -31,7 +31,7 @@ contract Escrow {
 
   // This exists to mirror the interaction of how the perpetual staking pool would
   function notifySecondaryTokens(uint256 amount) external {
-    IERC20(token).transferFrom(msg.sender, address(this), amount);
+    // IERC20(token).transferFrom(msg.sender, address(this), amount);
   }
 
   function setGovernance(address account) external onlyGov {
