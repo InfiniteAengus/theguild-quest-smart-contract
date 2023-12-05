@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.5.16;
 
-import "./interfaces/IRebaser.sol";
-import "./interfaces/INFT.sol";
-import "./interfaces/INFTFactoryOld.sol";
-import "./openzeppelin/SafeMath.sol";
-import "./openzeppelin/SafeERC20.sol";
-import "./openzeppelin/Address.sol";
-import "./token/BalanceManagement.sol";
-import "./token/Frozen.sol";
-import "./token/Whitelistable.sol";
-import "./token/TradePair.sol";
+import "../interfaces/IRebaser.sol";
+import "../interfaces/INFTFactory.sol";
+import "@openzeppelin/contracts/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/Address.sol";
 
-contract ETFToken is BalanceManagement, Frozen, Whitelistable, TradePair {
+contract ETFToken {
 
   // Modifiers
   modifier onlyGov() {
