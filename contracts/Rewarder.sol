@@ -34,7 +34,7 @@ contract Rewarder {
         return ITaxManager(taxManager);
     }
 
-    function handleReward(
+    function handleReward(  // anyone can call
         uint256 claimedEpoch,
         address factory,
         address token

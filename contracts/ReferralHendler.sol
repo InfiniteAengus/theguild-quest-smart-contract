@@ -276,6 +276,7 @@ contract ReferralHandler {
         levelUp();
     }
 
+// minting tokens 
     function mintForRewarder(address recipient, uint256 amount ) external onlyRewarder {  // should be changed, no token mints
         token.mintForReferral(recipient, amount);
     }

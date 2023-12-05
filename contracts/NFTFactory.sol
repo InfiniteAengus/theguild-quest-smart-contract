@@ -12,8 +12,8 @@ contract NFTFactory {
     address public admin;
     address public tierManager;
     address public taxManager;
-    address public rebaser;
-    address public token;
+    //address public rebaser;
+    //address public token;
     address public handlerImplementation;
     address public depositBoxImplementation;
     address public rewarder;
@@ -23,7 +23,7 @@ contract NFTFactory {
     mapping(address => bool) handlerStorage;
     mapping(address => uint256) claimedAt;
     IMembershipNFT public NFT;
-    string public tokenURI;
+    //string public tokenURI;
 
     event NewAdmin(address oldAdmin, address newAdmin);
     event NewURI(string OldTokenURI,string NewTokenURI);
