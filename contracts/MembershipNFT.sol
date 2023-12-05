@@ -11,13 +11,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract MembershipNFT is ERC721URIStorage {
     using SafeERC20 for IERC20;
     
-    uint32 private _tokenIds;
+    uint32 private _tokenCounter;
     mapping(uint256 => address) public tokenMinter;
     address public admin;
-    address public factory;
+    address public nftFactory;
 
     modifier onlyFactory() {
-        require(msg.sender == factory, "only factory");
+        require(msg.sender == nftFactory, "only factory");
         _;
     }
 
@@ -28,8 +28,8 @@ contract MembershipNFT is ERC721URIStorage {
 
     constructor(address _factory) ERC721("Guild embership NFT", "GuildNFT") {
         admin = msg.sender;
-        factory = _factory;
-        _tokenIds++; // Start Token IDs from 1 instead of 0, we use 0 to indicate absense of NFT on a wallet
+        nftFactory = _factory;
+        _tokenCounter++; // Start Token IDs from 1 instead of 0, we use 0 to indicate absense of NFT on a wallet
     }
 
     function setAdmin(address account) public onlyAdmin {
@@ -37,29 +37,29 @@ contract MembershipNFT is ERC721URIStorage {
     }
 
     function setFactory(address account) public onlyAdmin {
-        factory = account;
+        nftFactory = account;
     }
 
     function issueNFT(
         address user,
         string memory tokenURI
     ) public onlyFactory returns (uint256) {
-        uint256 newNFTId = _tokenIds;
+        uint256 newNFTId = _tokenCounter;
         _mint(user, newNFTId);
         _setTokenURI(newNFTId, tokenURI);
         tokenMinter[newNFTId] = user;
-        _tokenIds++;
+        _tokenCounter++;
         return newNFTId;
     }
 
     function changeURI(uint256 tokenID, string memory tokenURI) public {
-        address handler = INFTFactory(factory).getHandler(tokenID);
+        address handler = INFTFactory(nftFactory).getHandler(tokenID);
         require(msg.sender == handler, "Only Handler can update Token's URI");
         _setTokenURI(tokenID, tokenURI);
     }
 
     function tier(uint256 tokenID) public view returns (uint256) {
-        address handler = INFTFactory(factory).getHandler(tokenID);
+        address handler = INFTFactory(nftFactory).getHandler(tokenID);
         return IReferralHandler(handler).getTier();
     }
 
@@ -68,12 +68,12 @@ contract MembershipNFT is ERC721URIStorage {
         address to,
         uint256 tokenId
     ) internal virtual override {
-        INFTFactory(factory).registerUserEpoch(to); // Alerting NFT Factory to update incase of new user
+        INFTFactory(nftFactory).registerUserEpoch(to); // Alerting NFT Factory to update incase of new user
         super._transfer(from, to, tokenId);
     }
 
     function getTransferLimit(uint256 tokenID) public view returns (uint256) {
-        address handler = INFTFactory(factory).getHandler(tokenID);
+        address handler = INFTFactory(nftFactory).getHandler(tokenID);
         return IReferralHandler(handler).getTransferLimit();
     }
 
