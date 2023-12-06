@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-interface IMembershipNFT {
+interface IProfileNFT {
     function ownerOf(uint256) external view returns (address);
     function belongsTo(address) external view returns (uint256);
     function tier(uint256) external view returns(uint256);
