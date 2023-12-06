@@ -77,7 +77,8 @@ const config: HardhatUserConfig = {
     apiKey: {
       sepolia: env.ETHERSCAN_API_KEY,
       spicy: env.ETHERSCAN_API_KEY,
-      snowtrace: "snowtrace"
+      snowtrace: "snowtrace",
+      fuji: "snowtrace",
     },
     
     customChains: [
