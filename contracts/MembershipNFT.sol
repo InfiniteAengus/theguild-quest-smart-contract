@@ -63,11 +63,11 @@ contract MembershipNFT is ERC721URIStorage {
         return IReferralHandler(handler).getTier();
     }
 
-    function _transfer( // internal + is never used 
+    function transfer( // internal + is never used 
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override {
+    ) internal virtual  {
         INFTFactory(nftFactory).registerUserEpoch(to); // Alerting NFT Factory to update incase of new user
         super._transfer(from, to, tokenId);
     }
