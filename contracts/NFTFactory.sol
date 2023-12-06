@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "./interfaces/IMembershipNFT.sol";
 import "./interfaces/IReferralHandler.sol";
@@ -49,7 +49,7 @@ contract NFTFactory {
         admin = msg.sender;
         handlerImplementation = _handlerImplementation;
         depositBoxImplementation = _depositBoxImplementation;
-        tokenURI = _tokenURI;
+        // tokenURI = _tokenURI;
     }
 
     function getHandlerForUser(address user) external view returns (address) {
@@ -96,17 +96,17 @@ contract NFTFactory {
     }
 
 
-    function getRebaser() external view returns(address) {
-        return rebaser;  // Get address of the Rebaser contract
-    }
+    // function getRebaser() external view returns(address) {
+    //     return rebaser;  // Get address of the Rebaser contract
+    // }
 
     function getAdmin() external view returns(address) {
         return admin;
     }
 
-    function getToken()  external view returns(address){
-        return token;
-    }
+    // function getToken()  external view returns(address){
+    //     return token;
+    // }
 
     function getTaxManager() external view returns(address) {
         return taxManager;
@@ -130,11 +130,11 @@ contract NFTFactory {
         emit NewAdmin(oldAdmin, account);
     }
 
-    function setDefaultURI(string memory _tokenURI) onlyAdmin public {
-        string memory oldURI = tokenURI;
-        tokenURI = _tokenURI;
-        emit NewURI(oldURI, _tokenURI);
-    }
+    // function setDefaultURI(string memory _tokenURI) onlyAdmin public {
+    //     string memory oldURI = tokenURI;
+    //     tokenURI = _tokenURI;
+    //     emit NewURI(oldURI, _tokenURI);
+    // }
 
     function setRewarder(address _rewarder) onlyAdmin public {
         address oldRewarder = rewarder;
@@ -148,17 +148,17 @@ contract NFTFactory {
         emit NewNFT(oldNFT, _NFT);
     }
 
-    function setRebaser(address _rebaser) onlyAdmin external {
-        address oldRebaser = rebaser;
-        rebaser = _rebaser; // Set address of the Rebaser contract
-         emit NewRebaser(oldRebaser, _rebaser);
-    }
+    // function setRebaser(address _rebaser) onlyAdmin external {
+    //     address oldRebaser = rebaser;
+    //     rebaser = _rebaser; // Set address of the Rebaser contract
+    //      emit NewRebaser(oldRebaser, _rebaser);
+    // }
 
-    function setToken(address _token) onlyAdmin external {
-        address oldToken = token;
-        token = _token; // Set address of the Token contract
-        emit NewToken(oldToken, _token);
-    }
+    // function setToken(address _token) onlyAdmin external {
+    //     address oldToken = token;
+    //     token = _token; // Set address of the Token contract
+    //     emit NewToken(oldToken, _token);
+    // }
 
     function setTaxManager(address _taxManager) onlyAdmin external {
         address oldManager = taxManager;
@@ -174,9 +174,9 @@ contract NFTFactory {
 
     function registerUserEpoch(address user) external {
         require(msg.sender == address(NFT));
-        uint256 epoch = IRebaser(rebaser).getPositiveEpochCount();
-        if(claimedAt[user] == 0)
-            claimedAt[user] = epoch;
+        // uint256 epoch = IRebaser(rebaser).getPositiveEpochCount();
+        // if(claimedAt[user] == 0)
+        //     claimedAt[user] = epoch;
     }
 
     function updateUserEpoch(address user, uint256 epoch) external {
@@ -185,17 +185,17 @@ contract NFTFactory {
     }
 
     function mint(address referrer) external returns (address) { //Referrer is address of NFT handler of the guy above
-        uint256 nftID = NFT.issueNFT(msg.sender, tokenURI);
+        uint256 nftID = NFT.issueNFT(msg.sender, "hjg");
         // is positive epoch for unix overflow?
-        uint256 epoch = IRebaser(rebaser).getPositiveEpochCount(); // The handlers need to only track positive rebases
+        // uint256 epoch = IRebaser(rebaser).getPositiveEpochCount(); // The handlers need to only track positive rebases
         IReferralHandler handler = IReferralHandler(Clones.clone(handlerImplementation));
         require(address(handler) != referrer, "Cannot be its own referrer");
         require(handlerStorage[referrer] == true || referrer == address(0), "Referrer should be a valid handler");
-        handler.initialize(token, referrer, address(NFT), nftID);
-        if(claimedAt[msg.sender] == 0)
-            claimedAt[msg.sender] = epoch;
+        handler.initialize(admin, referrer, address(NFT), nftID);
+        // if(claimedAt[msg.sender] == 0)
+        //     claimedAt[msg.sender] = epoch;
         IDepositBox depositBox =  IDepositBox(Clones.clone(depositBoxImplementation));
-        depositBox.initialize(address(handler), nftID, token);
+        depositBox.initialize(address(handler), nftID, admin);
         handler.setDepositBox(address(depositBox));
         NFTToHandler[nftID] = address(handler);
         NFTToDepositBox[nftID] = address(depositBox);
@@ -209,16 +209,16 @@ contract NFTFactory {
 
     //TODO: Refactor reuable code
     function mintToAddress(address referrer, address recipient, uint256 tier) external onlyAdmin returns (address) { //Referrer is address of NFT handler of the guy above
-        uint256 nftID = NFT.issueNFT(recipient, tokenURI);
-        uint256 epoch = IRebaser(rebaser).getPositiveEpochCount(); // The handlers need to only track positive rebases
+        uint256 nftID = NFT.issueNFT(recipient, "hhh");
+        // uint256 epoch = IRebaser(rebaser).getPositiveEpochCount(); // The handlers need to only track positive rebases
         IReferralHandler handler = IReferralHandler(Clones.clone(handlerImplementation));
         require(address(handler) != referrer, "Cannot be its own referrer");
         require(handlerStorage[referrer] == true || referrer == address(0), "Referrer should be a valid handler");
-        handler.initialize(token, referrer, address(NFT), nftID);
-        if(claimedAt[recipient] == 0)
-            claimedAt[recipient] = epoch;
+        // handler.initialize(token, referrer, address(NFT), nftID);
+        // if(claimedAt[recipient] == 0)
+        //     claimedAt[recipient] = epoch;
         IDepositBox depositBox =  IDepositBox(Clones.clone(depositBoxImplementation));
-        depositBox.initialize(address(handler), nftID, token);
+        // depositBox.initialize(address(handler), nftID, token);
         handler.setDepositBox(address(depositBox));
         NFTToHandler[nftID] = address(handler);
         NFTToDepositBox[nftID] = address(depositBox);
