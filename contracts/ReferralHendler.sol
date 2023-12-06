@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity ^0.8.0;
 
 import "./interfaces/IMembershipNFT.sol";
 import "./interfaces/IReferralHandler.sol";
@@ -18,7 +18,7 @@ contract ReferralHandler {
 
     address public factory;
     IMembershipNFT public NFTContract;
-    IETF public token;
+    // IETF public token;
     uint256 public nftID;
     uint256 public mintTime;
     address public referredBy; // NFT address of the referrer's ID
@@ -71,7 +71,7 @@ contract ReferralHandler {
     ) public {
         require(!initialized, "Already initialized");
         initialized = true;
-        token = IETF(_token);
+        // token = IETF(_token);
         factory = msg.sender;
         referredBy = _referredBy;
         NFTContract = IMembershipNFT(_nftAddress);
@@ -94,13 +94,13 @@ contract ReferralHandler {
     }
 
     function getTier() public view returns (uint256) {
-        return tier.sub(1);
+        return tier - 1;
     }
 
-    function getRebaser() public view returns (IRebaser) {
-        address rebaser = INFTFactory(factory).getRebaser() ;
-        return IRebaser(rebaser);
-    }
+    // function getRebaser() public view returns (IRebaser) {
+    //     address rebaser = INFTFactory(factory).getRebaser() ;
+    //     return IRebaser(rebaser);
+    // }
 
     function getTierManager() public view returns (ITierManager) {
         address tierManager = INFTFactory(factory).getTierManager() ;
@@ -116,11 +116,11 @@ contract ReferralHandler {
         canLevel = status;
     }
 
-    function remainingClaims() public view returns (uint256) {
-        uint256 currentEpoch = getRebaser().getPositiveEpochCount();
-        uint256 claimedEpoch = INFTFactory(factory).getEpoch(ownedBy());
-        return currentEpoch.sub(claimedEpoch);
-    }
+    // function remainingClaims() public view returns (uint256) {
+    //     // uint256 currentEpoch = getRebaser().getPositiveEpochCount();
+    //     uint256 claimedEpoch = INFTFactory(factory).getEpoch(ownedBy());
+    //     // return currentEpoch.sub(claimedEpoch);
+    // }
 
     function getTransferLimit() public view returns(uint256)
     {
@@ -211,23 +211,23 @@ contract ReferralHandler {
         uint256[5] memory tierCounts; // Tiers can be 0 to 4 (Stored 1 to 5 in Handlers)
         for (uint256 index = 0; index < firstLevelAddress.length; index++) {
             address referral = firstLevelAddress[index];
-            uint256 NFTtier = first_level[referral].sub(1); // Subtrating one to offset the default +1 due to solidity limitations
-            tierCounts[NFTtier]++;
+            // uint256 NFTtier = first_level[referral].sub(1); // Subtrating one to offset the default +1 due to solidity limitations
+            // tierCounts[NFTtier]++;
         }
         for (uint256 index = 0; index < secondLevelAddress.length; index++) {
             address referral = secondLevelAddress[index];
-            uint256 NFTtier = second_level[referral].sub(1);
-            tierCounts[NFTtier]++;
+            // uint256 NFTtier = second_level[referral].sub(1);
+            // tierCounts[NFTtier]++;
         }
         for (uint256 index = 0; index < thirdLevelAddress.length; index++) {
             address referral = thirdLevelAddress[index];
-            uint256 NFTtier = third_level[referral].sub(1);
-            tierCounts[NFTtier]++;
+            // uint256 NFTtier = third_level[referral].sub(1);
+            // tierCounts[NFTtier]++;
         }
         for (uint256 index = 0; index < fourthLevelAddress.length; index++) {
             address referral = fourthLevelAddress[index];
-            uint256 NFTtier = fourth_level[referral].sub(1);
-            tierCounts[NFTtier]++;
+            // uint256 NFTtier = fourth_level[referral].sub(1);
+            // tierCounts[NFTtier]++;
         }
         return tierCounts;
     }
@@ -235,7 +235,7 @@ contract ReferralHandler {
     function setTier(uint256 _tier) public onlyProtocol {
         require( _tier >= 0 && _tier < 5, "Invalid depth");
         uint256 oldTier = getTier(); // For events
-        tier = _tier.add(1); // Adding the default +1 offset stored in handlers
+        tier = _tier + 1; // Adding the default +1 offset stored in handlers
         updateReferrersAbove(tier);
         string memory tokenURI = getTierManager().getTokenURI(getTier());
         NFTContract.changeURI(nftID, tokenURI);
@@ -246,8 +246,8 @@ contract ReferralHandler {
         if(getTier() < 4 &&  canLevel == true && getTierManager().checkTierUpgrade(getTierCounts()) == true)
         {
             uint256 oldTier = getTier(); // For events
-            updateReferrersAbove(tier.add(1));
-            tier = tier.add(1);
+            updateReferrersAbove(tier + 1);
+            tier = tier + 1;
             string memory tokenURI = getTierManager().getTokenURI(getTier());
             NFTContract.changeURI(nftID, tokenURI);
             INFTFactory(factory).alertLevel(oldTier, getTier());
@@ -261,25 +261,25 @@ contract ReferralHandler {
         // This also calls the claim function if there referral rewards from below available to claim
         address owner = ownedBy();
         ITaxManager taxManager =  getTaxManager();
-        uint256 currentEpoch = getRebaser().getPositiveEpochCount();
+        // uint256 currentEpoch = getRebaser().getPositiveEpochCount();
         uint256 protocolTaxRate = taxManager.getProtocolTaxRate();
         uint256 taxDivisor = taxManager.getTaxBaseDivisor();
         uint256 claimedEpoch = INFTFactory(factory).getEpoch(ownedBy());
-        if (claimedEpoch < currentEpoch) {
-            claimedEpoch++;
-            IRewarder rewarder = IRewarder(INFTFactory(factory).getRewarder());
-            rewarder.handleReward(claimedEpoch, factory, address(token));
-        }
-        uint256 currentClaimable = token.balanceOf(address(this));
-        if(currentClaimable > 0)
-            handleClaimTaxAndDistribution(owner, currentClaimable, protocolTaxRate, taxDivisor);
-        levelUp();
+        // if (claimedEpoch < currentEpoch) {
+        //     claimedEpoch++;
+        //     IRewarder rewarder = IRewarder(INFTFactory(factory).getRewarder());
+        //     // rewarder.handleReward(claimedEpoch, factory, address(token));
+        // }
+        // uint256 currentClaimable = token.balanceOf(address(this));
+        // if(currentClaimable > 0)
+        //     handleClaimTaxAndDistribution(owner, currentClaimable, protocolTaxRate, taxDivisor);
+        // levelUp();
     }
 
 // minting tokens 
-    function mintForRewarder(address recipient, uint256 amount ) external onlyRewarder {  // should be changed, no token mints
-        token.mintForReferral(recipient, amount);
-    }
+    // function mintForRewarder(address recipient, uint256 amount ) external onlyRewarder {  // should be changed, no token mints
+    //     token.mintForReferral(recipient, amount);
+    // }
 
 // should be changed to notify 
     function alertFactory(uint256 reward, uint256 timestamp) external onlyRewarder { 
@@ -294,27 +294,27 @@ contract ReferralHandler {
         // User Distribution
         // Block Scoping to reduce local Variables spillage (leak)
         { 
-        uint256 taxedAmount = currentClaimable.mul(protocolTaxRate).div(taxDivisor);
-        uint256 userReward = currentClaimable.sub(taxedAmount);
-        token.transferForRewards(owner, userReward);
+        uint256 taxedAmount = currentClaimable * protocolTaxRate / taxDivisor;
+        uint256 userReward = currentClaimable - taxedAmount;
+        // token.transferForRewards(owner, userReward);
         INFTFactory(factory).alertReferralClaimed(userReward, block.timestamp);
         }
         {
         uint256 perpetualTaxRate = taxManager.getPerpetualPoolTaxRate();
-        uint256 perpetualAmount = currentClaimable.mul(perpetualTaxRate).div(taxDivisor);
+        uint256 perpetualAmount = currentClaimable * perpetualTaxRate / taxDivisor;
         address perpetualPool = taxManager.getPerpetualPool();
-        IERC20(address(token)).safeApprove(perpetualPool, 0);
-        IERC20(address(token)).safeApprove(perpetualPool, perpetualAmount);
-        IPoolEscrow(perpetualPool).notifySecondaryTokens(perpetualAmount);
-        leftOverTaxRate = leftOverTaxRate.sub(perpetualTaxRate);
+        // IERC20(address(token)).safeApprove(perpetualPool, 0);
+        // IERC20(address(token)).safeApprove(perpetualPool, perpetualAmount);
+        // IPoolEscrow(perpetualPool).notifySecondaryTokens(perpetualAmount);
+        leftOverTaxRate = leftOverTaxRate - perpetualTaxRate;
         }
         // Block Scoping to reduce local Variables spillage
         {
         uint256 protocolMaintenanceRate = taxManager.getMaintenanceTaxRate();
-        uint256 protocolMaintenanceAmount = currentClaimable.mul(protocolMaintenanceRate).div(taxDivisor);
+        uint256 protocolMaintenanceAmount = currentClaimable * protocolMaintenanceRate / taxDivisor;
         address maintenancePool = taxManager.getMaintenancePool();
-        token.transferForRewards(maintenancePool, protocolMaintenanceAmount);
-        leftOverTaxRate = leftOverTaxRate.sub(protocolMaintenanceRate); // Minted above
+        // token.transferForRewards(maintenancePool, protocolMaintenanceAmount);
+        leftOverTaxRate = leftOverTaxRate - protocolMaintenanceRate; // Minted above
         }
         referral[1]  = IReferralHandler(_handler).referredBy();
         if(referral[1] != address(0)) {
@@ -322,15 +322,15 @@ contract ReferralHandler {
             {
             // Rightup Reward
             uint256 rightUpRate = taxManager.getRightUpTaxRate();
-            uint256 rightUpAmount = currentClaimable.mul(rightUpRate).div(taxDivisor);
-            token.transferForRewards(referral[1], rightUpAmount);
-            leftOverTaxRate = leftOverTaxRate.sub(rightUpRate);
+            // uint256 rightUpAmount = currentClaimable.mul(rightUpRate).div(taxDivisor);
+            // token.transferForRewards(referral[1], rightUpAmount);
+            leftOverTaxRate = leftOverTaxRate - rightUpRate;
             // Normal Referral Reward
             uint256 firstTier = IReferralHandler(referral[1]).getTier();
             uint256 firstRewardRate = taxManager.getReferralRate(1, firstTier);
-            uint256 firstReward = currentClaimable.mul(firstRewardRate).div(taxDivisor);
-            token.transferForRewards(referral[1], firstReward);
-            leftOverTaxRate = leftOverTaxRate.sub(firstRewardRate);
+            uint256 firstReward = currentClaimable * firstRewardRate / taxDivisor;
+            // token.transferForRewards(referral[1], firstReward);
+            leftOverTaxRate = leftOverTaxRate - firstRewardRate;
             }
             referral[2] = IReferralHandler(referral[1]).referredBy();
             if(referral[2] != address(0)) {
@@ -338,9 +338,9 @@ contract ReferralHandler {
                 {
                 uint256 secondTier = IReferralHandler(referral[2]).getTier();
                 uint256 secondRewardRate = taxManager.getReferralRate(2, secondTier);
-                uint256 secondReward = currentClaimable.mul(secondRewardRate).div(taxDivisor);
-                token.transferForRewards(referral[2], secondReward);
-                leftOverTaxRate = leftOverTaxRate.sub(secondRewardRate);
+                uint256 secondReward = currentClaimable * secondRewardRate / taxDivisor;
+                // token.transferForRewards(referral[2], secondReward);
+                leftOverTaxRate = leftOverTaxRate - secondRewardRate;
                 }
                 referral[3] = IReferralHandler(referral[2]).referredBy();
                 if(referral[3] != address(0)) {
@@ -348,9 +348,9 @@ contract ReferralHandler {
                     {
                     uint256 thirdTier = IReferralHandler(referral[3]).getTier();
                     uint256 thirdRewardRate = taxManager.getReferralRate(3, thirdTier);
-                    uint256 thirdReward = currentClaimable.mul(thirdRewardRate).div(taxDivisor);
-                    token.transferForRewards(referral[3], thirdReward);
-                    leftOverTaxRate = leftOverTaxRate.sub(thirdRewardRate);
+                    uint256 thirdReward = currentClaimable * thirdRewardRate / taxDivisor;
+                    // token.transferForRewards(referral[3], thirdReward);
+                    leftOverTaxRate = leftOverTaxRate - thirdRewardRate;
                     }
                     referral[4] = IReferralHandler(referral[3]).referredBy();
                     if(referral[4] != address(0)) {
@@ -358,9 +358,9 @@ contract ReferralHandler {
                         {
                         uint256 fourthTier = IReferralHandler(referral[4]).getTier();
                         uint256 fourthRewardRate = taxManager.getReferralRate(4, fourthTier);
-                        uint256 fourthReward = currentClaimable.mul(fourthRewardRate).div(taxDivisor);
-                        token.transferForRewards(referral[4], fourthReward);
-                        leftOverTaxRate = leftOverTaxRate.sub(fourthRewardRate);
+                        uint256 fourthReward = currentClaimable * fourthRewardRate / taxDivisor;
+                        // token.transferForRewards(referral[4], fourthReward);
+                        leftOverTaxRate = leftOverTaxRate - fourthRewardRate;
                         }
                     }
                 }
@@ -369,18 +369,18 @@ contract ReferralHandler {
         // Reward Allocation
         {
         uint256 rewardTaxRate = taxManager.getRewardPoolRate();
-        uint256 rewardPoolAmount = currentClaimable.mul(rewardTaxRate).div(taxDivisor);
+        uint256 rewardPoolAmount = currentClaimable * rewardTaxRate / taxDivisor;
         address rewardPool = taxManager.getRewardAllocationPool();
-        token.transferForRewards(rewardPool, rewardPoolAmount);
-        leftOverTaxRate = leftOverTaxRate.sub(rewardTaxRate);
+        // token.transferForRewards(rewardPool, rewardPoolAmount);
+        leftOverTaxRate = leftOverTaxRate - rewardTaxRate;
         }
         // Dev Allocation & // Revenue Allocation
         {
-        uint256 leftOverTax = currentClaimable.mul(leftOverTaxRate).div(taxDivisor);
+        uint256 leftOverTax = currentClaimable * leftOverTaxRate / taxDivisor;
         address devPool = taxManager.getDevPool();
         address revenuePool = taxManager.getRevenuePool();
-        token.transferForRewards(devPool, leftOverTax.div(2));
-        token.transferForRewards(revenuePool, leftOverTax.div(2));
+        // token.transferForRewards(devPool, leftOverTax.div(2));
+        // token.transferForRewards(revenuePool, leftOverTax.div(2));
         }
     }
 }

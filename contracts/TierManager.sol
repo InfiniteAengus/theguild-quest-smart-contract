@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity ^0.8.0;
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/IETFNew.sol";
 //import "./interfaces/IStakingPoolAggregator.sol";
-//import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TierManager {
 
@@ -17,7 +17,7 @@ contract TierManager {
     }
 
     address public admin;
-    IStakingPoolAggregator public stakingPool;
+    //IStakingPoolAggregator public stakingPool;
     mapping(uint256 => TierParamaters) public levelUpConditions;
     mapping(uint256 => uint256) public transferLimits;
     mapping(uint256 => string) public tokenURI;
@@ -32,13 +32,13 @@ contract TierManager {
         admin = msg.sender;
     }
 
-    function setStakingAggregator(address oracle) public onlyAdmin {
-        stakingPool = IStakingPoolAggregator(oracle);
-    }
+    // function setStakingAggregator(address oracle) public onlyAdmin {
+    //     stakingPool = IStakingPoolAggregator(oracle);
+    // }
 
     function scaleUpTokens(uint256 amount) public pure returns (uint256) {
         uint256 scalingFactor = 10 ** 18;
-        return amount.mul(scalingFactor);
+        return amount * scalingFactor;
     }
 
     function setAdmin(address account) public onlyAdmin {
@@ -69,13 +69,13 @@ contract TierManager {
     ) public view returns (bool) {
         // Check if user has valid requirements for the tier, if it returns true it means they have the requirement for the tier sent as parameter
 
-        if (
-            !isMinimumStaked(
-                owner,
-                levelUpConditions[tier].stakedTokens,
-                levelUpConditions[tier].stakedDuration
-            )
-        ) return false;
+        // if (
+        //     !isMinimumStaked(
+        //         owner,
+        //         levelUpConditions[tier].stakedTokens,
+        //         levelUpConditions[tier].stakedDuration
+        //     )
+        // ) return false;
         if (tierCounts[0] < levelUpConditions[tier].tierZero) return false;
         if (tierCounts[1] < levelUpConditions[tier].tierOne) return false;
         if (tierCounts[2] < levelUpConditions[tier].tierTwo) return false;
@@ -83,18 +83,18 @@ contract TierManager {
         return true;
     }
 
-    function isMinimumStaked(
-        address user,
-        uint256 stakedAmount,
-        uint256 stakedDuration
-    ) internal view returns (bool) {
-        return
-            stakingPool.checkForStakedRequirements(
-                user,
-                stakedAmount,
-                stakedDuration
-            );
-    }
+    // function isMinimumStaked(
+    //     address user,
+    //     uint256 stakedAmount,
+    //     uint256 stakedDuration
+    // ) internal view returns (bool) {
+    //     return
+    //         stakingPool.checkForStakedRequirements(
+    //             user,
+    //             stakedAmount,
+    //             stakedDuration
+    //         );
+    // }
 
     function setTokenURI(
         uint256 tier,
@@ -123,7 +123,7 @@ contract TierManager {
         uint256[5] memory tierCounts
     ) public view returns (bool) {
         address owner = IReferralHandler(msg.sender).ownedBy();
-        uint256 newTier = IReferralHandler(msg.sender).getTier().add(1);
+        uint256 newTier = IReferralHandler(msg.sender).getTier() + 1;
         return validateUserTier(owner, newTier, tierCounts); // If it returns true it means user is eligible for an upgrade in tier
     }
 
