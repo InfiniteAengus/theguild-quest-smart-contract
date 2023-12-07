@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-//import "./interfaces/IETFNew.sol";
+
 import "./interfaces/ITaxManager.sol";
 import "./interfaces/INFTFactory.sol";
 import "./interfaces/IReferralHandler.sol";

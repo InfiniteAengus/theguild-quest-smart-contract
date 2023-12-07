@@ -22,7 +22,7 @@ contract NFTFactory {
     mapping(uint256 => address) NFTToDepositBox;
     mapping(address => bool) handlerStorage;
     mapping(address => uint256) claimedAt;
-    IMembershipNFT public NFT;
+    IProfileNFT public NFT;
     //string public tokenURI;
 
     event NewAdmin(address oldAdmin, address newAdmin);
@@ -75,22 +75,22 @@ contract NFTFactory {
         handlerStorage[_handler] = true;
     }
 
-    function alertLevel(uint256 oldTier, uint256 newTier) external { // All the handlers notify the Factory incase there is a change in levels
+    function notifyLevel(uint256 oldTier, uint256 newTier) external { // All the handlers notify the Factory incase there is a change in levels
         require(isHandler(msg.sender) == true);
         emit LevelChange(msg.sender, oldTier, newTier);
     }
 
-    function alertSelfTaxClaimed(uint256 amount, uint256 timestamp) external { // All the handlers notify the Factory when they claim self tax
+    function notifySelfTaxClaimed(uint256 amount, uint256 timestamp) external { // All the handlers notify the Factory when they claim self tax
         require(isHandler(msg.sender) == true);
         emit SelfTaxClaimed(msg.sender, amount, timestamp);
     }
 
-    function alertReferralClaimed(uint256 amount, uint256 timestamp) external { // All the handlers notify the Factory when the claim referral Reward
+    function notifyReferralClaimed(uint256 amount, uint256 timestamp) external { // All the handlers notify the Factory when the claim referral Reward
         require(isHandler(msg.sender) == true);
         emit RewardClaimed(msg.sender, amount, timestamp);
     }
 
-    function alertDepositClaimed(uint256 amount, uint256 timestamp) external { // All the handlers notify the Factory when they deposit
+    function notifyDepositClaimed(uint256 amount, uint256 timestamp) external { // All the handlers notify the Factory when they deposit
         require(isHandler(msg.sender) == true);
         emit DepositClaimed(msg.sender, amount, timestamp);
     }
@@ -144,7 +144,7 @@ contract NFTFactory {
 
     function setNFTAddress(address _NFT) onlyAdmin external {
         address oldNFT = address(NFT);
-        NFT = IMembershipNFT(_NFT); // Set address of the NFT contract
+        NFT = IProfileNFT(_NFT); // Set address of the NFT contract
         emit NewNFT(oldNFT, _NFT);
     }
 

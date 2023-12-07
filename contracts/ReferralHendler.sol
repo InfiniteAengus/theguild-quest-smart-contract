@@ -17,7 +17,7 @@ contract ReferralHandler {
     using SafeERC20 for IERC20;
 
     address public factory;
-    IMembershipNFT public NFTContract;
+    IProfileNFT public NFTContract;
     // IETF public token;
     uint256 public nftID;
     uint256 public mintTime;
@@ -74,7 +74,7 @@ contract ReferralHandler {
         // token = IETF(_token);
         factory = msg.sender;
         referredBy = _referredBy;
-        NFTContract = IMembershipNFT(_nftAddress);
+        NFTContract = IProfileNFT(_nftAddress);
         nftID = _nftId;
         mintTime = block.timestamp;
         tier = 1; // Default tier is 1 instead of 0, since solidity 0 can also mean non-existant, all tiers on contract are + 1
@@ -239,7 +239,7 @@ contract ReferralHandler {
         updateReferrersAbove(tier);
         string memory tokenURI = getTierManager().getTokenURI(getTier());
         NFTContract.changeURI(nftID, tokenURI);
-        INFTFactory(factory).alertLevel(oldTier, getTier());
+        INFTFactory(factory).notifyLevel(oldTier, getTier());
     }
 
     function levelUp() public returns (bool) {
@@ -250,7 +250,7 @@ contract ReferralHandler {
             tier = tier + 1;
             string memory tokenURI = getTierManager().getTokenURI(getTier());
             NFTContract.changeURI(nftID, tokenURI);
-            INFTFactory(factory).alertLevel(oldTier, getTier());
+            INFTFactory(factory).notifyLevel(oldTier, getTier());
             return true;
         }
         return false;
@@ -283,7 +283,7 @@ contract ReferralHandler {
 
 // should be changed to notify 
     function alertFactory(uint256 reward, uint256 timestamp) external onlyRewarder { 
-        INFTFactory(factory).alertSelfTaxClaimed(reward, timestamp);
+        INFTFactory(factory).notifySelfTaxClaimed(reward, timestamp);
     }
 
     function handleClaimTaxAndDistribution(address owner, uint256 currentClaimable, uint256 protocolTaxRate, uint256 taxDivisor) internal {
@@ -297,7 +297,7 @@ contract ReferralHandler {
         uint256 taxedAmount = currentClaimable * protocolTaxRate / taxDivisor;
         uint256 userReward = currentClaimable - taxedAmount;
         // token.transferForRewards(owner, userReward);
-        INFTFactory(factory).alertReferralClaimed(userReward, block.timestamp);
+        INFTFactory(factory).notifyReferralClaimed(userReward, block.timestamp);
         }
         {
         uint256 perpetualTaxRate = taxManager.getPerpetualPoolTaxRate();

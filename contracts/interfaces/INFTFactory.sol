@@ -5,10 +5,10 @@ interface INFTFactory {
     function isHandler(address) external view returns (bool);
     function getHandler(uint256) external view returns (address);
     function getEpoch(address) external view returns (uint256);
-    function alertLevel(uint256, uint256) external;
-    function alertSelfTaxClaimed(uint256, uint256) external;
-    function alertReferralClaimed(uint256, uint256) external;
-    function alertDepositClaimed(uint256, uint256) external;
+    function notifyLevel(uint256, uint256) external;
+    function notifySelfTaxClaimed(uint256, uint256) external;
+    function notifyReferralClaimed(uint256, uint256) external;
+    function notifyDepositClaimed(uint256, uint256) external;
     function registerUserEpoch(address) external;
     function updateUserEpoch(address, uint256) external;
     function getTierManager() external view returns(address);
