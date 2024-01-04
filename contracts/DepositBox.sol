@@ -30,11 +30,6 @@ contract DepositBox {
         return handler.ownedBy();
     }
 
-    function getTaxManager() public view returns (ITaxManager) {
-        address taxManager = INFTFactory(factory).getTaxManager() ;
-        return ITaxManager(taxManager);
-    }
-
     function claimReward() public { // Can be called by anyone but rewards always goes owner of NFT
         address owner = ownedBy();
         // uint256 currentClaimable = token.balanceOf(address(this));
@@ -43,7 +38,7 @@ contract DepositBox {
     }
 
     function handleClaimTaxAndDistribution(address owner, uint256 currentClaimable) internal {
-        ITaxManager taxManager =  getTaxManager();
+        ITaxManager taxManager = ITaxManager(INFTFactory(factory).getTaxManager());
         uint256 protocolTaxRate = taxManager.getProtocolTaxRate();
         uint256 taxDivisor = taxManager.getTaxBaseDivisor();
         uint256 leftOverTaxRate = protocolTaxRate;

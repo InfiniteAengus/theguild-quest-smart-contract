@@ -7,7 +7,7 @@ import "./interfaces/IDepositBox.sol";
 //import "./interfaces/IRebaserNew.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
-contract NFTFactory {
+contract Nexus {
 
     address public admin;
     address public tierManager;
@@ -19,7 +19,7 @@ contract NFTFactory {
     address public rewarder;
     mapping(uint256 => address) NFTToHandler;
     mapping(address => uint256) HandlerToNFT;
-    mapping(uint256 => address) NFTToDepositBox;
+    mapping(uint256 => address) NFTToDepositBox;  // should be changed to account
     mapping(address => bool) handlerStorage;
     mapping(address => uint256) claimedAt;
     IProfileNFT public NFT;
