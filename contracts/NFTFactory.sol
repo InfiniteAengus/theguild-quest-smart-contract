@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IProfileNFT.sol";
 import "./interfaces/IReferralHandler.sol";
-import "./interfaces/IDepositBox.sol";
 //import "./interfaces/IRebaserNew.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 

@@ -4,11 +4,8 @@ pragma solidity ^0.8.0;
 import "./interfaces/IProfileNFT.sol";
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/ITierManager.sol";
-//import "./interfaces/IRebaserNew.sol";
-//import "./interfaces/IETFNew.sol";
 import "./interfaces/ITaxManager.sol";
-import "./interfaces/INFTFactory.sol";
-import "./interfaces/IPoolEscrow.sol";
+import "./interfaces/INexus.sol";
 import "./interfaces/IRewarder.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -16,22 +13,22 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract ReferralHandler {
     using SafeERC20 for IERC20;
 
-    address public factory;
+    bool public initialized = false;
+
     IProfileNFT public NFTContract;
-    // IETF public token;
-    uint256 public nftID;
+    uint32 public nftID;
     uint256 public mintTime;
     address public referredBy; // NFT address of the referrer's ID
     address[] public referrals;  // ? all of the referred? not used anywhere in the code 
-    address public depositBox;
-    uint256 private tier;
+    uint8 private tier;
     bool private canLevel;
     // NFT addresses of those referred by this NFT and its subordinates
     address[] public firstLevelAddress;
     address[] public secondLevelAddress;
     address[] public thirdLevelAddress;
     address[] public fourthLevelAddress;
-    bool public initialized = false;
+    INexus nexus;
+
     // Mapping of the above Address list and their corresponding NFT tiers, tiers are public (tier + 1)
     mapping (address => uint256) public first_level; // add/change "tier" here (is it silver tier)
     mapping (address => uint256) public second_level;
@@ -39,12 +36,12 @@ contract ReferralHandler {
     mapping (address => uint256) public fourth_level;
 
     modifier onlyAdmin() {
-        require(msg.sender == INFTFactory(factory).getAdmin(), "only admin");
+        require(msg.sender == nexus.master(), "only admin");
         _;
     }
 
     modifier onlyProtocol() {
-        require(msg.sender == INFTFactory(factory).getAdmin() || msg.sender == factory, "only admin or factory");
+        require(msg.sender == nexus.master() || msg.sender == address(nexus), "only admin or factory");
         _;
     }
 
@@ -54,12 +51,12 @@ contract ReferralHandler {
     }
 
     modifier onlyFactory() {
-        require(msg.sender == factory, "only factory");
+        require(msg.sender == address(nexus), "only factory");
         _;
     }
 
     modifier onlyRewarder() {
-        require(msg.sender == INFTFactory(factory).getRewarder());
+        require(msg.sender == nexus.rewarder());
         _;
     }
 
@@ -67,12 +64,12 @@ contract ReferralHandler {
         address _token,
         address _referredBy,
         address _nftAddress,
-        uint256 _nftId
+        uint32 _nftId
     ) public {
         require(!initialized, "Already initialized");
         initialized = true;
         // token = IETF(_token);
-        factory = msg.sender;
+        nexus = INexus(msg.sender);
         referredBy = _referredBy;
         NFTContract = IProfileNFT(_nftAddress);
         nftID = _nftId;
@@ -82,14 +79,14 @@ contract ReferralHandler {
     }
 
     function setFactory(address account) public onlyAdmin {
-        factory = account;
+        nexus = INexus(account);
     }
 
     function ownedBy() public view returns (address) { // Returns the Owner of the NFT coupled with this handler
         return NFTContract.ownerOf(nftID);
     }
 
-    function coupledNFT() public view returns (uint256) { // Returns the address of the NFT coupled with this handler
+    function coupledNftId() external view returns (uint256) { // Returns the address of the NFT coupled with this handler
         return nftID;
     }
 
@@ -103,12 +100,12 @@ contract ReferralHandler {
     // }
 
     function getTierManager() public view returns (ITierManager) {
-        address tierManager = INFTFactory(factory).getTierManager() ;
+        address tierManager = nexus.tierManager() ;
         return ITierManager(tierManager);
     }
 
     function getTaxManager() public view returns (ITaxManager) {
-        address taxManager = INFTFactory(factory).getTaxManager() ;
+        address taxManager = nexus.taxManager() ;
         return ITaxManager(taxManager);
     }
 
@@ -125,14 +122,6 @@ contract ReferralHandler {
     function getTransferLimit() public view returns(uint256)
     {
         return getTierManager().getTransferLimit(getTier());
-    }
-
-    function getDepositBox() public view returns (address) {
-        return depositBox;
-    }
-
-    function setDepositBox(address _depositBox) external onlyFactory {
-        depositBox = _depositBox;
     }
 
     function checkExistenceAndLevel(uint256 depth, address referred) view public returns (uint256) {
@@ -152,7 +141,7 @@ contract ReferralHandler {
         return 0;
     }
 
-    function updateReferrersAbove(uint256 _tier) internal {
+    function updateReferrersAbove(uint8 _tier) internal {
         address _handler = address(this);
         address first_ref = IReferralHandler(_handler).referredBy();
         if(first_ref != address(0)) {
@@ -232,14 +221,14 @@ contract ReferralHandler {
         return tierCounts;
     }
 
-    function setTier(uint256 _tier) public onlyProtocol {
+    function setTier(uint8 _tier) public onlyProtocol {
         require( _tier >= 0 && _tier < 5, "Invalid depth");
         uint256 oldTier = getTier(); // For events
         tier = _tier + 1; // Adding the default +1 offset stored in handlers
         updateReferrersAbove(tier);
         string memory tokenURI = getTierManager().getTokenURI(getTier());
         NFTContract.changeURI(nftID, tokenURI);
-        INFTFactory(factory).notifyLevel(oldTier, getTier());
+        nexus.notifyLevelUpdate(oldTier, getTier());
     }
 
     function levelUp() public returns (bool) {
@@ -250,31 +239,12 @@ contract ReferralHandler {
             tier = tier + 1;
             string memory tokenURI = getTierManager().getTokenURI(getTier());
             NFTContract.changeURI(nftID, tokenURI);
-            INFTFactory(factory).notifyLevel(oldTier, getTier());
+            nexus.notifyLevelUpdate(oldTier, getTier());
             return true;
         }
         return false;
     }
 
-    function claimReward() public { // Can be called by anyone but rewards always goes to owner of NFT
-        // This function mints the tokens that were deducted at rebase and disperses them
-        // This also calls the claim function if there referral rewards from below available to claim
-        address owner = ownedBy();
-        ITaxManager taxManager =  getTaxManager();
-        // uint256 currentEpoch = getRebaser().getPositiveEpochCount();
-        uint256 protocolTaxRate = taxManager.getProtocolTaxRate();
-        uint256 taxDivisor = taxManager.getTaxBaseDivisor();
-        uint256 claimedEpoch = INFTFactory(factory).getEpoch(ownedBy());
-        // if (claimedEpoch < currentEpoch) {
-        //     claimedEpoch++;
-        //     IRewarder rewarder = IRewarder(INFTFactory(factory).getRewarder());
-        //     // rewarder.handleReward(claimedEpoch, factory, address(token));
-        // }
-        // uint256 currentClaimable = token.balanceOf(address(this));
-        // if(currentClaimable > 0)
-        //     handleClaimTaxAndDistribution(owner, currentClaimable, protocolTaxRate, taxDivisor);
-        // levelUp();
-    }
 
 // minting tokens 
     // function mintForRewarder(address recipient, uint256 amount ) external onlyRewarder {  // should be changed, no token mints
@@ -283,7 +253,7 @@ contract ReferralHandler {
 
 // should be changed to notify 
     function alertFactory(uint256 reward, uint256 timestamp) external onlyRewarder { 
-        INFTFactory(factory).notifySelfTaxClaimed(reward, timestamp);
+        nexus.notifySelfTaxClaimed(reward, timestamp);
     }
 
     function handleClaimTaxAndDistribution(address owner, uint256 currentClaimable, uint256 protocolTaxRate, uint256 taxDivisor) internal {
@@ -297,7 +267,7 @@ contract ReferralHandler {
         uint256 taxedAmount = currentClaimable * protocolTaxRate / taxDivisor;
         uint256 userReward = currentClaimable - taxedAmount;
         // token.transferForRewards(owner, userReward);
-        INFTFactory(factory).notifyReferralClaimed(userReward, block.timestamp);
+        nexus.notifyReferralTaxClaimed(userReward, block.timestamp);
         }
         {
         uint256 perpetualTaxRate = taxManager.getPerpetualPoolTaxRate();

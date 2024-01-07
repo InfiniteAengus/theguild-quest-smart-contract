@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./interfaces/IReferralHandler.sol";
-import "./interfaces/INFTFactory.sol";
+import "./interfaces/INexus.sol";
 //import "./interfaces/IRebaser.sol";
 //import "./interfaces/IETFNew.sol";
 import "./interfaces/ITaxManager.sol";
@@ -30,7 +30,7 @@ contract Rewarder {
     // }
 
     function getTaxManager(address factory) public view returns (ITaxManager) {
-        address taxManager = INFTFactory(factory).getTaxManager();
+        address taxManager = INexus(factory).taxManager();
         return ITaxManager(taxManager);
     }
 
@@ -103,12 +103,8 @@ contract Rewarder {
         uint256 taxedAmountReward = balance * selfTaxRate / divisor;
         uint256 protocolTaxed = taxedAmountReward * protocolTaxRate / divisor;
         uint256 reward = taxedAmountReward - protocolTaxed;
-        IReferralHandler(handler).mintForRewarder(owner, reward);
+        
         IReferralHandler(handler).notifyFactory(reward, block.timestamp); // change to notify 
-        IReferralHandler(handler).mintForRewarder(
-            taxManager.getSelfTaxPool(),
-            protocolTaxed
-        );
     }
 
     function handleRightUpTax(
@@ -124,11 +120,6 @@ contract Rewarder {
         uint256 protocolTaxed = taxedAmountReward * protocolTaxRate /divisor;
         uint256 reward = taxedAmountReward - protocolTaxed;
         address referrer = IReferralHandler(handler).referredBy();
-        IReferralHandler(handler).mintForRewarder(referrer, reward);
-        IReferralHandler(handler).mintForRewarder(
-            taxManager.getRightUpTaxPool(),
-            protocolTaxed
-        );
     }
 
     function rewardReferrers(
@@ -151,10 +142,6 @@ contract Rewarder {
                 .getMaintenanceTaxRate();
             uint256 protocolMaintenanceAmount = balanceDuringRebase * protocolMaintenanceRate / taxDivisor;
             address maintenancePool = taxManager.getMaintenancePool();
-            IReferralHandler(handler).mintForRewarder(
-                maintenancePool,
-                protocolMaintenanceAmount
-            );
             leftOverTaxRate = leftOverTaxRate - protocolMaintenanceRate;
         }
         referral[1] = IReferralHandler(handler).referredBy();
@@ -168,10 +155,6 @@ contract Rewarder {
                 );
                 leftOverTaxRate = leftOverTaxRate - firstRewardRate;
                 uint256 firstReward = balanceDuringRebase * firstRewardRate / taxDivisor;
-                IReferralHandler(handler).mintForRewarder(
-                    referral[1],
-                    firstReward
-                );
             }
             referral[2] = IReferralHandler(referral[1]).referredBy();
             if (referral[2] != address(0)) {
@@ -185,10 +168,6 @@ contract Rewarder {
                     );
                     leftOverTaxRate = leftOverTaxRate - secondRewardRate;
                     uint256 secondReward = balanceDuringRebase * secondRewardRate / taxDivisor;
-                    IReferralHandler(handler).mintForRewarder(
-                        referral[2],
-                        secondReward
-                    );
                 }
                 referral[3] = IReferralHandler(referral[2]).referredBy();
                 if (referral[3] != address(0)) {
@@ -202,10 +181,6 @@ contract Rewarder {
                         );
                         leftOverTaxRate = leftOverTaxRate - thirdRewardRate;
                         uint256 thirdReward = balanceDuringRebase * thirdRewardRate / taxDivisor;
-                        IReferralHandler(handler).mintForRewarder(
-                            referral[3],
-                            thirdReward
-                        );
                     }
                     referral[4] = IReferralHandler(referral[3]).referredBy();
                     if (referral[4] != address(0)) {
@@ -217,10 +192,6 @@ contract Rewarder {
                                 .getReferralRate(4, fourthTier);
                             leftOverTaxRate = leftOverTaxRate - fourthRewardRate;
                             uint256 fourthReward = balanceDuringRebase * fourthRewardRate / taxDivisor;
-                            IReferralHandler(handler).mintForRewarder(
-                                referral[4],
-                                fourthReward
-                            );
                         }
                     }
                 }
@@ -231,10 +202,6 @@ contract Rewarder {
             uint256 rewardTaxRate = taxManager.getRewardPoolRate();
             uint256 rewardPoolAmount = balanceDuringRebase * rewardTaxRate / taxDivisor;
             address rewardPool = taxManager.getRewardAllocationPool();
-            IReferralHandler(handler).mintForRewarder(
-                rewardPool,
-                rewardPoolAmount
-            );
             leftOverTaxRate = leftOverTaxRate - rewardTaxRate;
         }
         // Dev Allocation & // Revenue Allocation
@@ -242,14 +209,6 @@ contract Rewarder {
             uint256 leftOverTax = balanceDuringRebase * leftOverTaxRate / taxDivisor;
             address devPool = taxManager.getDevPool();
             address revenuePool = taxManager.getRevenuePool();
-            IReferralHandler(handler).mintForRewarder(
-                devPool,
-                leftOverTax/2
-            );
-            IReferralHandler(handler).mintForRewarder(
-                revenuePool,
-                leftOverTax /2 
-            );
         }
     }
 
