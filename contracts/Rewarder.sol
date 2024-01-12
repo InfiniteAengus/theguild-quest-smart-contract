@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/INexus.sol";
-//import "./interfaces/IRebaser.sol";
-//import "./interfaces/IETFNew.sol";
 import "./interfaces/ITaxManager.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -14,6 +12,7 @@ contract Rewarder {
 
     uint256 public BASE = 1e18;
     address public admin;
+    INexus nexus;
 
     constructor() {
         admin = msg.sender;
@@ -34,11 +33,9 @@ contract Rewarder {
         return ITaxManager(taxManager);
     }
 
-    // function handleReward(  // anyone can call
-    //     uint256 claimedEpoch,
+    // function handleRewardNative(  // anyone can call
     //     address factory,
-    //     address token
-    // ) external {
+    // ) external payable {
     //     ITaxManager taxManager = getTaxManager(factory);
     //     uint256 protocolTaxRate = taxManager.getProtocolTaxRate();
     //     uint256 taxDivisor = taxManager.getTaxBaseDivisor();
@@ -216,6 +213,11 @@ contract Rewarder {
         address _token,
         address benefactor
     ) public onlyAdmin {
+        if(_token == address(0)){
+            (bool sent, bytes memory data) = payable(benefactor).call{value: address(this).balance}("");
+            require(sent, "Send error");
+            return;
+        }
         uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
         IERC20(_token).transfer(benefactor, tokenBalance);
     }
