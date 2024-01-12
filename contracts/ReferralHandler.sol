@@ -90,7 +90,7 @@ contract ReferralHandler {
         return nftID;
     }
 
-    function getTier() public view returns (uint256) {
+    function getTier() public view returns (uint8) {
         return tier - 1;
     }
 
@@ -223,7 +223,7 @@ contract ReferralHandler {
 
     function setTier(uint8 _tier) public onlyProtocol {
         require( _tier >= 0 && _tier < 5, "Invalid depth");
-        uint256 oldTier = getTier(); // For events
+        uint8 oldTier = getTier(); // For events
         tier = _tier + 1; // Adding the default +1 offset stored in handlers
         updateReferrersAbove(tier);
         string memory tokenURI = getTierManager().getTokenURI(getTier());

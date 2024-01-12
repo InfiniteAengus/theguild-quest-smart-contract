@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 import "./interfaces/INexus.sol";
 import "./interfaces/IReferralHandler.sol";
-import "./interfaces/IProfileNFT.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -16,10 +15,6 @@ contract ProfileNFT is ERC721URIStorage {
 
     address public councelor;
     address public nexus;
-    // should be deprecated
-    // Mapping from owner address to token ID
-    mapping(address => uint32[]) private _tokenIdsByAddress;
-
 
     modifier onlyNexus() { // nexus / hub
         require(msg.sender == nexus, "only nexus");
@@ -37,14 +32,6 @@ contract ProfileNFT is ERC721URIStorage {
         _tokenCounter++; // Start Token IDs from 1 instead of 0, we use 0 to indicate absense of NFT on a wallet
     }
 
-    function setAdmin(address account) public onlyCouncelor {
-        councelor = account;
-    }
-
-    function setNexus(address account) public onlyCouncelor {
-        nexus = account;
-    }
-
     function issueProfile(
         address user,
         string memory tokenURI
@@ -53,44 +40,44 @@ contract ProfileNFT is ERC721URIStorage {
         _tokenCounter++;
         _mint(user, newNFTId);
         _setTokenURI(newNFTId, tokenURI);
-        _tokenIdsByAddress[user].push(newNFTId);
         return newNFTId;
     }
 
-    function owns(address addr) external view returns (uint32[] memory) {
-        uint32[] memory tokenIds = _owns(addr);
-        return tokenIds; // Returns 0 if address holds no token
-    }
-
     /**
-     * @dev Returns the tokenID owner of the `owner`. Does NOT revert if owner doesn't exist
+     * @dev Transfers `tokenId` from `from` to `to`.
+     *  As opposed to {transferFrom}, this imposes no restrictions on msg.sender.
+     *
+     * Requirements:
+     *
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must be owned by `from`.
+     *
+     * Emits a {Transfer} event.
      */
-    function _owns(address addr) internal view returns (uint32[] memory ) {
-        return _tokenIdsByAddress[addr];
+    function transfer(
+        address _to,
+        uint32 _tokenId
+    ) external {
+        super.safeTransferFrom(msg.sender, _to, _tokenId);
     }
 
-    function changeURI(uint32 tokenID, string memory tokenURI) public {
+    function changeURI(uint32 tokenID, string memory tokenURI) external {
         address handler = INexus(nexus).getHandler(tokenID);
         require(msg.sender == handler, "Only Handler can update Token's URI");
         _setTokenURI(tokenID, tokenURI);
     }
 
-    function tier(uint32 tokenID) public view returns (uint8) {
-        address handler = INexus(nexus).getHandler(tokenID);
-        return IReferralHandler(handler).getTier(); 
+    function setCouncelor(address account) public onlyCouncelor {
+        councelor = account;
     }
 
-    function transfer( // internal + is never used 
-        address _to,
-        uint32 _tokenId
-    ) external {
-        _tokenIdsByAddress[msg.sender][0];
-        //INexus(nexus).registerUserEpoch(_to); // Alerting NFT Factory to update incase of new user address
-        super.transferFrom(msg.sender, _to, _tokenId);
-        uint32[] storage ids = _tokenIdsByAddress[_to];
-        uint256 l = ids.length + 1;
-        uint32[] storage i = ids;
-        i.push(_tokenId);
+    function setNexus(address account) public onlyCouncelor {
+        nexus = account;
+    }
+
+    function getTier(uint32 tokenID) public view returns (uint8) {
+        address handler = INexus(nexus).getHandler(tokenID);
+        return IReferralHandler(handler).getTier(); 
     }
 
     /**
@@ -111,33 +98,5 @@ contract ProfileNFT is ERC721URIStorage {
     ) public onlyCouncelor {
         uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
         IERC20(_token).transfer(benefactor, tokenBalance);
-    }
-
-    /**
-     * @dev Transfers `tokenId` from `from` to `to`.
-     *  As opposed to {transferFrom}, this imposes no restrictions on msg.sender.
-     *
-     * Requirements:
-     *
-     * - `to` cannot be the zero address.
-     * - `tokenId` token must be owned by `from`.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transfer(
-        address from,
-        address to,
-        uint32 tokenId
-    ) external virtual {
-        require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer from incorrect owner");
-        require(to != address(0), "ERC721: transfer to the zero address");
-
-        //_beforeTokenTransfer(from, to, tokenId, 1);
-
-        // Check that tokenId was not transferred by `_beforeTokenTransfer` hook
-        require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer from incorrect owner");
-        require(balanceOf(to) == 0, "One address cannot have multiple tokens");
-
-        _transfer(from, to, tokenId);
     }
 }

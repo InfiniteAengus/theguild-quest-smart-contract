@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 import "./interfaces/IReferralHandler.sol";
-import "./interfaces/IETFNew.sol";
-//import "./interfaces/IStakingPoolAggregator.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract TierManager {
+    using SafeERC20 for IERC20;
 
     struct TierParamaters {
         uint256 stakedTokens;
@@ -17,7 +17,6 @@ contract TierManager {
     }
 
     address public admin;
-    //IStakingPoolAggregator public stakingPool;
     mapping(uint256 => TierParamaters) public levelUpConditions;
     mapping(uint256 => uint256) public transferLimits;
     mapping(uint256 => string) public tokenURI;
