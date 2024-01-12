@@ -10,48 +10,49 @@ import "./interfaces/IRewarder.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract ReferralHandler {
+contract ReferralHandler is IReferralHandler{
     using SafeERC20 for IERC20;
 
     bool public initialized = false;
 
-    IProfileNFT public NFTContract;
+    IProfileNFT public NFT;
     uint32 public nftID;
     uint256 public mintTime;
-    address public referredBy; // NFT address of the referrer's ID
-    address[] public referrals;  // ? all of the referred? not used anywhere in the code 
+    uint32 public referredById;
+    uint32[] public referrals;  // ? all of the referred? not used anywhere in the code 
     uint8 private tier;
     bool private canLevel;
-    // NFT addresses of those referred by this NFT and its subordinates
-    address[] public firstLevelAddress;
-    address[] public secondLevelAddress;
-    address[] public thirdLevelAddress;
-    address[] public fourthLevelAddress;
+    // NFT ids of those referred by this NFT and its subordinates
+    uint32[] public firstLevelId;
+    uint32[] public secondLevelId;
+    uint32[] public thirdLevelId;
+    uint32[] public fourthLevelId;
     INexus nexus;
 
-    // Mapping of the above Address list and their corresponding NFT tiers, tiers are public (tier + 1)
-    mapping (address => uint256) public first_level; // add/change "tier" here (is it silver tier)
-    mapping (address => uint256) public second_level;
-    mapping (address => uint256) public third_level;
-    mapping (address => uint256) public fourth_level;
+    // bad practice of repeatd tiers storing
+    // Mapping of the above Id list and their corresponding NFT tiers, tiers are public (tier + 1)
+    mapping (uint32 => uint8) public first_level; 
+    mapping (address => uint8) public second_level;
+    mapping (address => uint8) public third_level;
+    mapping (address => uint8) public fourth_level;
 
-    modifier onlyAdmin() {
+    modifier onlyMaster() {
         require(msg.sender == nexus.master(), "only admin");
         _;
     }
 
     modifier onlyProtocol() {
-        require(msg.sender == nexus.master() || msg.sender == address(nexus), "only admin or factory");
+        require(msg.sender == nexus.master() || msg.sender == address(nexus), "only master or factory");
         _;
     }
 
     modifier onlyOwner() {
-        require(msg.sender == ownedBy(), "only owner");
+        require(msg.sender == ownedBy(), "only profile owner");
         _;
     }
 
-    modifier onlyFactory() {
-        require(msg.sender == address(nexus), "only factory");
+    modifier onlyNexus() {
+        require(msg.sender == address(nexus), "only nexus");
         _;
     }
 
@@ -61,8 +62,7 @@ contract ReferralHandler {
     }
 
     function initialize(
-        address _token,
-        address _referredBy,
+        uint32 _referredBy,
         address _nftAddress,
         uint32 _nftId
     ) public {
@@ -78,7 +78,7 @@ contract ReferralHandler {
         canLevel = true;
     }
 
-    function setFactory(address account) public onlyAdmin {
+    function setNexus(address account) public onlyMaster {
         nexus = INexus(account);
     }
 
@@ -109,7 +109,7 @@ contract ReferralHandler {
         return ITaxManager(taxManager);
     }
 
-    function changeEligibility(bool status) public onlyAdmin {
+    function changeEligibility(bool status) public onlyMaster {
         canLevel = status;
     }
 
@@ -160,8 +160,8 @@ contract ReferralHandler {
         }
     }
 
-    function addToReferralTree(uint256 depth, address referred, uint256 NFTtier) public onlyFactory { // _referral address is address of the NFT handler not the new user
-        require(depth <= 4, "Invalid depth");
+    function addToReferralTree(uint256 refDepth, uint32 referredId, uint8 _tier) public onlyNexus { // referred address is address of the NFT handler not the new user
+        require(refDepth <= 4, "Invalid depth");
         require(referred != address(0), "Invalid referred address");
         if (depth == 1) {
             firstLevelAddress.push(referred);
