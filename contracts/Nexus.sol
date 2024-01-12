@@ -8,16 +8,15 @@ import "./interfaces/INexus.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract Nexus is INexus {
-    address public master;
+    address public master; 
+    address private guardian;
     address public tierManager;
     address public taxManager;
-    //address public rebaser;
-    //address public token;
     address public handlerImplementation;
-    address public depositBoxImplementation;
+    address public accountImplementation;
     address public rewarder;
-    mapping(uint256 => address) NFTToHandler;
-    mapping(address => uint256) HandlerToNFT;
+    mapping(uint32 => address) NFTToHandler;
+    mapping(address => uint32) HandlerToNFT;
     //mapping(uint256 => address) NFTToDepositBox; // should be changed to account, not needed
     mapping(address => bool) handlerStorage;
     IProfileNFT public NFT;
@@ -31,19 +30,16 @@ contract Nexus is INexus {
     event NewTaxManager(address oldTaxManager, address newTaxManager);
     event NewTierManager(address oldTierManager, address newTierManager);
 
-    event NewIssuance(uint256 id, address handler, address depositBox);
-    event LevelChange(address handler, uint256 oldTier, uint256 newTier);
+    event NewIssuance(uint32 id, address handler, address account);
+    event LevelChange(address handler, uint8 oldTier, uint8 newTier);
+
     event SelfTaxClaimed(
         address indexed handler,
         uint256 amount,
         uint256 timestamp
     );
+
     event RewardClaimed(
-        address indexed handler,
-        uint256 amount,
-        uint256 timestamp
-    );
-    event DepositClaimed(
         address indexed handler,
         uint256 amount,
         uint256 timestamp
@@ -54,23 +50,19 @@ contract Nexus is INexus {
         _;
     }
 
+    modifier onlyGuardian() {
+        require(msg.sender == guardian, "only admin");
+        _;
+    }
+
     constructor(
         address _handlerImplementation
     ) {
         master = msg.sender;
         handlerImplementation = _handlerImplementation;
     }
-    
-    // should be deprecated/ changed to account
-    function getHandlerForProfile(address user) external view returns (address) {
-        uint256 tokenID = NFT.belongsTo(user);
-        if (tokenID != 0)
-            // Incase user holds no NFT
-            return NFTToHandler[tokenID];
-        return address(0);
-    }
 
-    function getHandler(uint256 tokenID) external view returns (address) {
+    function getHandler(uint32 tokenID) external view returns (address) {
         return NFTToHandler[tokenID];
     }
 
@@ -79,11 +71,10 @@ contract Nexus is INexus {
     }
 
     function addHandler(address _handler) public onlyMaster {
-        // For adding handlers for Staking pools and Protocol owned Pools
         handlerStorage[_handler] = true;
     }
 
-    function notifyLevelUpdate(uint256 oldTier, uint256 newTier) external {
+    function notifyLevelUpdate(uint8 oldTier, uint8 newTier) external {
         // All the handlers notify the Factory incase there is a change in levels
         require(isHandler(msg.sender) == true);
         emit LevelChange(msg.sender, oldTier, newTier);
@@ -107,6 +98,12 @@ contract Nexus is INexus {
     function setAdmin(address account) public onlyMaster {
         address oldAdmin = master;
         master = account;
+        emit NewAdmin(oldAdmin, account);
+    }
+
+    function setGuardian(address account) public onlyMaster {
+        address oldAdmin = guardian;
+        guardian = account;
         emit NewAdmin(oldAdmin, account);
     }
 
@@ -134,118 +131,63 @@ contract Nexus is INexus {
         emit NewTierManager(oldManager, _tierManager);
     }
 
-    function mint(uint32 reffererId) external returns (address) {
-        //Referrer is address of refferal handler of the guy above
-        uint256 nftId = NFT.issueNFT(msg.sender, "hjg"); // token URI should be updated
+    function createProfile(uint32 referrerId, address recipient, string memory profileLink) external onlyGuardian returns (address) {
+        uint32 nftId = NFT.issueProfile(recipient, profileLink); // token URI should be updated
         IReferralHandler handler = IReferralHandler(
             Clones.clone(handlerImplementation)
         );
-        require(nftId!= reffererId, "Cannot be its own referrer");
+        require(nftId!= referrerId, "Cannot be its own referrer");
         require(
-            reffererId < nftId || reffererId == 0,
-            "Referrer should be a valid handler"
+            referrerId < nftId,  // 0 in case of no referrer
+            "Referrer should have a valid profile id"
         );
-        //handler.initialize(master, referrerId, address(NFT), nftID);
-
-        // IDepositBox depositBox = IDepositBox(
-        //     Clones.clone(depositBoxImplementation)
-        // );
-        //depositBox.initialize(address(handler), nftID, admin);
-        // handler.setDepositBox(address(depositBox));
+        handler.initialize(referrerId, address(NFT), nftId);
         NFTToHandler[nftId] = address(handler);
         HandlerToNFT[address(handler)] = nftId;
         handlerStorage[address(handler)] = true;
-        //handlerStorage[address(depositBox)] = true; // Required to allow it fully transfer the collected rewards without limit
-        addToReferrersAbove(1, address(handler));
+        addToReferrersAbove(1, nftId);
         emit NewIssuance(nftId, address(handler), address(0));
         return address(handler);
     }
 
-    //TODO: Refactor reuable code
-    function mintToAddress(
-        address referrer,
-        address recipient,
-        uint256 tier
-    ) external onlyMaster returns (address) {
-        //Referrer is address of NFT handler of the guy above
-        uint256 nftID = NFT.issueNFT(recipient, "hhh");
-        // uint256 epoch = IRebaser(rebaser).getPositiveEpochCount(); // The handlers need to only track positive rebases
-        IReferralHandler handler = IReferralHandler(
-            Clones.clone(handlerImplementation)
-        );
-        require(address(handler) != referrer, "Cannot be its own referrer");
-        require(
-            handlerStorage[referrer] == true || referrer == address(0),
-            "Referrer should be a valid handler"
-        );
-        // handler.initialize(token, referrer, address(NFT), nftID);
-        // if(claimedAt[recipient] == 0)
-        //     claimedAt[recipient] = epoch;
-    
-        // depositBox.initialize(address(handler), nftID, token);
-       
-        NFTToHandler[nftID] = address(handler);
-        HandlerToNFT[address(handler)] = nftID;
-        handlerStorage[address(handler)] = true;
-        // Required to allow it fully transfer the collected rewards without limit
-        addToReferrersAbove(1, address(handler));
-        handler.setTier(tier);
-        emit NewIssuance(nftID, address(handler), address(0));
-        return address(handler);
-    }
-
-    function addToReferrersAbove(uint8 _tier, address _handler) internal {
+    function addToReferrersAbove(uint8 _tier, uint32 nftId) internal {
         // maybe rewritten better
-        if (_handler != address(0)) {
-            address first_ref = IReferralHandler(_handler).referredBy();
-            if (first_ref != address(0)) {
-                IReferralHandler(first_ref).addToReferralTree(
-                    1,
-                    _handler,
+        uint32 firstRefId = IReferralHandler(NFTToHandler[nftId]).referredById();
+        if ( firstRefId != 0) {
+            IReferralHandler(NFTToHandler[firstRefId]).addToReferralTree(
+                1,
+                nftId,
+                _tier
+            );
+            uint32 secondRefId = IReferralHandler(NFTToHandler[firstRefId]).referredById();
+            if (secondRefId != 0) {
+                IReferralHandler(NFTToHandler[secondRefId]).addToReferralTree(
+                    2,
+                    nftId,
                     _tier
                 );
-                address second_ref = IReferralHandler(first_ref).referredBy();
-                if (second_ref != address(0)) {
-                    IReferralHandler(second_ref).addToReferralTree(
-                        2,
-                        _handler,
+                uint32 thirdRefId = IReferralHandler(NFTToHandler[secondRefId]).referredById();
+                if (thirdRefId != 0) {
+                    IReferralHandler(NFTToHandler[thirdRefId]).addToReferralTree(
+                        3,
+                        nftId,
                         _tier
                     );
-                    address third_ref = IReferralHandler(second_ref)
-                        .referredBy();
-                    if (third_ref != address(0)) {
-                        IReferralHandler(third_ref).addToReferralTree(
-                            3,
-                            _handler,
+                    uint32 fourthRefId = IReferralHandler(NFTToHandler[thirdRefId]).referredById();
+                    if (fourthRefId != 0) {
+                        IReferralHandler(NFTToHandler[fourthRefId]).addToReferralTree(
+                            4,
+                            nftId,
                             _tier
                         );
-                        address fourth_ref = IReferralHandler(third_ref)
-                            .referredBy();
-                        if (fourth_ref != address(0))
-                            IReferralHandler(fourth_ref).addToReferralTree(
-                                4,
-                                _handler,
-                                _tier
-                            );
                     }
                 }
             }
         }
     }
 
-    function getTierManager() external view returns (address) {
-        return tierManager;
+    function getGuardian() external view onlyMaster returns(address){
+        return guardian;
     }
 
-    function getTaxManager() external view returns (address) {
-        return taxManager;
-    }
-
-    function getRewarder() external view returns (address) {
-        return rewarder;
-    }
-
-    function getMaster() external view returns (address) {
-        return master;
-    }
 }
