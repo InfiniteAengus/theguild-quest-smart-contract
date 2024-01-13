@@ -10,7 +10,7 @@ import "./interfaces/IRewarder.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract ReferralHandler is IReferralHandler{
+contract ReferralHandler is IReferralHandler {
     using SafeERC20 for IERC20;
 
     bool public initialized = false;
@@ -18,31 +18,30 @@ contract ReferralHandler is IReferralHandler{
     IProfileNFT public NFT;
     uint32 public nftID;
     uint256 public mintTime;
-    uint32 public referredById;
-    uint32[] public referrals;  // ? all of the referred? not used anywhere in the code 
+    address public referredBy;  // maybe changed to referredBy address
     uint8 private tier;
     bool private canLevel;
     // NFT ids of those referred by this NFT and its subordinates
-    uint32[] public firstLevelId;
-    uint32[] public secondLevelId;
-    uint32[] public thirdLevelId;
-    uint32[] public fourthLevelId;
+    address[] public firstLevelAddress;
+    address[] public secondLevelAddress;
+    address[] public thirdLevelAddress;
+    uint32[] public fourthLevelAddress;
     INexus nexus;
 
-    // bad practice of repeatd tiers storing
+    // bad practice of repeated tiers storing, expensive tier updates 
     // Mapping of the above Id list and their corresponding NFT tiers, tiers are public (tier + 1)
-    mapping (uint32 => uint8) public first_level; 
-    mapping (address => uint8) public second_level;
-    mapping (address => uint8) public third_level;
-    mapping (address => uint8) public fourth_level;
+    mapping (address => uint8) public firstLevel; 
+    mapping (address => uint8) public secondLevel;
+    mapping (address => uint8) public thirdLevel;
+    mapping (address => uint8) public fourthLevel;
 
     modifier onlyMaster() {
-        require(msg.sender == nexus.master(), "only admin");
+        require(msg.sender == nexus.master(), "only master");
         _;
     }
 
     modifier onlyProtocol() {
-        require(msg.sender == nexus.master() || msg.sender == address(nexus), "only master or factory");
+        require(msg.sender == nexus.master() || msg.sender == address(nexus), "only master or nexus");
         _;
     }
 
@@ -62,16 +61,15 @@ contract ReferralHandler is IReferralHandler{
     }
 
     function initialize(
-        uint32 _referredBy,
+        address _referredBy,
         address _nftAddress,
         uint32 _nftId
     ) public {
         require(!initialized, "Already initialized");
         initialized = true;
-        // token = IETF(_token);
         nexus = INexus(msg.sender);
         referredBy = _referredBy;
-        NFTContract = IProfileNFT(_nftAddress);
+        NFT = IProfileNFT(_nftAddress);
         nftID = _nftId;
         mintTime = block.timestamp;
         tier = 1; // Default tier is 1 instead of 0, since solidity 0 can also mean non-existant, all tiers on contract are + 1
@@ -83,21 +81,16 @@ contract ReferralHandler is IReferralHandler{
     }
 
     function ownedBy() public view returns (address) { // Returns the Owner of the NFT coupled with this handler
-        return NFTContract.ownerOf(nftID);
+        return NFT.ownerOf(nftID);
     }
 
-    function coupledNftId() external view returns (uint256) { // Returns the address of the NFT coupled with this handler
+    function nftId() external view returns (uint256) { // Returns the address of the NFT coupled with this handler
         return nftID;
     }
 
     function getTier() public view returns (uint8) {
         return tier - 1;
     }
-
-    // function getRebaser() public view returns (IRebaser) {
-    //     address rebaser = INFTFactory(factory).getRebaser() ;
-    //     return IRebaser(rebaser);
-    // }
 
     function getTierManager() public view returns (ITierManager) {
         address tierManager = nexus.tierManager() ;
@@ -113,37 +106,26 @@ contract ReferralHandler is IReferralHandler{
         canLevel = status;
     }
 
-    // function remainingClaims() public view returns (uint256) {
-    //     // uint256 currentEpoch = getRebaser().getPositiveEpochCount();
-    //     uint256 claimedEpoch = INFTFactory(factory).getEpoch(ownedBy());
-    //     // return currentEpoch.sub(claimedEpoch);
+    // function checkExistenceAndLevel(uint8 depth, address referred) view public returns (uint32 nftId) {
+    //     // Checks for existence for the given address in the given depth of the tree
+    //     // Returns 0 if it does not exist, else returns the NFT tier
+    //     require(depth <= 4 && depth >= 1, "Invalid depth");
+    //     require(referred != address(0), "Invalid referred address");
+
+    //     if (depth == 1) {
+    //         return first_level[referred];
+    //     } else if (depth == 2) {
+    //         return second_level[referred];
+    //     } else if (depth == 3) {
+    //         return third_level[referred];
+    //     } else if (depth == 4) {
+    //         return fourth_level[referred];
+    //     }
+    //     return 0;
     // }
 
-    function getTransferLimit() public view returns(uint256)
-    {
-        return getTierManager().getTransferLimit(getTier());
-    }
-
-    function checkExistenceAndLevel(uint256 depth, address referred) view public returns (uint256) {
-        // Checks for existence for the given address in the given depth of the tree
-        // Returns 0 if it does not exist, else returns the NFT tier
-        require(depth <= 4 && depth >= 1, "Invalid depth");
-        require(referred != address(0), "Invalid referred address");
-        if (depth == 1) {
-            return first_level[referred];
-        } else if (depth == 2) {
-            return second_level[referred];
-        } else if (depth == 3) {
-            return third_level[referred];
-        } else if (depth == 4) {
-            return fourth_level[referred];
-        }
-        return 0;
-    }
-
     function updateReferrersAbove(uint8 _tier) internal {
-        address _handler = address(this);
-        address first_ref = IReferralHandler(_handler).referredBy();
+        address first_ref = referredBy;
         if(first_ref != address(0)) {
             IReferralHandler(first_ref).updateReferralTree(1, _tier);
             address second_ref = IReferralHandler(first_ref).referredBy();
@@ -160,9 +142,10 @@ contract ReferralHandler is IReferralHandler{
         }
     }
 
-    function addToReferralTree(uint256 refDepth, uint32 referredId, uint8 _tier) public onlyNexus { // referred address is address of the NFT handler not the new user
-        require(refDepth <= 4, "Invalid depth");
-        require(referred != address(0), "Invalid referred address");
+    function addToReferralTree(uint8 refDepth, address referralHandler, uint8 _tier) public onlyNexus { // referred address is address of the NFT handler not the new user
+        require(refDepth <= 4 && refDepth >= 0, "Invalid depth");
+        require(referralHandler != address(0), "Invalid referral address");
+        // swtich case here 
         if (depth == 1) {
             firstLevelAddress.push(referred);
             first_level[referred] = NFTtier;
@@ -178,9 +161,11 @@ contract ReferralHandler is IReferralHandler{
         }
     }
 
-    function updateReferralTree(uint256 depth, uint256 NFTtier) external {
-        require(depth <= 4 && depth >= 1, "Invalid depth");
+    function updateReferralTree(uint256 refDepth, uint256 NFTtier) external {
+        require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
         require(msg.sender != address(0), "Invalid referred address");
+
+        // switch here 
         if (depth == 1) {
             require(first_level[msg.sender]!= 0, "Cannot update non-existant entry");
             first_level[msg.sender] = NFTtier;
@@ -227,7 +212,7 @@ contract ReferralHandler is IReferralHandler{
         tier = _tier + 1; // Adding the default +1 offset stored in handlers
         updateReferrersAbove(tier);
         string memory tokenURI = getTierManager().getTokenURI(getTier());
-        NFTContract.changeURI(nftID, tokenURI);
+        NFT.changeURI(nftID, tokenURI);
         nexus.notifyLevelUpdate(oldTier, getTier());
     }
 
@@ -238,7 +223,7 @@ contract ReferralHandler is IReferralHandler{
             updateReferrersAbove(tier + 1);
             tier = tier + 1;
             string memory tokenURI = getTierManager().getTokenURI(getTier());
-            NFTContract.changeURI(nftID, tokenURI);
+            NFT.changeURI(nftID, tokenURI);
             nexus.notifyLevelUpdate(oldTier, getTier());
             return true;
         }
