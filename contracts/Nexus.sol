@@ -21,6 +21,7 @@ contract Nexus is INexus {
     mapping(address => bool) handlerStorage;
     IProfileNFT public NFT;
 
+    // check events
     event NewAdmin(address oldAdmin, address newAdmin);
     event NewURI(string OldTokenURI, string NewTokenURI);
     event NewRewarder(address oldRewarder, address newRewarder);
@@ -45,6 +46,7 @@ contract Nexus is INexus {
         uint256 timestamp
     );
 
+// check events
     modifier onlyMaster() {
         require(msg.sender == master, "only admin");
         _;
@@ -141,43 +143,49 @@ contract Nexus is INexus {
             referrerId < nftId,  // 0 in case of no referrer
             "Referrer should have a valid profile id"
         );
-        handler.initialize(referrerId, address(NFT), nftId);
+        address referrerHandler = NFTToHandler[referrerId];
+        handler.initialize(referrerHandler, address(NFT), nftId);
         NFTToHandler[nftId] = address(handler);
         HandlerToNFT[address(handler)] = nftId;
         handlerStorage[address(handler)] = true;
-        addToReferrersAbove(1, nftId);
+        addToReferrersAbove(1, address(handler));
         emit NewIssuance(nftId, address(handler), address(0));
         return address(handler);
     }
 
-    function addToReferrersAbove(uint8 _tier, uint32 nftId) internal {
-        // maybe rewritten better
-        uint32 firstRefId = IReferralHandler(NFTToHandler[nftId]).referredById();
-        if ( firstRefId != 0) {
-            IReferralHandler(NFTToHandler[firstRefId]).addToReferralTree(
+    /**
+     * 
+     * @param _tier  Tier of the profile
+     * @param _handler Address of the handler for the newly created profile
+     */
+    function addToReferrersAbove(uint8 _tier, address _handler) internal {  // handler of the newly created profile
+        // maybe rewritten id -> address (handler of the referrer)  ;; done
+        address firstRef = IReferralHandler(_handler).referredBy();
+        if ( firstRef != address(0)) {
+            IReferralHandler(firstRef).addToReferralTree(
                 1,
-                nftId,
+                _handler,
                 _tier
             );
-            uint32 secondRefId = IReferralHandler(NFTToHandler[firstRefId]).referredById();
-            if (secondRefId != 0) {
-                IReferralHandler(NFTToHandler[secondRefId]).addToReferralTree(
+            address secondRef = IReferralHandler(firstRef).referredBy();
+            if (secondRef!= address(0)) {
+                IReferralHandler(secondRef).addToReferralTree(
                     2,
-                    nftId,
+                    _handler,
                     _tier
                 );
-                uint32 thirdRefId = IReferralHandler(NFTToHandler[secondRefId]).referredById();
-                if (thirdRefId != 0) {
-                    IReferralHandler(NFTToHandler[thirdRefId]).addToReferralTree(
+                address thirdRef = IReferralHandler(secondRef).referredBy();
+                if (thirdRef != address(0)) {
+                    IReferralHandler(thirdRef).addToReferralTree(
                         3,
-                        nftId,
+                        _handler,
                         _tier
                     );
-                    uint32 fourthRefId = IReferralHandler(NFTToHandler[thirdRefId]).referredById();
-                    if (fourthRefId != 0) {
-                        IReferralHandler(NFTToHandler[fourthRefId]).addToReferralTree(
+                    address fourthRef = IReferralHandler(thirdRef).referredBy();
+                    if (fourthRef != address(0)) {
+                        IReferralHandler(fourthRef).addToReferralTree(
                             4,
-                            nftId,
+                            _handler,
                             _tier
                         );
                     }
