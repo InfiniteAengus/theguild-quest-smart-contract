@@ -7,13 +7,13 @@ interface IReferralHandler {
         address _nftAddress,
         uint32 _nftId
     ) external;
-    function setTier(uint256 _tier) external;
+    function setTier(uint8 _tier) external;
     function checkExistence(uint256, address) external view returns (address);
     function nFTId() external view returns (address);
     function referredBy() external view returns (address);
     function ownedBy() external view returns (address);
     function getTier() external view returns (uint8);
-    function updateReferralTree(uint256 depth, uint8 NFTtier) external;
-    function addToReferralTree(uint256 refDepth, address referral , uint8 _tier) external;
+    function updateReferralTree(uint8 refDepth, uint8 _tier) external;
+    function addToReferralTree(uint8 refDepth, address referralHandler , uint8 _tier) external;
     function notifyFactory(uint256 reward, uint256 timestamp) external;
 }
