@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+
+
 pragma solidity ^0.8.0;
 
 import "./interfaces/IProfileNFT.sol";
@@ -6,8 +8,9 @@ import "./interfaces/IReferralHandler.sol";
 //import "./interfaces/IRebaserNew.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
-contract Nexus {
-
+contract Factory {
+}
+/*
     address public admin;
     address public tierManager;
     address public taxManager;
@@ -191,13 +194,7 @@ contract Nexus {
         require(address(handler) != referrer, "Cannot be its own referrer");
         require(handlerStorage[referrer] == true || referrer == address(0), "Referrer should be a valid handler");
         handler.initialize(admin, referrer, address(NFT), nftID);
-        // if(claimedAt[msg.sender] == 0)
-        //     claimedAt[msg.sender] = epoch;
-        IDepositBox depositBox =  IDepositBox(Clones.clone(depositBoxImplementation));
-        depositBox.initialize(address(handler), nftID, admin);
-        handler.setDepositBox(address(depositBox));
         NFTToHandler[nftID] = address(handler);
-        NFTToDepositBox[nftID] = address(depositBox);
         HandlerToNFT[address(handler)] = nftID;
         handlerStorage[address(handler)] = true;
         handlerStorage[address(depositBox)] = true; // Required to allow it fully transfer the collected rewards without limit
@@ -250,3 +247,5 @@ contract Nexus {
         }
     }
 }
+
+*/

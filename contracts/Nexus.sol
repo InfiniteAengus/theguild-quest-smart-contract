@@ -76,7 +76,7 @@ contract Nexus is INexus {
         handlerStorage[_handler] = true;
     }
 
-    function notifyLevelUpdate(uint8 oldTier, uint8 newTier) external {
+    function notifyTierUpdate(uint8 oldTier, uint8 newTier) external {
         // All the handlers notify the Factory incase there is a change in levels
         require(isHandler(msg.sender) == true);
         emit LevelChange(msg.sender, oldTier, newTier);

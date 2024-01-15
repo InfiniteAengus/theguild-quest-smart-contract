@@ -101,7 +101,7 @@ contract Rewarder {
         uint256 protocolTaxed = taxedAmountReward * protocolTaxRate / divisor;
         uint256 reward = taxedAmountReward - protocolTaxed;
         
-        IReferralHandler(handler).notifyFactory(reward, block.timestamp); // change to notify 
+        IReferralHandler(handler).notifyNexus(reward, block.timestamp); // change to notify 
     }
 
     function handleRightUpTax(
