@@ -19,9 +19,10 @@ interface ITaxManager {
     function getTotalTaxAtMint() external view returns (uint256);
     function getPerpetualPoolTaxRate() external view returns (uint256);
     function getTaxBaseDivisor() external view returns (uint256);
+    
     function getReferralRate(uint256, uint256) external view returns (uint256);
     function getTierPoolRate() external view returns (uint256);
-    // function getDevPoolRate() external view returns (uint256);
+    function getDevPoolRate() external view returns (uint256);
     function getMarketingTaxRate() external view returns (uint256);
     function getRewardPoolRate() external view returns (uint256);
 }
