@@ -22,18 +22,18 @@ contract ReferralHandler is IReferralHandler {
     uint8 private tier;
     bool private canLevel;
     // NFT ids of those referred by this NFT and its subordinates
-    address[] public firstLevelAddress;
-    address[] public secondLevelAddress;
-    address[] public thirdLevelAddress;
-    uint32[] public fourthLevelAddress;
+    address[] public firstLevelRefs;
+    address[] public secondLevelRefs;
+    address[] public thirdLevelRefs;
+    address[] public fourthLevelRefs;
     INexus nexus;
 
     // bad practice of repeated tiers storing, expensive tier updates 
     // Mapping of the above Id list and their corresponding NFT tiers, tiers are public (tier + 1)
-    mapping (address => uint8) public firstLevel; 
-    mapping (address => uint8) public secondLevel;
-    mapping (address => uint8) public thirdLevel;
-    mapping (address => uint8) public fourthLevel;
+    mapping (address => uint8) public firstLevelTiers; 
+    mapping (address => uint8) public secondLevelTiers;
+    mapping (address => uint8) public thirdLevelTiers;
+    mapping (address => uint8) public fourthLevelTiers;
 
     modifier onlyMaster() {
         require(msg.sender == nexus.master(), "only master");
@@ -109,17 +109,17 @@ contract ReferralHandler is IReferralHandler {
     // function checkExistenceAndLevel(uint8 depth, address referred) view public returns (uint32 nftId) {
     //     // Checks for existence for the given address in the given depth of the tree
     //     // Returns 0 if it does not exist, else returns the NFT tier
-    //     require(depth <= 4 && depth >= 1, "Invalid depth");
+    //     requirerefDepth <= 4 && depth >= 1, "Invalid depth");
     //     require(referred != address(0), "Invalid referred address");
 
-    //     if (depth == 1) {
-    //         return first_level[referred];
-    //     } else if (depth == 2) {
-    //         return second_level[referred];
-    //     } else if (depth == 3) {
-    //         return third_level[referred];
-    //     } else if (depth == 4) {
-    //         return fourth_level[referred];
+    //     if refDepth == 1) {
+    //         return firstLevelTiers[referralHandler];
+    //     } else if refDepth == 2) {
+    //         return secondLevelTiers[referralHandler];
+    //     } else if refDepth == 3) {
+    //         return thirdLevelTiers[referralHandler];
+    //     } else if refDepth == 4) {
+    //         return fourthLevelTiers[referralHandler];
     //     }
     //     return 0;
     // }
@@ -142,66 +142,71 @@ contract ReferralHandler is IReferralHandler {
         }
     }
 
-    function addToReferralTree(uint8 refDepth, address referralHandler, uint8 _tier) public onlyNexus { // referred address is address of the NFT handler not the new user
+    /**
+     * 
+     * @param refDepth Number of layers between the referral and referee
+     * @param referralHandler Address of the handler of referred person(referral)
+     * @param _tier Tier of the referral Nft
+     */
+    function addToReferralTree(uint8 refDepth, address referralHandler, uint8 _tier) public onlyNexus { 
         require(refDepth <= 4 && refDepth >= 0, "Invalid depth");
         require(referralHandler != address(0), "Invalid referral address");
-        // swtich case here 
-        if (depth == 1) {
-            firstLevelAddress.push(referred);
-            first_level[referred] = NFTtier;
-        } else if (depth == 2) {
-            secondLevelAddress.push(referred);
-            second_level[referred] = NFTtier;
-        } else if (depth == 3) {
-            thirdLevelAddress.push(referred);
-            third_level[referred] = NFTtier;
-        } else if (depth == 4) {
-            fourthLevelAddress.push(referred);
-            fourth_level[referred] = NFTtier;
+    
+        if (refDepth == 1) {
+            firstLevelRefs.push(referralHandler);
+            firstLevelTiers[referralHandler] = _tier;
+        } else if (refDepth == 2) {
+            secondLevelRefs.push(referralHandler);
+            secondLevelTiers[referralHandler] = _tier;
+        } else if (refDepth == 3) {
+            thirdLevelRefs.push(referralHandler);
+            thirdLevelTiers[referralHandler] = _tier;
+        } else if (refDepth == 4) {
+            fourthLevelRefs.push(referralHandler);
+            fourthLevelTiers[referralHandler] = _tier;
         }
     }
 
-    function updateReferralTree(uint256 refDepth, uint256 NFTtier) external {
+    function updateReferralTree(uint8 refDepth, uint8 _tier) external {  // msg.sender should be the handler reffered by this address
         require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
         require(msg.sender != address(0), "Invalid referred address");
 
-        // switch here 
-        if (depth == 1) {
-            require(first_level[msg.sender]!= 0, "Cannot update non-existant entry");
-            first_level[msg.sender] = NFTtier;
-        } else if (depth == 2) {
-            require(second_level[msg.sender]!= 0, "Cannot update non-existant entry");
-            second_level[msg.sender] = NFTtier;
-        } else if (depth == 3) {
-            require(third_level[msg.sender]!= 0, "Cannot update non-existant entry");
-            third_level[msg.sender] = NFTtier;
-        } else if (depth == 4) {
-            require(fourth_level[msg.sender]!= 0, "Cannot update non-existant entry");
-            fourth_level[msg.sender] = NFTtier;
+        if (refDepth == 1) {
+            require(firstLevelTiers[msg.sender]!= 0, "Cannot update non-existant entry");
+            firstLevelTiers[msg.sender] = _tier;
+        } else if (refDepth == 2) {
+            require(secondLevelTiers[msg.sender]!= 0, "Cannot update non-existant entry");
+            secondLevelTiers[msg.sender] = _tier;
+        } else if (refDepth == 3) {
+            require(thirdLevelTiers[msg.sender]!= 0, "Cannot update non-existant entry");
+            thirdLevelTiers[msg.sender] = _tier;
+        } else if (refDepth == 4) {
+            require(fourthLevelTiers[msg.sender]!= 0, "Cannot update non-existant entry");
+            fourthLevelTiers[msg.sender] = _tier;
         }
     }
 
-    function getTierCounts() public view returns (uint256[5] memory) { // returns count of Tiers 0 to 5 under the user
-        uint256[5] memory tierCounts; // Tiers can be 0 to 4 (Stored 1 to 5 in Handlers)
-        for (uint256 index = 0; index < firstLevelAddress.length; index++) {
-            address referral = firstLevelAddress[index];
-            // uint256 NFTtier = first_level[referral].sub(1); // Subtrating one to offset the default +1 due to solidity limitations
-            // tierCounts[NFTtier]++;
+    function getTierCounts() public view returns (uint8[5] memory) { // returns count of Tiers 0 to 5 under the user
+        uint8[5] memory tierCounts; // Tiers can be 0 to 4 (Stored 1 to 5 in Handlers)
+        for (uint256 index = 0; index < firstLevelRefs.length; index++) {
+            address referral = firstLevelRefs[index];
+            // uint256 _tier = firstLevelTiers[referral].sub(1); // Subtrating one to offset the default +1 due to solidity limitations
+            // tierCounts[_tier]++;
         }
-        for (uint256 index = 0; index < secondLevelAddress.length; index++) {
-            address referral = secondLevelAddress[index];
-            // uint256 NFTtier = second_level[referral].sub(1);
-            // tierCounts[NFTtier]++;
+        for (uint256 index = 0; index < secondLevelRefs.length; index++) {
+            address referral = secondLevelRefs[index];
+            // uint256 _tier = secondLevelTiers[referral].sub(1);
+            // tierCounts[_tier]++;
         }
-        for (uint256 index = 0; index < thirdLevelAddress.length; index++) {
-            address referral = thirdLevelAddress[index];
-            // uint256 NFTtier = third_level[referral].sub(1);
-            // tierCounts[NFTtier]++;
+        for (uint256 index = 0; index < thirdLevelRefs.length; index++) {
+            address referral = thirdLevelRefs[index];
+            // uint256 _tier = thirdLevelTiers[referral].sub(1);
+            // tierCounts[_tier]++;
         }
-        for (uint256 index = 0; index < fourthLevelAddress.length; index++) {
-            address referral = fourthLevelAddress[index];
-            // uint256 NFTtier = fourth_level[referral].sub(1);
-            // tierCounts[NFTtier]++;
+        for (uint256 index = 0; index < fourthLevelRefs.length; index++) {
+            address referral = fourthLevelRefs[index];
+            // uint256 _tier = fourthLevelTiers[referral].sub(1);
+            // tierCounts[_tier]++;
         }
         return tierCounts;
     }
@@ -219,7 +224,7 @@ contract ReferralHandler is IReferralHandler {
     function levelUp() public returns (bool) {
         if(getTier() < 4 &&  canLevel == true && getTierManager().checkTierUpgrade(getTierCounts()) == true)
         {
-            uint256 oldTier = getTier(); // For events
+            uint8 oldTier = getTier(); // For events
             updateReferrersAbove(tier + 1);
             tier = tier + 1;
             string memory tokenURI = getTierManager().getTokenURI(getTier());
