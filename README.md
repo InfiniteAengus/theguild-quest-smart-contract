@@ -4,6 +4,17 @@ This project demonstrates a basic Hardhat use case. It comes with a sample contr
 
 Try running some of the following tasks:
 
+
+## Notation:
+
+Referral - the identity that was referred.
+Referrer - the identity that referred. 
+
+Referrer referred the referral.
+Referral was referred by referrer. 
+
+# Admins for contracts
+
 ```shell
 npx hardhat help
 npx hardhat test

@@ -125,18 +125,18 @@ contract ReferralHandler is IReferralHandler {
     // }
 
     function updateReferrersAbove(uint8 _tier) internal {
-        address first_ref = referredBy;
-        if(first_ref != address(0)) {
-            IReferralHandler(first_ref).updateReferralTree(1, _tier);
-            address second_ref = IReferralHandler(first_ref).referredBy();
-            if(second_ref != address(0)) {
-                IReferralHandler(second_ref).updateReferralTree(2, _tier);
-                address third_ref = IReferralHandler(second_ref).referredBy();
-                if(third_ref != address(0)) {
-                    IReferralHandler(third_ref).updateReferralTree(3, _tier);
-                    address fourth_ref = IReferralHandler(third_ref).referredBy();
-                    if(fourth_ref != address(0))
-                        IReferralHandler(fourth_ref).updateReferralTree(4, _tier);
+        address firstRef = referredBy;
+        if(firstRef != address(0)) {
+            IReferralHandler(firstRef).updateReferralTree(1, _tier);
+            address secondRef = IReferralHandler(firstRef).referredBy();
+            if(secondRef != address(0)) {
+                IReferralHandler(secondRef).updateReferralTree(2, _tier);
+                address thirdRef = IReferralHandler(secondRef).referredBy();
+                if(thirdRef != address(0)) {
+                    IReferralHandler(thirdRef).updateReferralTree(3, _tier);
+                    address fourthRef = IReferralHandler(thirdRef).referredBy();
+                    if(fourthRef != address(0))
+                        IReferralHandler(fourthRef).updateReferralTree(4, _tier);
                 }
             }
         }
@@ -185,61 +185,56 @@ contract ReferralHandler is IReferralHandler {
             fourthLevelTiers[msg.sender] = _tier;
         }
     }
-
-    function getTierCounts() public view returns (uint8[5] memory) { // returns count of Tiers 0 to 5 under the user
-        uint8[5] memory tierCounts; // Tiers can be 0 to 4 (Stored 1 to 5 in Handlers)
-        for (uint256 index = 0; index < firstLevelRefs.length; index++) {
-            address referral = firstLevelRefs[index];
-            // uint256 _tier = firstLevelTiers[referral].sub(1); // Subtrating one to offset the default +1 due to solidity limitations
-            // tierCounts[_tier]++;
+    /**
+     * @notice Returns number of referrals for each tier
+     * @dev Returns array of counts for Tiers 1 to 5 under the user
+     */
+    function getTierCounts() public view returns (uint32[5] memory) { 
+        uint32[5] memory tierCounts; // Tiers can be 0 to 4 (Stored 1 to 5 in Handlers)
+        for (uint32 i = 0; i < firstLevelRefs.length; ++i) {
+            address referral = firstLevelRefs[i];
+            uint8 _tier = firstLevelTiers[referral] - 1; 
+            tierCounts[_tier]++;
         }
-        for (uint256 index = 0; index < secondLevelRefs.length; index++) {
-            address referral = secondLevelRefs[index];
-            // uint256 _tier = secondLevelTiers[referral].sub(1);
-            // tierCounts[_tier]++;
+        for (uint32 i = 0; i < secondLevelRefs.length; ++i) {
+            address referral = secondLevelRefs[i];
+            uint8 _tier = secondLevelTiers[referral] - 1;
+            tierCounts[_tier]++;
         }
-        for (uint256 index = 0; index < thirdLevelRefs.length; index++) {
-            address referral = thirdLevelRefs[index];
-            // uint256 _tier = thirdLevelTiers[referral].sub(1);
-            // tierCounts[_tier]++;
+        for (uint32 i = 0; i < thirdLevelRefs.length; ++i) {
+            address referral = thirdLevelRefs[i];
+            uint8 _tier = thirdLevelTiers[referral] - 1;
+            tierCounts[_tier]++;
         }
-        for (uint256 index = 0; index < fourthLevelRefs.length; index++) {
-            address referral = fourthLevelRefs[index];
-            // uint256 _tier = fourthLevelTiers[referral].sub(1);
-            // tierCounts[_tier]++;
+        for (uint32 i = 0; i < fourthLevelRefs.length; ++i) {
+            address referral = fourthLevelRefs[i];
+            uint8 _tier = fourthLevelTiers[referral] - 1;
+            tierCounts[_tier]++;
         }
         return tierCounts;
     }
 
     function setTier(uint8 _tier) public onlyProtocol {
-        require( _tier >= 0 && _tier < 5, "Invalid depth");
+        require( _tier >= 0 && _tier <= 4, "Invalid Tier");
         uint8 oldTier = getTier(); // For events
         tier = _tier + 1; // Adding the default +1 offset stored in handlers
         updateReferrersAbove(tier);
         string memory tokenURI = getTierManager().getTokenURI(getTier());
         NFT.changeURI(nftID, tokenURI);
-        nexus.notifyLevelUpdate(oldTier, getTier());
+        nexus.notifyTierUpdate(oldTier, getTier());
     }
 
-    function levelUp() public returns (bool) {
-        if(getTier() < 4 &&  canLevel == true && getTierManager().checkTierUpgrade(getTierCounts()) == true)
-        {
+    function tierUp() external returns (bool) {  // not used anywhere, changed to external
+    require(getTier() < 4 &&  canLevel == true, "Can't increase the tier");
+    require(getTierManager().checkTierUpgrade(getTierCounts()), "Tier upgrade condition not met");
             uint8 oldTier = getTier(); // For events
-            updateReferrersAbove(tier + 1);
             tier = tier + 1;
+            updateReferrersAbove(tier);
             string memory tokenURI = getTierManager().getTokenURI(getTier());
             NFT.changeURI(nftID, tokenURI);
-            nexus.notifyLevelUpdate(oldTier, getTier());
+            nexus.notifyTierUpdate(oldTier, getTier());
             return true;
-        }
-        return false;
     }
-
-
-// minting tokens 
-    // function mintForRewarder(address recipient, uint256 amount ) external onlyRewarder {  // should be changed, no token mints
-    //     token.mintForReferral(recipient, amount);
-    // }
 
 // should be changed to notify 
     function alertFactory(uint256 reward, uint256 timestamp) external onlyRewarder { 
