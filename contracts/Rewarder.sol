@@ -11,88 +11,49 @@ contract Rewarder {
     using SafeERC20 for IERC20;
 
     uint256 public BASE = 1e18;
-    address public admin;
+    address public steward;
     INexus nexus;
 
-    constructor() {
-        admin = msg.sender;
+    constructor(address _steward) {
+        steward = _steward;
     }
 
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "only Admin");
+    modifier onlySteward() {
+        require(msg.sender == steward, "only Steward");
         _;
     }
-
-    // function getRebaser(address factory) public view returns (IRebaser) {
-    //     address rebaser = INFTFactory(factory).getRebaser();
-    //     return IRebaser(rebaser);
-    // }
 
     function getTaxManager(address factory) public view returns (ITaxManager) {
         address taxManager = INexus(factory).taxManager();
         return ITaxManager(taxManager);
     }
 
-    // function handleRewardNative(  // anyone can call
-    //     address factory,
-    // ) external payable {
-    //     ITaxManager taxManager = getTaxManager(factory);
-    //     uint256 protocolTaxRate = taxManager.getProtocolTaxRate();
-    //     uint256 taxDivisor = taxManager.getTaxBaseDivisor();
-    //     // needs to be deleted (?)
-    //     uint256 rebaseRate = getRebaser(factory).getDeltaForPositiveEpoch(
-    //         claimedEpoch
-    //     );
-    //     address handler = msg.sender;
-    //     address owner = IReferralHandler(handler).ownedBy();
-    //     // need to figure out the epochs 
-    //     INFTFactory(factory).updateUserEpoch(owner, claimedEpoch);
-    //     if (rebaseRate != 0) {
-    //         // uint256 blockForRebase = getRebaser(factory)
-    //             // .getBlockForPositiveEpoch(claimedEpoch);
-    //         // uint256 balanceDuringRebase = IETF(token).getPriorBalance(
-    //         //     owner,
-    //         //     blockForRebase
-    //         // ); // We deal only with underlying balances
-    //         balanceDuringRebase = balanceDuringRebase.div(1e6); // 4.0 token internally stores 1e24 not 1e18
-    //         uint256 expectedBalance = balanceDuringRebase
-    //             .mul(BASE.add(rebaseRate))
-    //             .div(BASE);
-    //         uint256 balanceToMint = expectedBalance.sub(balanceDuringRebase);
-    //         handleSelfTax(
-    //             handler,
-    //             factory,
-    //             balanceToMint,
-    //             protocolTaxRate,
-    //             taxDivisor
-    //         );
-    //         uint256 rightUpTaxRate = taxManager.getRightUpTaxRate();
-    //         if (rightUpTaxRate != 0)
-    //             handleRightUpTax(
-    //                 handler,
-    //                 factory,
-    //                 balanceToMint,
-    //                 rightUpTaxRate,
-    //                 protocolTaxRate,
-    //                 taxDivisor
-    //             );
-    //         rewardReferrers(
-    //             handler,
-    //             factory,
-    //             balanceToMint,
-    //             rightUpTaxRate,
-    //             protocolTaxRate,
-    //             taxDivisor
-    //         );
-    //     }
-    // }
+    function handleRewardNative(  // anyone can call
+        address factory
+    ) external payable {
+        ITaxManager taxManager = getTaxManager(factory);
+        uint256 protocolTaxRate = taxManager.getProtocolTaxRate();
+        uint256 taxDivisor = taxManager.getTaxBaseDivisor();
+        address handler = msg.sender;
+        address owner = IReferralHandler(handler).ownedBy();
 
-    function handleSelfTax(
+        // handleSelfTax(
+        //     handler,
+        //     factory,
+        //     balanceToMint,
+        //     protocolTaxRate,
+        //     taxDivisor
+        // );
+        
+    }
+
+
+    function handleSolverTax(
         address handler,
         address factory,
         uint256 balance,
         uint256 protocolTaxRate,
-        uint256 divisor
+        uint256 taxDivisor
     ) internal {
         address owner = IReferralHandler(handler).ownedBy();
         ITaxManager taxManager = getTaxManager(factory);
@@ -104,7 +65,7 @@ contract Rewarder {
         IReferralHandler(handler).notifyNexus(reward, block.timestamp); // change to notify 
     }
 
-    function handleRightUpTax(
+    function handlePayment(
         address handler,
         address factory,
         uint256 balance,
@@ -212,7 +173,7 @@ contract Rewarder {
     function recoverTokens(
         address _token,
         address benefactor
-    ) public onlyAdmin {
+    ) public onlySteward {
         if(_token == address(0)){
             (bool sent, bytes memory data) = payable(benefactor).call{value: address(this).balance}("");
             require(sent, "Send error");
