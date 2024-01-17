@@ -1,40 +1,52 @@
+//SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IEscrow } from "./interfaces/Quests/IEscrow.sol";
+import { IRewarder } from "./interfaces/IRewarder.sol";
 
-contract Escrow {
+/**
+ * @title Quest Escrow 
+ * @notice Stores reward for quest
+ * @dev Implementation contract, instances are created as clones 
+ */
+contract EscrowNative is IEscrow {
   using SafeERC20 for IERC20;
 
-  address[] public tokens;
-  address public governance; // who is it?
+  bool public initialized = false;
+  address public quest;
+  uint256 paymentAmount;
 
-  modifier onlyGov() {
-    require(msg.sender == governance, "only gov");
+  modifier onlyQuest() {
+    require(msg.sender == quest, "only quest");
     _;
   }
 
-  constructor (address[] memory _tokens) {
-    tokens = _tokens;
-    governance = msg.sender;
+  constructor () {
   }
 
-  function approve(address _token, address to, uint256 amount) public onlyGov {
-    IERC20(_token).approve(to, 0);
-    IERC20(_token).approve(to, amount);
+  function initialize() external payable {   
+    require(!initialized);
+    initialized = true;
+    quest = msg.sender;
+    paymentAmount = msg.value;
   }
 
-  function transfer(address _token, address to, uint256 amount) public onlyGov {
-    IERC20(_token).transfer(to, amount);
+  function proccessPayment(uint32 solverId) external onlyQuest{
+    // (bool sentTreasury, bytes memory dataT) = payable(treasury).call{value: (paymentAmount * 10) / 100}(""); // change to flexible % 
+    // require(sentTreasury, "Failed to send Ether to solver");
+    // (bool sentSolver, bytes memory dataS) = payable(solver).call{value: (paymentAmount * 90) / 100}(""); // change to flexible % 
+    // require(sentSolver, "Failed to send Ether to solver");
+  }
+  
+  // for disputes
+  function proccessResolution(uint32 seekerId, uint32 solverId, uint8 seekerShare, uint8 solverShare) external onlyQuest{
+    //(bool sentSeeker, bytes memory data) = payable(seeker).call{value: (paymentAmount * seekerShare) / 100}("");
+    //require(sentSeeker, "Failed to send Ether");
+    //(bool sentSolver, bytes memory datas) = payable(solver).call{value: (paymentAmount * solverShare) / 100}(""); // change to flexible % 
+    //require(sentSolver, "Failed to send Ether");
   }
 
-  // This exists to mirror the interaction of how the perpetual staking pool would
-  function notifySecondaryTokens(uint256 amount) external {
-    // IERC20(token).transferFrom(msg.sender, address(this), amount);
-  }
-
-  function setGovernance(address account) external onlyGov {
-    governance = account;
-  }
 }
