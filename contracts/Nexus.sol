@@ -48,12 +48,12 @@ contract Nexus is INexus {
 
 // check events
     modifier onlyMaster() {
-        require(msg.sender == master, "only admin");
+        require(msg.sender == master, "only master");
         _;
     }
 
     modifier onlyGuardian() {
-        require(msg.sender == guardian, "only admin");
+        require(msg.sender == guardian, "only guardian");
         _;
     }
 
@@ -97,10 +97,10 @@ contract Nexus is INexus {
         emit RewardClaimed(msg.sender, amount, timestamp);
     }
 
-    function setAdmin(address account) public onlyMaster {
-        address oldAdmin = master;
+    function setMaster(address account) public onlyMaster {
+        address oldMaster = master;
         master = account;
-        emit NewAdmin(oldAdmin, account);
+        emit NewAdmin(oldMaster, account);
     }
 
     function setGuardian(address account) public onlyMaster {
