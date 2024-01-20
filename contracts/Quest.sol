@@ -122,10 +122,10 @@ contract Quest is IQuest {
         require(!beingDisputed, "Is under dispute");
         require(rewardTime <= block.timestamp, "Not reward time yet");
         rewarded = true;
-        escrow.proccessPayment(solverId);
+        escrow.proccessPayment(solverId, getRewarder());
     }
 
-    function getRewarder() external view returns (address) {
+    function getRewarder() public view returns (address) {
         return Tavern.getRewarder();
     }
 }
