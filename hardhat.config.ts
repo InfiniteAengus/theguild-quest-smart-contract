@@ -59,7 +59,8 @@ const config: HardhatUserConfig = {
     fuji: {
       url: "https://api.avax-test.network/ext/bc/C/rpc",
       accounts: [env.WALLET_PRIVATE_KEY], 
-      chainId: 43113
+      chainId: 43113,
+      gasPrice: 35000000000,
     },
     // avalanche:{
     //   url: "https://api.avax.network/ext/bc/C/rpc",
