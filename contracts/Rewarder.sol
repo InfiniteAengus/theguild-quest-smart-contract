@@ -23,57 +23,51 @@ contract Rewarder {
         _;
     }
 
-    function getTaxManager(address factory) public view returns (ITaxManager) {
-        address taxManager = INexus(factory).taxManager();
+    function getTaxManager() public view returns (ITaxManager) {
+        address taxManager = INexus(nexus).taxManager();
         return ITaxManager(taxManager);
     }
 
-    function handleRewardNative(  // anyone can call
-        address factory
-    ) external payable {
-        ITaxManager taxManager = getTaxManager(factory);
+    function handleRewardNative() external payable { // anyone can call
+        ITaxManager taxManager = getTaxManager();
         uint256 protocolTaxRate = taxManager.getProtocolTaxRate();
         uint256 taxDivisor = taxManager.getTaxBaseDivisor();
-        address handler = msg.sender;
-        address owner = IReferralHandler(handler).ownedBy();
+        address escrow = msg.sender;
+        //address owner = IReferralHandler(handler).ownedBy();
 
-        // handleSelfTax(
-        //     handler,
-        //     factory,
-        //     balanceToMint,
-        //     protocolTaxRate,
-        //     taxDivisor
-        // );
+        handleSolverTax(
+            handler,
+            nexus,
+            protocolTaxRate,
+            taxDivisor
+        );
         
     }
 
 
     function handleSolverTax(
         address handler,
-        address factory,
         uint256 balance,
         uint256 protocolTaxRate,
         uint256 taxDivisor
     ) internal {
         address owner = IReferralHandler(handler).ownedBy();
-        ITaxManager taxManager = getTaxManager(factory);
+        ITaxManager taxManager = getTaxManager(nexus);
         uint256 selfTaxRate = taxManager.getSelfTaxRate();
-        uint256 taxedAmountReward = balance * selfTaxRate / divisor;
-        uint256 protocolTaxed = taxedAmountReward * protocolTaxRate / divisor;
-        uint256 reward = taxedAmountReward - protocolTaxed;
+        // uint256 taxedAmountReward = balance * selfTaxRate / divisor;
+        // uint256 protocolTaxed = taxedAmountReward * protocolTaxRate / divisor;
+        uint256 reward = 0;//taxedAmountReward - protocolTaxed;
         
         IReferralHandler(handler).notifyNexus(reward, block.timestamp); // change to notify 
     }
 
     function handlePayment(
         address handler,
-        address factory,
-        uint256 balance,
         uint256 taxRate,
         uint256 protocolTaxRate,
         uint256 divisor
     ) internal {
-        ITaxManager taxManager = getTaxManager(factory);
+        ITaxManager taxManager = getTaxManager(nexus);
         uint256 taxedAmountReward = balance * taxRate / divisor;
         uint256 protocolTaxed = taxedAmountReward * protocolTaxRate /divisor;
         uint256 reward = taxedAmountReward - protocolTaxed;
@@ -81,38 +75,30 @@ contract Rewarder {
     }
 
     function rewardReferrers(
-        address handler,
-        address factory,
-        uint256 balanceDuringRebase,
-        uint256 rightUpTaxRate,
+        address handler,  // should be merged with account
         uint256 protocolTaxRate,
-        uint256 taxDivisor
+        uint256 taxDivisor,
+        uint256 taxValue
     ) internal {
-        // This function mints the tokens and disperses them to referrers above
-        ITaxManager taxManager = getTaxManager(factory);
-        uint256 perpetualTaxRate = taxManager.getPerpetualPoolTaxRate();
-        uint256 leftOverTaxRate = protocolTaxRate - perpetualTaxRate; // Taxed and minted on rebase
-        leftOverTaxRate = leftOverTaxRate - rightUpTaxRate; // Tax and minted in function above
+        ITaxManager taxManager = getTaxManager();
         address[5] memory referral; // Used to store above referrals, saving variable space
         // Block Scoping to reduce local Variables spillage
         {
-            uint256 protocolMaintenanceRate = taxManager
-                .getMaintenanceTaxRate();
-            uint256 protocolMaintenanceAmount = balanceDuringRebase * protocolMaintenanceRate / taxDivisor;
             address maintenancePool = taxManager.getMaintenancePool();
-            leftOverTaxRate = leftOverTaxRate - protocolMaintenanceRate;
         }
         referral[1] = IReferralHandler(handler).referredBy();
         if (referral[1] != address(0)) {
             // Block Scoping to reduce local Variables spillage
             {
                 uint256 firstTier = IReferralHandler(referral[1]).getTier();
+                // need to merge handler and account
+                address account = 0;
                 uint256 firstRewardRate = taxManager.getReferralRate(
                     1,
                     firstTier
                 );
-                leftOverTaxRate = leftOverTaxRate - firstRewardRate;
-                uint256 firstReward = balanceDuringRebase * firstRewardRate / taxDivisor;
+                uint256 firstReward =  (taxValue * firstRewardRate) / taxDivisor;
+                
             }
             referral[2] = IReferralHandler(referral[1]).referredBy();
             if (referral[2] != address(0)) {

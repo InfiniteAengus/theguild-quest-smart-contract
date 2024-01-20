@@ -2,6 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IRewarder {
-    function handleRewardNative(address nexus) external;
+    function handleRewardNative() external payable;
     function handleRewardToken(address nexus, address token) external;
 }
