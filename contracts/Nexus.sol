@@ -24,8 +24,9 @@ contract Nexus is INexus {
     IProfileNFT public NFT;
     IERC6551Registry public Registry;
 
-    // check events
-    event NewAdmin(address oldAdmin, address newAdmin);
+    // Set events
+    event NewMaster(address oldMaster, address newMaster);
+    event NewGuardian(address oldGuardian, address newGuardian);
     event NewURI(string OldTokenURI, string NewTokenURI);
     event NewRewarder(address oldRewarder, address newRewarder);
     event NewNFT(address oldNFT, address NewNFT);
@@ -34,7 +35,7 @@ contract Nexus is INexus {
     event NewTaxManager(address oldTaxManager, address newTaxManager);
     event NewTierManager(address oldTierManager, address newTierManager);
 
-    event NewIssuance(uint32 id, address handler, address account);
+    event NewIssuance(uint32 id, address account);
     event LevelChange(address handler, uint8 oldTier, uint8 newTier);
 
     event SelfTaxClaimed(
@@ -102,16 +103,16 @@ contract Nexus is INexus {
         emit RewardClaimed(msg.sender, amount, timestamp);
     }
 //
-    function setMaster(address account) public onlyMaster {
+    function setMaster(address newMaster) public onlyMaster {
         address oldMaster = master;
-        master = account;
-        emit NewAdmin(oldMaster, account);
+        master = newMaster;
+        emit NewMaster(oldMaster, master);
     }
 
-    function setGuardian(address account) public onlyMaster {
-        address oldAdmin = guardian;
-        guardian = account;
-        emit NewAdmin(oldAdmin, account);
+    function setGuardian(address newGuardian) public onlyMaster {
+        address oldGuardian = guardian;
+        guardian = newGuardian;
+        emit NewGuardian(oldGuardian, newGuardian);
     }
 
     function setRewarder(address _rewarder) public onlyMaster {
@@ -154,7 +155,7 @@ contract Nexus is INexus {
         IReferralHandler Handler = IReferralHandler(handlerAd);
         Handler.initialize(referrerHandler, address(NFT), nftId);
         addToReferrersAbove(1, handlerAd);
-        emit NewIssuance(nftId, handlerAd, address(0));
+        emit NewIssuance(nftId, handlerAd);
         return handlerAd;
     }
 
