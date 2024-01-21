@@ -14,6 +14,12 @@ contract Rewarder {
     address public steward;
     INexus nexus;
 
+    event RewardNativeClaimed(
+        address indexed solverAccount,
+        address escrow,
+        uint256 solverReward
+    );
+
     constructor(address _steward) {
         steward = _steward;
     }
@@ -28,131 +34,142 @@ contract Rewarder {
         return ITaxManager(taxManager);
     }
 
-    function handleRewardNative() external payable { // anyone can call
+    function handleRewardNative(uint32 solverId) external payable { // anyone can call
+        address escrow = msg.sender;
+        require(escrow.balance == 0, "Escrow not empty");
+
         ITaxManager taxManager = getTaxManager();
         uint256 protocolTaxRate = taxManager.getProtocolTaxRate();
-        uint256 taxDivisor = taxManager.getTaxBaseDivisor();
-        address escrow = msg.sender;
-        //address owner = IReferralHandler(handler).ownedBy();
+        uint256 taxRateDivisor = taxManager.getTaxBaseDivisor();
+        uint256 rewardValue = msg.value;
+        uint256 tax = (rewardValue * protocolTaxRate) / taxRateDivisor;
+        require(tax<= rewardValue);
+        
+        address solverHandler = nexus.getHandler(solverId);
+        address solver = IReferralHandler(solverHandler).ownedBy();
 
-        handleSolverTax(
-            handler,
-            nexus,
-            protocolTaxRate,
-            taxDivisor
+        rewardReferrers(
+            solverHandler,
+            tax,
+            taxRateDivisor
         );
         
+        uint256 solverReward = rewardValue - tax;
+        (bool success, bytes memory data) = payable(solver).call{value: solverReward }("");
+        require(success, "Solver reward pay error;");
+        emit RewardNativeClaimed(solverHandler, escrow, solverReward);
     }
 
 
-    function handleSolverTax(
-        address handler,
-        uint256 balance,
-        uint256 protocolTaxRate,
-        uint256 taxDivisor
-    ) internal {
-        address owner = IReferralHandler(handler).ownedBy();
-        ITaxManager taxManager = getTaxManager(nexus);
-        uint256 selfTaxRate = taxManager.getSelfTaxRate();
-        // uint256 taxedAmountReward = balance * selfTaxRate / divisor;
-        // uint256 protocolTaxed = taxedAmountReward * protocolTaxRate / divisor;
-        uint256 reward = 0;//taxedAmountReward - protocolTaxed;
+    // function handleSolverTax(
+    //     address handler,
+    //     uint256 balance,
+    //     uint256 protocolTaxRate,
+    //     uint256 taxDivisor
+    // ) internal {
+    //     address owner = IReferralHandler(handler).ownedBy();
+    //     ITaxManager taxManager = getTaxManager();
+    //     uint256 selfTaxRate = taxManager.getSelfTaxRate();
+    //     // uint256 taxedAmountReward = balance * selfTaxRate / divisor;
+    //     // uint256 protocolTaxed = taxedAmountReward * protocolTaxRate / divisor;
+    //     uint256 reward = 0;//taxedAmountReward - protocolTaxed;
         
-        IReferralHandler(handler).notifyNexus(reward, block.timestamp); // change to notify 
-    }
+    //     IReferralHandler(handler).notifyNexus(reward, block.timestamp); // change to notify 
+    // }
 
-    function handlePayment(
-        address handler,
-        uint256 taxRate,
-        uint256 protocolTaxRate,
-        uint256 divisor
-    ) internal {
-        ITaxManager taxManager = getTaxManager(nexus);
-        uint256 taxedAmountReward = balance * taxRate / divisor;
-        uint256 protocolTaxed = taxedAmountReward * protocolTaxRate /divisor;
-        uint256 reward = taxedAmountReward - protocolTaxed;
-        address referrer = IReferralHandler(handler).referredBy();
-    }
+    // function handlePayment(
+    //     address handler,
+    //     uint256 taxRate,
+    //     uint256 protocolTaxRate,
+    //     uint256 divisor
+    // ) internal {
+    //     ITaxManager taxManager = getTaxManager(nexus);
+    //     uint256 taxedAmountReward = balance * taxRate / divisor;
+    //     uint256 protocolTaxed = taxedAmountReward * protocolTaxRate /divisor;
+    //     uint256 reward = taxedAmountReward - protocolTaxed;
+    //     address referrer = IReferralHandler(handler).referredBy();
+    // }
 
     function rewardReferrers(
-        address handler,  // should be merged with account
-        uint256 protocolTaxRate,
-        uint256 taxDivisor,
-        uint256 taxValue
+        address handler, 
+        uint256 taxValue,
+        uint256 taxDivisor
     ) internal {
         ITaxManager taxManager = getTaxManager();
-        address[5] memory referral; // Used to store above referrals, saving variable space
+        address[5] memory referrals; // Used to store above referrals, saving variable space
+        uint256[5] memory rewards;
         // Block Scoping to reduce local Variables spillage
-        {
-            address maintenancePool = taxManager.getMaintenancePool();
-        }
-        referral[1] = IReferralHandler(handler).referredBy();
-        if (referral[1] != address(0)) {
+        
+        uint256 leftTax = taxValue;
+
+        referrals[1] = IReferralHandler(handler).referredBy();
+        if (referrals[1] != address(0)) {
             // Block Scoping to reduce local Variables spillage
             {
-                uint256 firstTier = IReferralHandler(referral[1]).getTier();
-                // need to merge handler and account
-                address account = 0;
+                uint8 firstTier = IReferralHandler(referrals[1]).getTier();
                 uint256 firstRewardRate = taxManager.getReferralRate(
                     1,
                     firstTier
                 );
-                uint256 firstReward =  (taxValue * firstRewardRate) / taxDivisor;
-                
+               
+                rewards[1] =  (taxValue * firstRewardRate) / taxDivisor;
+                leftTax -= rewards[1];
             }
-            referral[2] = IReferralHandler(referral[1]).referredBy();
-            if (referral[2] != address(0)) {
+            referrals[2] = IReferralHandler(referrals[1]).referredBy();
+            if (referrals[2] != address(0)) {
                 // Block Scoping to reduce local Variables spillage
                 {
-                    uint256 secondTier = IReferralHandler(referral[2])
-                        .getTier();
+                    uint8 secondTier = IReferralHandler(referrals[2]).getTier();
                     uint256 secondRewardRate = taxManager.getReferralRate(
                         2,
                         secondTier
                     );
-                    leftOverTaxRate = leftOverTaxRate - secondRewardRate;
-                    uint256 secondReward = balanceDuringRebase * secondRewardRate / taxDivisor;
+    
+                    rewards[2] = (secondRewardRate * taxValue) / taxDivisor;
+                    leftTax -= rewards[2];
                 }
-                referral[3] = IReferralHandler(referral[2]).referredBy();
-                if (referral[3] != address(0)) {
+                referrals[3] = IReferralHandler(referrals[2]).referredBy();
+                if (referrals[3] != address(0)) {
                     // Block Scoping to reduce local Variables spillage
                     {
-                        uint256 thirdTier = IReferralHandler(referral[3])
-                            .getTier();
+                        uint8 thirdTier = IReferralHandler(referrals[3]).getTier();
                         uint256 thirdRewardRate = taxManager.getReferralRate(
                             3,
                             thirdTier
                         );
-                        leftOverTaxRate = leftOverTaxRate - thirdRewardRate;
-                        uint256 thirdReward = balanceDuringRebase * thirdRewardRate / taxDivisor;
+                        rewards[3] =  (taxValue * thirdRewardRate) / taxDivisor;
+                        leftTax -= rewards[3];
                     }
-                    referral[4] = IReferralHandler(referral[3]).referredBy();
-                    if (referral[4] != address(0)) {
+                    referrals[4] = IReferralHandler(referrals[3]).referredBy();
+                    if (referrals[4] != address(0)) {
                         // Block Scoping to reduce local Variables spillage
                         {
-                            uint256 fourthTier = IReferralHandler(referral[4])
-                                .getTier();
+                            uint8 fourthTier = IReferralHandler(referrals[4]).getTier();
                             uint256 fourthRewardRate = taxManager
                                 .getReferralRate(4, fourthTier);
-                            leftOverTaxRate = leftOverTaxRate - fourthRewardRate;
-                            uint256 fourthReward = balanceDuringRebase * fourthRewardRate / taxDivisor;
+                            rewards[4] = (taxValue) * fourthRewardRate / taxDivisor;
+                            leftTax -= rewards[4];
                         }
                     }
                 }
             }
         }
-        // Reward Allocation
-        {
-            uint256 rewardTaxRate = taxManager.getRewardPoolRate();
-            uint256 rewardPoolAmount = balanceDuringRebase * rewardTaxRate / taxDivisor;
-            address rewardPool = taxManager.getRewardAllocationPool();
-            leftOverTaxRate = leftOverTaxRate - rewardTaxRate;
+        // Pay out the Refferal rewards
+        for(uint8 i =0; i<5 ; ++i){
+            uint256 reward = rewards[i];
+            rewards[i]=0;
+            (bool success, bytes memory data) = payable(referrals[i]).call{value: reward}("");
+            require(success, "Referral rewards pay error;");
         }
+        // // Reward Allocation
+        // {
+        //     uint256 rewardTaxRate = taxManager.getRewardPoolRate();
+        // }
         // Dev Allocation & // Revenue Allocation
         {
-            uint256 leftOverTax = balanceDuringRebase * leftOverTaxRate / taxDivisor;
-            address devPool = taxManager.getDevPool();
             address revenuePool = taxManager.getRevenuePool();
+            (bool success, bytes memory data) = payable(revenuePool).call{value: leftTax}("");
+            require(success, "Revenue pool pay error;");
         }
     }
 

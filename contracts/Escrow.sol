@@ -36,11 +36,7 @@ contract EscrowNative is IEscrow {
 
   function proccessPayment(uint32 solverId, address rewarder) external onlyQuest{
     IRewarder Rewarder  = IRewarder(rewarder);
-    Rewarder.handleRewardNative{value: address(this).balance}();
-    // (bool sentTreasury, bytes memory dataT) = payable(treasury).call{value: (paymentAmount * 10) / 100}(""); // change to flexible % 
-    // require(sentTreasury, "Failed to send Ether to solver");
-    // (bool sentSolver, bytes memory dataS) = payable(solver).call{value: (paymentAmount * 90) / 100}(""); // change to flexible % 
-    // require(sentSolver, "Failed to send Ether to solver");
+    Rewarder.handleRewardNative{value: address(this).balance}(solverId);
   }
   
   // for disputes
