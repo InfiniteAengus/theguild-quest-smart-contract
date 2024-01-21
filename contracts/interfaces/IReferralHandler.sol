@@ -9,7 +9,7 @@ interface IReferralHandler {
     ) external;
     function setTier(uint8 _tier) external;
     function checkReferralExistence(uint8 refdDpth, address referralHandler) view external returns (uint8 _tier);
-    function nftId() external view returns (uint32 nftId);
+    function getNftId() external view returns (uint32 nftId);
     function getNft() external view returns (address nftContract);
     function referredBy() external view returns (address referrerHandler);
     function ownedBy() external view returns (address owner);

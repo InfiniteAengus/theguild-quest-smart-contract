@@ -22,21 +22,19 @@ contract ReferralHandlerERC6551Account is
     IERC165,
     IERC1271,
     IERC6551Account,
-    IERC6551Executable, 
+    IERC6551Executable,
     IReferralHandler
 {
     uint256 private _state;
 
     receive() external payable {}
 
-    // Hanlder part 
+    // Hanlder part
 
     using SafeERC20 for IERC20;
 
     bool public initialized = false;
 
-    IProfileNFT public NFT;
-    uint32 public nftId;
     uint256 public mintTime;
     address public referredBy; // maybe changed to referredBy address
     uint8 private tier;
@@ -83,17 +81,11 @@ contract ReferralHandlerERC6551Account is
         _;
     }
 
-    function initialize(
-        address _referredBy,
-        address _nftAddress,
-        uint32 _nftId
-    ) public {
+    function initialize(address _referredBy) public {
         require(!initialized, "Already initialized");
         initialized = true;
         nexus = INexus(msg.sender);
         referredBy = _referredBy;
-        NFT = IProfileNFT(_nftAddress);
-        nftId = _nftId;
         mintTime = block.timestamp;
         tier = 1; // Default tier is 1 instead of 0, since solidity 0 can also mean non-existant, all tiers on contract are + 1
         canLevel = true;
@@ -103,9 +95,18 @@ contract ReferralHandlerERC6551Account is
         nexus = INexus(account);
     }
 
+    /**
+     * Returns the Owner of the NFT coupled with this handler
+     */
     function ownedBy() public view returns (address) {
-        // Returns the Owner of the NFT coupled with this handler
+        (, address nft, uint256 nftId) = token();
+        IProfileNFT NFT = IProfileNFT(nft);
         return NFT.ownerOf(nftId);
+    }
+
+    function getNftId() public view returns (uint32) {
+        (, , uint256 nftId) = token();
+        return uint32(nftId);
     }
 
     function getTier() public view returns (uint8) {
@@ -264,6 +265,8 @@ contract ReferralHandlerERC6551Account is
         tier = _tier + 1; // Adding the default +1 offset stored in handlers
         updateReferrersAbove(tier);
         string memory tokenURI = getTierManager().getTokenURI(getTier());
+        IProfileNFT NFT = IProfileNFT(getNft());
+        uint32 nftId = getNftId();
         NFT.changeURI(nftId, tokenURI);
         nexus.notifyTierUpdate(oldTier, getTier());
     }
@@ -279,6 +282,8 @@ contract ReferralHandlerERC6551Account is
         tier = tier + 1;
         updateReferrersAbove(tier);
         string memory tokenURI = getTierManager().getTokenURI(getTier());
+        IProfileNFT NFT = IProfileNFT(getNft());
+        uint32 nftId = getNftId();
         NFT.changeURI(nftId, tokenURI);
         nexus.notifyTierUpdate(oldTier, getTier());
         return true;
@@ -292,12 +297,12 @@ contract ReferralHandlerERC6551Account is
         nexus.notifySelfTaxClaimed(reward, timestamp);
     }
 
-    function getNft() external view returns (address) {
-        return address(NFT);
+    function getNft() public view returns (address) {
+        (, address nftAddr, ) = token();
+        return nftAddr;
     }
 
-
-    // ERC6551 part 
+    // ERC6551 part
 
     function execute(
         address to,
@@ -380,5 +385,11 @@ contract ReferralHandlerERC6551Account is
     function state() external view override returns (uint256) {
         return _state;
     }
+
+    function initialize(
+        address _referredBy,
+        address _nftAddress,
+        uint32 _nftId
+    ) external override {}
 
 }
