@@ -3,23 +3,26 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IProfileNFT.sol";
 import "./interfaces/IReferralHandler.sol";
+import "./interfaces/IERC6551/IERC6551Registry.sol";
 import "./interfaces/INexus.sol";  
-//import "./interfaces/IRebaserNew.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+
+// Handler and account were mrged, thus refer to the same contract
 
 contract Nexus is INexus {
     address public master; 
     address private guardian;
+
     address public tierManager;
     address public taxManager;
-    address public handlerImplementation;
     address public accountImplementation;
     address public rewarder;
+
     mapping(uint32 => address) NFTToHandler;
     mapping(address => uint32) HandlerToNFT;
-    //mapping(uint256 => address) NFTToDepositBox; // should be changed to account, not needed
     mapping(address => bool) handlerStorage;
     IProfileNFT public NFT;
+    IERC6551Registry public Registry;
 
     // check events
     event NewAdmin(address oldAdmin, address newAdmin);
@@ -58,10 +61,12 @@ contract Nexus is INexus {
     }
 
     constructor(
-        address _handlerImplementation
+        address _accountImplementation,
+        address _registry
     ) {
         master = msg.sender;
-        handlerImplementation = _handlerImplementation;
+        accountImplementation = _accountImplementation;
+        Registry = IERC6551Registry(_registry);
     }
 
     function getHandler(uint32 tokenID) external view returns (address) {
@@ -81,7 +86,7 @@ contract Nexus is INexus {
         require(isHandler(msg.sender) == true);
         emit LevelChange(msg.sender, oldTier, newTier);
     }
-
+// 
     function notifySelfTaxClaimed(uint256 amount, uint256 timestamp) external {
         // All the handlers notify the Factory when they claim self tax
         require(isHandler(msg.sender) == true);
@@ -96,7 +101,7 @@ contract Nexus is INexus {
         require(isHandler(msg.sender) == true);
         emit RewardClaimed(msg.sender, amount, timestamp);
     }
-
+//
     function setMaster(address account) public onlyMaster {
         address oldMaster = master;
         master = account;
@@ -135,22 +140,22 @@ contract Nexus is INexus {
 
     function createProfile(uint32 referrerId, address recipient, string memory profileLink) external onlyGuardian returns (address) {
         uint32 nftId = NFT.issueProfile(recipient, profileLink); // token URI should be updated
-        IReferralHandler handler = IReferralHandler(
-            Clones.clone(handlerImplementation)
-        );
         require(nftId!= referrerId, "Cannot be its own referrer");
         require(
             referrerId < nftId,  // 0 in case of no referrer
             "Referrer should have a valid profile id"
         );
+        address handlerAd = Registry.createAccount(accountImplementation, 0, block.chainid, address(NFT), nftId);
+        NFTToHandler[nftId] = handlerAd;
+        HandlerToNFT[handlerAd] = nftId;
+        handlerStorage[handlerAd] = true;
+
         address referrerHandler = NFTToHandler[referrerId];
-        handler.initialize(referrerHandler, address(NFT), nftId);
-        NFTToHandler[nftId] = address(handler);
-        HandlerToNFT[address(handler)] = nftId;
-        handlerStorage[address(handler)] = true;
-        addToReferrersAbove(1, address(handler));
-        emit NewIssuance(nftId, address(handler), address(0));
-        return address(handler);
+        IReferralHandler Handler = IReferralHandler(handlerAd);
+        Handler.initialize(referrerHandler, address(NFT), nftId);
+        addToReferrersAbove(1, handlerAd);
+        emit NewIssuance(nftId, handlerAd, address(0));
+        return handlerAd;
     }
 
     /**
