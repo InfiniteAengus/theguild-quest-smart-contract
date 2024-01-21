@@ -82,6 +82,7 @@ contract Quest is IQuest {
         started = true;
     }
 
+    // todo
     function startDispute() external onlySeeker {
         require(started, "quest not started");
         require(!beingDisputed, "Dispute started before");
