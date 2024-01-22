@@ -3,9 +3,7 @@ pragma solidity ^0.8.0;
 
 interface IReferralHandler {
     function initialize(
-        address _referredBy,
-        address _nftAddress,
-        uint32 _nftId
+        address _referredBy
     ) external;
     function setTier(uint8 _tier) external;
     function checkReferralExistence(uint8 refdDpth, address referralHandler) view external returns (uint8 _tier);
