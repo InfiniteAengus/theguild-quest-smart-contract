@@ -75,6 +75,7 @@ contract TierManager {
         //         levelUpConditions[tier].stakedDuration
         //     )
         // ) return false;
+        address _owner = owner;
         if (tierCounts[0] < levelUpConditions[tier].tierZero) return false;
         if (tierCounts[1] < levelUpConditions[tier].tierOne) return false;
         if (tierCounts[2] < levelUpConditions[tier].tierTwo) return false;

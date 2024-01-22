@@ -386,10 +386,6 @@ contract ReferralHandlerERC6551Account is
         return _state;
     }
 
-    function initialize(
-        address _referredBy,
-        address _nftAddress,
-        uint32 _nftId
-    ) external override {}
+    // End of Account
 
 }

@@ -153,7 +153,7 @@ contract Nexus is INexus {
 
         address referrerHandler = NFTToHandler[referrerId];
         IReferralHandler Handler = IReferralHandler(handlerAd);
-        Handler.initialize(referrerHandler, address(NFT), nftId);
+        Handler.initialize(referrerHandler);
         addToReferrersAbove(1, handlerAd);
         emit NewIssuance(nftId, handlerAd);
         return handlerAd;
