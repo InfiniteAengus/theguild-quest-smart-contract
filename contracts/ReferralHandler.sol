@@ -276,4 +276,11 @@ contract ReferralHandler is IReferralHandler {
         return address(NFT);
     }
 
+    function initialize(address _referredBy) external override {}
+
+    function getNftId() external view returns (uint32 _nftId) {
+        return nftId;
+    }
+
+    
 }
