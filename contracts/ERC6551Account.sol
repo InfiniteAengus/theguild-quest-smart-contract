@@ -44,7 +44,10 @@ contract ReferralHandlerERC6551Account is
     address[] public secondLevelRefs;
     address[] public thirdLevelRefs;
     address[] public fourthLevelRefs;
-    INexus nexus;
+
+
+    INexus nexus = INexus(0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1);
+
 
     // bad practice of repeated tiers storing, expensive tier updates
     // Mapping of the above Handler list and their corresponding NFT tiers, tiers are public (tier + 1)
@@ -81,7 +84,11 @@ contract ReferralHandlerERC6551Account is
         _;
     }
 
-    function initialize(address _referredBy) public {
+    constructor(address _nexus) {
+        nexus = INexus(_nexus);
+    }
+
+    function initialize(address _referredBy) public onlyNexus{
         require(!initialized, "Already initialized");
         initialized = true;
         nexus = INexus(msg.sender);
