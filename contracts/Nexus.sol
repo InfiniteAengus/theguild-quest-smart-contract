@@ -27,9 +27,10 @@ contract Nexus is INexus {
     // Set events
     event NewMaster(address oldMaster, address newMaster);
     event NewGuardian(address oldGuardian, address newGuardian);
-    event NewURI(string OldTokenURI, string NewTokenURI);
+    event NewURI(string oldTokenURI, string newTokenURI);
     event NewRewarder(address oldRewarder, address newRewarder);
-    event NewNFT(address oldNFT, address NewNFT);
+    event NewNFT(address oldNFT, address newNFT);
+    event NewAccountImpl(address oldAcc, address newAcc);
     event NewRebaser(address oldRebaser, address newRebaser);
     event NewToken(address oldToken, address newToken);
     event NewTaxManager(address oldTaxManager, address newTaxManager);
@@ -125,6 +126,12 @@ contract Nexus is INexus {
         address oldNFT = address(NFT);
         NFT = IProfileNFT(_NFT); // Set address of the NFT contract
         emit NewNFT(oldNFT, _NFT);
+    }
+
+    function setAccountImpl(address _acc) external onlyMaster {
+        address oldAcc = address(NFT);
+        accountImplementation = _acc; // Set address of the NFT contract
+        emit NewAccountImpl(oldAcc, _acc);
     }
 
     function setTaxManager(address _taxManager) external onlyMaster {
