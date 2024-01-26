@@ -11,7 +11,7 @@ import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract Nexus is INexus {
     address public master; 
-    address private guardian;
+    address public guardian; // needs to be private
 
     address public tierManager;
     address public taxManager;
@@ -147,7 +147,7 @@ contract Nexus is INexus {
     }
 
     function createProfile(uint32 referrerId, address recipient, string memory profileLink) external onlyGuardian returns (address) {
-        uint32 nftId = NFT.issueProfile(recipient, profileLink); // token URI should be updated
+        uint32 nftId = NFT.issueProfile(recipient, profileLink); 
         require(nftId!= referrerId, "Cannot be its own referrer");
         require(
             referrerId < nftId,  // 0 in case of no referrer

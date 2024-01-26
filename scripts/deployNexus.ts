@@ -2,6 +2,8 @@ import { ethers } from "hardhat";
 
 const registry = ethers.getAddress("0x000000006551c19487814612e58FE06813775758");
 
+const myWallet = ethers.getAddress("0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1");
+
 async function main() {
 
   const nexus = await ethers.deployContract("Nexus", ["0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1", registry]);
@@ -36,12 +38,16 @@ async function main() {
 
   console.log("Account impl set to ", account.target);
 
-  await nexus.setGuardian("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
+  //await nexus.setGuardian("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
+  const guardian = await nexus.setGuardian(myWallet);
+  guardian.wait();
 
   console.log("Guardian set to ", await nexus.getGuardian());
 
-  await nexus.setMaster("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
+  //await nexus.setMaster("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
+  const master = await nexus.setMaster(myWallet);
 
+  master.wait();
   console.log("Master set to ", await nexus.master());
 
 }
