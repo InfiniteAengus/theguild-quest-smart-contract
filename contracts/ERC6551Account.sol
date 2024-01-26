@@ -46,7 +46,7 @@ contract ReferralHandlerERC6551Account is
     address[] public fourthLevelRefs;
 
 
-    INexus nexus = INexus(0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1);
+    INexus public nexus;
 
 
     // bad practice of repeated tiers storing, expensive tier updates
@@ -80,7 +80,7 @@ contract ReferralHandlerERC6551Account is
     }
 
     modifier onlyRewarder() {
-        require(msg.sender == nexus.rewarder());
+        require(msg.sender == nexus.rewarder(), "only rewarder");
         _;
     }
 
@@ -88,10 +88,9 @@ contract ReferralHandlerERC6551Account is
         nexus = INexus(_nexus);
     }
 
-    function initialize(address _referredBy) public onlyNexus{
+    function initialize(address _referredBy) external {
         require(!initialized, "Already initialized");
         initialized = true;
-        nexus = INexus(msg.sender);
         referredBy = _referredBy;
         mintTime = block.timestamp;
         tier = 1; // Default tier is 1 instead of 0, since solidity 0 can also mean non-existant, all tiers on contract are + 1
