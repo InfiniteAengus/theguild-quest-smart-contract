@@ -8,12 +8,12 @@ contract TierManager {
     using SafeERC20 for IERC20;
 
     struct TierParamaters {
-        uint256 stakedTokens;
-        uint256 stakedDuration;
-        uint256 tierZero;
-        uint256 tierOne;
-        uint256 tierTwo;
-        uint256 tierThree;
+        uint256 xpPoints;
+        // change naming
+        uint256 novicesReferred;
+        uint256 adeptsReferred;
+        uint256 mastersReferred;
+        uint256 godsReferred;
     }
 
     address public admin;
@@ -31,10 +31,6 @@ contract TierManager {
         admin = msg.sender;
     }
 
-    // function setStakingAggregator(address oracle) public onlyAdmin {
-    //     stakingPool = IStakingPoolAggregator(oracle);
-    // }
-
     function scaleUpTokens(uint256 amount) public pure returns (uint256) {
         uint256 scalingFactor = 10 ** 18;
         return amount * scalingFactor;
@@ -45,56 +41,32 @@ contract TierManager {
     }
 
     function setConditions(
-        uint256 tier,
-        uint256 stakedTokens,
-        uint256 stakedDurationInDays,
-        uint256 tierZero,
-        uint256 tierOne,
-        uint256 tierTwo,
-        uint256 tierThree
+        uint8 tier,
+        uint256 xpPoints,
+        uint256 novicesReferred,
+        uint256 adeptsReferred,
+        uint256 mastersReferred,
+        uint256 godsReferred
     ) public onlyAdmin {
-        levelUpConditions[tier].stakedTokens = stakedTokens;
-        levelUpConditions[tier].stakedDuration = stakedDurationInDays;
-        levelUpConditions[tier].tierZero = tierZero;
-        levelUpConditions[tier].tierOne = tierOne;
-        levelUpConditions[tier].tierTwo = tierTwo;
-        levelUpConditions[tier].tierThree = tierThree;
+        levelUpConditions[tier].novicesReferred = novicesReferred;
+        levelUpConditions[tier].adeptsReferred = adeptsReferred;
+        levelUpConditions[tier].mastersReferred = mastersReferred;
+        levelUpConditions[tier].godsReferred = godsReferred;
     }
 
     function validateUserTier(
-        address owner,
         uint256 tier,
-        uint256[5] memory tierCounts
+        uint8[5] memory tierCounts
     ) public view returns (bool) {
         // Check if user has valid requirements for the tier, if it returns true it means they have the requirement for the tier sent as parameter
-
-        // if (
-        //     !isMinimumStaked(
-        //         owner,
-        //         levelUpConditions[tier].stakedTokens,
-        //         levelUpConditions[tier].stakedDuration
-        //     )
-        // ) return false;
-        address _owner = owner;
-        if (tierCounts[0] < levelUpConditions[tier].tierZero) return false;
-        if (tierCounts[1] < levelUpConditions[tier].tierOne) return false;
-        if (tierCounts[2] < levelUpConditions[tier].tierTwo) return false;
-        if (tierCounts[3] < levelUpConditions[tier].tierThree) return false;
+        
+        // todo: update
+        if (tierCounts[0] < levelUpConditions[tier].novicesReferred) return false;
+        if (tierCounts[1] < levelUpConditions[tier].adeptsReferred) return false;
+        if (tierCounts[2] < levelUpConditions[tier].mastersReferred) return false;
+        if (tierCounts[3] < levelUpConditions[tier].godsReferred) return false;
         return true;
     }
-
-    // function isMinimumStaked(
-    //     address user,
-    //     uint256 stakedAmount,
-    //     uint256 stakedDuration
-    // ) internal view returns (bool) {
-    //     return
-    //         stakingPool.checkForStakedRequirements(
-    //             user,
-    //             stakedAmount,
-    //             stakedDuration
-    //         );
-    // }
 
     function setTokenURI(
         uint256 tier,
@@ -107,27 +79,14 @@ contract TierManager {
         return tokenURI[tier];
     }
 
-    function setTransferLimit(
-        uint256 tier,
-        uint256 limitPercent
-    ) public onlyAdmin {
-        require(limitPercent <= 100, "Limit cannot be above 100");
-        transferLimits[tier] = limitPercent;
-    }
-
-    function getTransferLimit(uint256 tier) public view returns (uint256) {
-        return transferLimits[tier];
-    }
-
     function checkTierUpgrade(
-        uint256[5] memory tierCounts
+        uint8[5] memory tierCounts
     ) public view returns (bool) {
-        address owner = IReferralHandler(msg.sender).ownedBy();
-        uint256 newTier = IReferralHandler(msg.sender).getTier() + 1;
-        return validateUserTier(owner, newTier, tierCounts); // If it returns true it means user is eligible for an upgrade in tier
+        uint8 newTier = IReferralHandler(msg.sender).getTier() + 1;
+        return validateUserTier(newTier, tierCounts); // If it returns true it means user is eligible for an upgrade in tier
     }
 
-// needs to be deleted 
+// needs to be updated 
     function recoverTokens(address token, address benefactor) public onlyAdmin {
         uint256 tokenBalance = IERC20(token).balanceOf(address(this));
         IERC20(token).transfer(benefactor, tokenBalance);
