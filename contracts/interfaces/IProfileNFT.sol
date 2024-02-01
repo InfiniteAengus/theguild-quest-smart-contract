@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: Unlicense
+//SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.20;
 
 interface IProfileNFT {
