@@ -38,14 +38,14 @@ async function main() {
 
   console.log("Account impl set to ", account.target);
 
-  //await nexus.setGuardian("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
-  const guardian = await nexus.setGuardian(myWallet);
-  guardian.wait();
+  const guardian = await nexus.setGuardian("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
+  //const guardian = await nexus.setGuardian(myWallet);
+  guardian.wait(2);
 
-  console.log("Guardian set to ", await nexus.getGuardian());
+  console.log("Guardian set to ", await nexus.guardian());
 
-  //await nexus.setMaster("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
-  const master = await nexus.setMaster(myWallet);
+  const master = await nexus.setMaster("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
+  //const master = await nexus.setMaster(myWallet);
 
   master.wait();
   console.log("Master set to ", await nexus.master());
