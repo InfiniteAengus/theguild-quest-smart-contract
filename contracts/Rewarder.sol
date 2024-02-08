@@ -55,7 +55,7 @@ contract Rewarder {
         );
         
         uint256 solverReward = rewardValue - tax;
-        (bool success, bytes memory data) = payable(solver).call{value: solverReward }("");
+        (bool success, ) = payable(solver).call{value: solverReward }("");
         require(success, "Solver reward pay error;");
         emit RewardNativeClaimed(solverHandler, escrow, solverReward);
     }
@@ -158,7 +158,7 @@ contract Rewarder {
         for(uint8 i =0; i<5 ; ++i){
             uint256 reward = rewards[i];
             rewards[i]=0;
-            (bool success, bytes memory data) = payable(referrals[i]).call{value: reward}("");
+            (bool success,) = payable(referrals[i]).call{value: reward}("");
             require(success, "Referral rewards pay error;");
         }
         // // Reward Allocation
@@ -168,7 +168,7 @@ contract Rewarder {
         // Dev Allocation & // Revenue Allocation
         {
             address revenuePool = taxManager.getRevenuePool();
-            (bool success, bytes memory data) = payable(revenuePool).call{value: leftTax}("");
+            (bool success,) = payable(revenuePool).call{value: leftTax}("");
             require(success, "Revenue pool pay error;");
         }
     }
@@ -178,7 +178,7 @@ contract Rewarder {
         address benefactor
     ) public onlySteward {
         if(_token == address(0)){
-            (bool sent, bytes memory data) = payable(benefactor).call{value: address(this).balance}("");
+            (bool sent,) = payable(benefactor).call{value: address(this).balance}("");
             require(sent, "Send error");
             return;
         }

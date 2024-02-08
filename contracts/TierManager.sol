@@ -17,7 +17,7 @@ contract TierManager {
     }
 
     address public admin;
-    mapping(uint256 => TierParamaters) public levelUpConditions;
+    mapping(uint256 => TierParamaters) public tierUpConditions;
     mapping(uint256 => uint256) public transferLimits;
     mapping(uint256 => string) public tokenURI;
 
@@ -48,10 +48,11 @@ contract TierManager {
         uint256 mastersReferred,
         uint256 godsReferred
     ) public onlyAdmin {
-        levelUpConditions[tier].novicesReferred = novicesReferred;
-        levelUpConditions[tier].adeptsReferred = adeptsReferred;
-        levelUpConditions[tier].mastersReferred = mastersReferred;
-        levelUpConditions[tier].godsReferred = godsReferred;
+        tierUpConditions[tier].novicesReferred = novicesReferred;
+        tierUpConditions[tier].adeptsReferred = adeptsReferred;
+        tierUpConditions[tier].mastersReferred = mastersReferred;
+        tierUpConditions[tier].godsReferred = godsReferred;
+        tierUpConditions[tier].xpPoints = xpPoints;
     }
 
     function validateUserTier(
@@ -61,10 +62,10 @@ contract TierManager {
         // Check if user has valid requirements for the tier, if it returns true it means they have the requirement for the tier sent as parameter
         
         // todo: update
-        if (tierCounts[0] < levelUpConditions[tier].novicesReferred) return false;
-        if (tierCounts[1] < levelUpConditions[tier].adeptsReferred) return false;
-        if (tierCounts[2] < levelUpConditions[tier].mastersReferred) return false;
-        if (tierCounts[3] < levelUpConditions[tier].godsReferred) return false;
+        if (tierCounts[0] < tierUpConditions[tier].novicesReferred) return false;
+        if (tierCounts[1] < tierUpConditions[tier].adeptsReferred) return false;
+        if (tierCounts[2] < tierUpConditions[tier].mastersReferred) return false;
+        if (tierCounts[3] < tierUpConditions[tier].godsReferred) return false;
         return true;
     }
 
