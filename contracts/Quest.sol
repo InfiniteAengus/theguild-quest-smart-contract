@@ -21,17 +21,17 @@ contract Quest is IQuest {
     bool public finished = false;
     bool public rewarded = false;
 
-    ITavern private Tavern;
     address public escrowImplemntation; // native or with token
-
     uint32 public solverId;
     uint32 public seekerId;
-    IEscrow private escrow;
-    uint256 public paymentAmount;
-    string public infoURI;
-    uint256 public rewardTime = 0;
     address public magistrate;
-
+    string public infoURI;
+    uint256 public paymentAmount;
+    uint256 public rewardTime = 0;
+    
+    ITavern private Tavern;
+    IEscrow private escrow;
+    
     modifier onlySeeker() {
         require(Tavern.ownerOf(seekerId) == msg.sender, "only Seeker");
         _;
@@ -47,22 +47,14 @@ contract Quest is IQuest {
         _;
     }
 
-    modifier onlyTavern() {
-        require(msg.sender == address(Tavern), "only tavern");
-        _;
-    }
-
-    constructor(address _tavern) {
-        Tavern = ITavern(_tavern);
-    }
-
     function initialize(
         uint32 _solverNftId,
         uint32 _seekerNftId,
         uint256 _paymentAmount,
         string memory _infoURI,
         address _escrowImplemntation
-    ) external onlyTavern returns (bool) {
+    ) external returns (bool) {
+        Tavern = ITavern(msg.sender);
         require(!initialized);
         initialized = true;
         solverId = _solverNftId;

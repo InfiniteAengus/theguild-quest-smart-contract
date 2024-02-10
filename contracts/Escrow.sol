@@ -24,9 +24,6 @@ contract EscrowNative is IEscrow {
     _;
   }
 
-  constructor () {
-  }
-
   function initialize() external payable {   
     require(!initialized);
     initialized = true;
