@@ -40,8 +40,8 @@ contract GuildXp is ERC20, Ownable, ERC20Permit{
     }
 
     /**
-     * @notice Burns tokens
-     * @dev only callable by the owner
+     * @notice Burns tokens function
+     * @dev only callable by the owner 
      * @param from The address from which the tokens get burned
      */
     function burn(address from, uint256 amount) public onlyOwner {
