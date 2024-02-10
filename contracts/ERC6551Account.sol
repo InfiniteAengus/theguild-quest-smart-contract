@@ -29,8 +29,14 @@ contract ReferralHandlerERC6551Account is
     uint256 private _state;
 
     receive() external payable {}
-
+    
+    //
+    //
     // Hanlder part
+    //
+    //
+    //
+    //
 
     //using SafeERC20 for IERC20;
 
@@ -69,21 +75,8 @@ contract ReferralHandlerERC6551Account is
         _;
     }
 
-
-// not used
-    modifier onlyOwner() {
-        require(msg.sender == ownedBy(), "only profile owner");
-        _;
-    }
-
     modifier onlyNexus() {
         require(msg.sender == address(nexus), "only nexus");
-        _;
-    }
-
-// used in 1 function that is not used
-    modifier onlyRewarder() {
-        require(msg.sender == nexus.rewarder(), "only rewarder");
         _;
     }
 
@@ -97,62 +90,52 @@ contract ReferralHandlerERC6551Account is
         canLevel = true;
     }
 
+    /**
+     * @dev Can be called by anyone
+     */
+    function tierUp() external returns (bool) {
+        require(getTier() < 4 && canLevel == true, "Can't increase the tier");
+        require(
+            getTierManager().checkTierUpgrade(getTierCounts()),
+            "Tier upgrade condition not met"
+        );
+        uint8 oldTier = getTier();
+        tier = tier + 1;
+        nexus.notifyTierUpdate(oldTier, getTier());
+        updateReferrersAbove(tier);
+        string memory tokenURI = getTierManager().getTokenURI(getTier());
+        IProfileNFT NFT = IProfileNFT(getNft());
+        uint32 nftId = getNftId();
+        NFT.changeURI(nftId, tokenURI);
+        
+        return true;
+    }
+
+    //
+    //Admin functions
+    //
+
     function setNexus(address account) public onlyMaster {
         nexus = INexus(account);
     }
 
-    /**
-     * Returns the Owner of the NFT coupled with this handler
-     */
-    function ownedBy() public view returns (address) {
-        (, address nft, uint256 nftId) = token();
-        IProfileNFT NFT = IProfileNFT(nft);
-        return NFT.ownerOf(nftId);
-    }
-
-    function getNftId() public view returns (uint32) {
-        (, , uint256 nftId) = token();
-        return uint32(nftId);
-    }
-
-    function getTier() public view returns (uint8) {
-        return tier - 1;
-    }
-
-    function getTierManager() public view returns (ITierManager) {
-        address tierManager = nexus.tierManager();
-        return ITierManager(tierManager);
-    }
-
-    function getTaxManager() public view returns (ITaxManager) {
-        address taxManager = nexus.taxManager();
-        return ITaxManager(taxManager);
+    function setTier(uint8 _tier) public onlyProtocol {
+        require(_tier >= 0 && _tier <= 4, "Invalid Tier");
+        uint8 oldTier = getTier(); // For events
+        tier = _tier + 1; // Adding the default +1 offset stored in handlers
+        updateReferrersAbove(tier);
+        string memory tokenURI = getTierManager().getTokenURI(getTier());
+        IProfileNFT NFT = IProfileNFT(getNft());
+        uint32 nftId = getNftId();
+        NFT.changeURI(nftId, tokenURI);
+        nexus.notifyTierUpdate(oldTier, getTier());
     }
 
     function changeEligibility(bool status) public onlyMaster {
         canLevel = status;
     }
 
-    function checkReferralExistence(
-        uint8 refDepth,
-        address referralHandler
-    ) public view returns (uint8 _tier) {
-        // Checks for existence for the given address in the given depth of the tree
-        // Returns 0 if it does not exist, else returns the NFT tier
-        require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
-        require(referralHandler != address(0), "Invalid referred address");
-
-        if (refDepth == 1) {
-            return firstLevelTiers[referralHandler];
-        } else if (refDepth == 2) {
-            return secondLevelTiers[referralHandler];
-        } else if (refDepth == 3) {
-            return thirdLevelTiers[referralHandler];
-        } else if (refDepth == 4) {
-            return fourthLevelTiers[referralHandler];
-        }
-        return 0;
-    }
+    // Internal/Utility functions
 
     function updateReferrersAbove(uint8 _tier) internal {
         address firstRef = referredBy;
@@ -176,16 +159,17 @@ contract ReferralHandlerERC6551Account is
     }
 
     /**
-     *
+     * @notice Adds new Handler to the Referral Tree
      * @param refDepth Number of layers between the referral and referee
      * @param referralHandler Address of the handler of referred person(referral)
      * @param _tier Tier of the referral Nft
+     * @dev Can be called only by Nexus
      */
     function addToReferralTree(
         uint8 refDepth,
         address referralHandler,
         uint8 _tier
-    ) public onlyNexus {
+    ) external onlyNexus {
         require(refDepth <= 4 && refDepth >= 0, "Invalid depth");
         require(referralHandler != address(0), "Invalid referral address");
 
@@ -236,9 +220,60 @@ contract ReferralHandlerERC6551Account is
         }
     }
 
+    // Get Methods
+
+    function getNft() public view returns (address) {
+        (, address nftAddr, ) = token();
+        return nftAddr;
+    }
+
+    function getNftId() public view returns (uint32) {
+        (, , uint256 nftId) = token();
+        return uint32(nftId);
+    }
+
+    function getTier() public view returns (uint8) {
+        return tier - 1;
+    }
+
+    function getTierManager() public view returns (ITierManager) {
+        address tierManager = nexus.tierManager();
+        return ITierManager(tierManager);
+    }
+
+    function getTaxManager() public view returns (ITaxManager) {
+        address taxManager = nexus.taxManager();
+        return ITaxManager(taxManager);
+    }
+
+    /**
+     * @notice Checks for existence of the given address on the given depth of the tree
+     * @param refDepth A layer of the referral connection
+     * @param referralHandler Address of the Handler Account of referral
+     * @return _tier Returns 0 if it does not exist, else returns the NFT tier
+     */
+    function checkReferralExistence(
+        uint8 refDepth,
+        address referralHandler
+    ) public view returns (uint8 _tier) {
+        require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
+        require(referralHandler != address(0), "Invalid referred address");
+
+        if (refDepth == 1) {
+            return firstLevelTiers[referralHandler];
+        } else if (refDepth == 2) {
+            return secondLevelTiers[referralHandler];
+        } else if (refDepth == 3) {
+            return thirdLevelTiers[referralHandler];
+        } else if (refDepth == 4) {
+            return fourthLevelTiers[referralHandler];
+        }
+        return 0;
+    }
+
     /**
      * @notice Returns number of referrals for each tier
-     * @dev Returns array of counts for Tiers 1 to 5 under the user
+     * @return Returns array of counts for Tiers 1 to 5 under the user
      */
     function getTierCounts() public view returns (uint32[5] memory) {
         uint32[5] memory tierCounts; // Tiers can be 0 to 4 (Stored 1 to 5 in Handlers)
@@ -265,51 +300,14 @@ contract ReferralHandlerERC6551Account is
         return tierCounts;
     }
 
-    function setTier(uint8 _tier) public onlyProtocol {
-        require(_tier >= 0 && _tier <= 4, "Invalid Tier");
-        uint8 oldTier = getTier(); // For events
-        tier = _tier + 1; // Adding the default +1 offset stored in handlers
-        updateReferrersAbove(tier);
-        string memory tokenURI = getTierManager().getTokenURI(getTier());
-        IProfileNFT NFT = IProfileNFT(getNft());
-        uint32 nftId = getNftId();
-        NFT.changeURI(nftId, tokenURI);
-        nexus.notifyTierUpdate(oldTier, getTier());
-    }
 
-    function tierUp() external returns (bool) {
-        // not used anywhere, changed to external
-        require(getTier() < 4 && canLevel == true, "Can't increase the tier");
-        require(
-            getTierManager().checkTierUpgrade(getTierCounts()),
-            "Tier upgrade condition not met"
-        );
-        uint8 oldTier = getTier(); // For events
-        tier = tier + 1;
-        updateReferrersAbove(tier);
-        string memory tokenURI = getTierManager().getTokenURI(getTier());
-        IProfileNFT NFT = IProfileNFT(getNft());
-        uint32 nftId = getNftId();
-        NFT.changeURI(nftId, tokenURI);
-        nexus.notifyTierUpdate(oldTier, getTier());
-        return true;
-    }
-
-// not used
-    function notifyNexus(
-        uint256 reward,
-        uint256 timestamp
-    ) external onlyRewarder {
-        // no need in timestamp
-        nexus.notifySelfTaxClaimed(reward, timestamp);
-    }
-
-    function getNft() public view returns (address) {
-        (, address nftAddr, ) = token();
-        return nftAddr;
-    }
-
+    //
+    //
+    //
     // ERC6551 part
+    //
+    //
+    //
 
     function execute(
         address to,

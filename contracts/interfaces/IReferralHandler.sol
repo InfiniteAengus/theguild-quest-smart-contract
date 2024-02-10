@@ -10,9 +10,8 @@ interface IReferralHandler {
     function getNftId() external view returns (uint32 nftId);
     function getNft() external view returns (address nftContract);
     function referredBy() external view returns (address referrerHandler);
-    function ownedBy() external view returns (address owner);
+    function owner() external view returns (address owner);
     function getTier() external view returns (uint8 _tier);
     function updateReferralTree(uint8 refDepth, uint8 _tier) external;
     function addToReferralTree(uint8 refDepth, address referralHandler , uint8 _tier) external;
-    function notifyNexus(uint256 reward, uint256 timestamp) external;
 }
