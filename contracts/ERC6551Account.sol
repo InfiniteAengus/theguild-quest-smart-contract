@@ -7,15 +7,16 @@ import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import "./interfaces/IERC6551/IERC6551Account.sol";
 import "./interfaces/IERC6551/IER6551Executable.sol";
+
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/IProfileNFT.sol";
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/ITierManager.sol";
 import "./interfaces/ITaxManager.sol";
 import "./interfaces/INexus.sol";
-import "./interfaces/IRewarder.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+//import "./interfaces/IRewarder.sol";
+// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+// import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 
 contract ReferralHandlerERC6551Account is
@@ -31,14 +32,14 @@ contract ReferralHandlerERC6551Account is
 
     // Hanlder part
 
-    using SafeERC20 for IERC20;
+    //using SafeERC20 for IERC20;
 
     bool public initialized = false;
-
-    uint256 public mintTime;
-    address public referredBy; // maybe changed to referredBy address
-    uint8 private tier;
     bool private canLevel;
+    uint8 private tier;
+    address public referredBy; // maybe changed to referredBy address
+    uint256 public mintTime;
+
     // NFT ids of those referred by this NFT and its subordinates
     address[] public firstLevelRefs;
     address[] public secondLevelRefs;
@@ -48,8 +49,7 @@ contract ReferralHandlerERC6551Account is
 
     INexus public nexus;
 
-
-    // bad practice of repeated tiers storing, expensive tier updates
+    // todo: bad practice of repeated tiers storing, expensive tier updates
     // Mapping of the above Handler list and their corresponding NFT tiers, tiers are public (tier + 1)
     mapping(address => uint8) public firstLevelTiers;
     mapping(address => uint8) public secondLevelTiers;
@@ -69,6 +69,8 @@ contract ReferralHandlerERC6551Account is
         _;
     }
 
+
+// not used
     modifier onlyOwner() {
         require(msg.sender == ownedBy(), "only profile owner");
         _;
@@ -79,17 +81,15 @@ contract ReferralHandlerERC6551Account is
         _;
     }
 
+// used in 1 function that is not used
     modifier onlyRewarder() {
         require(msg.sender == nexus.rewarder(), "only rewarder");
         _;
     }
 
-    constructor(address _nexus) {
-        nexus = INexus(_nexus);
-    }
-
     function initialize(address _referredBy) external {
         require(!initialized, "Already initialized");
+        nexus = INexus(msg.sender);
         initialized = true;
         referredBy = _referredBy;
         mintTime = block.timestamp;
@@ -295,6 +295,7 @@ contract ReferralHandlerERC6551Account is
         return true;
     }
 
+// not used
     function notifyNexus(
         uint256 reward,
         uint256 timestamp
