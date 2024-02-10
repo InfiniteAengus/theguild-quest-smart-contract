@@ -36,12 +36,23 @@ contract Tavern is AccessControl, ITavern {
         _;
     }
 
-    event QuestCreated(
+    // quests with paymants in native token
+    event QuestCreatedNative(
         uint32 solverId,
         uint32 seekerId,
         address quest,
         address escrowImplementation,
         uint256 paymentAmount
+    );
+    
+    // quests with token payments
+    event QuestCreatedToken(
+        uint32 solverId,
+        uint32 seekerId,
+        address quest,
+        address escrowImplementation,
+        uint256 paymentAmount,
+        address token
     );
 
     constructor(
@@ -57,20 +68,24 @@ contract Tavern is AccessControl, ITavern {
         nFT = IProfileNFT(_profileNft);
     }
 
+    /**
+     * @notice Function to create quests with Native token payments
+     * @param _solverId Nft id of the solver of the quest
+     * @param _seekerId Nft id of the seeker of the quest
+     * @param _paymentAmount Amount of Native tokens to be paid
+     * @param infoURI Link to the info a bout quest (flexible, decide with backend)
+     */
     function createNewQuest(
         // user identificators
         uint32 _solverId,
         uint32 _seekerId,
         uint256 _paymentAmount,
-        string memory infoURI,
-        bool withTokens
+        string memory infoURI
     ) external payable onlyBarkeeper {
         IQuest quest = IQuest(Clones.clone(questImplementation));
-        address escrowImpl;
-        if (withTokens){
-            escrowImpl = escrowTokenImplementation;
-        }
-        else { escrowImpl = escrowNativeImplementation;}
+        address escrowImpl = escrowNativeImplementation;
+   
+        emit QuestCreatedNative(_seekerId, _solverId, address(quest), escrowImpl, _paymentAmount);
 
         quest.initialize(
             _solverId,
@@ -79,8 +94,41 @@ contract Tavern is AccessControl, ITavern {
             infoURI,
             escrowImpl
         );
-        emit QuestCreated(_seekerId, _solverId, address(quest), escrowImpl, _paymentAmount);
+        
     }
+
+    /**
+     * @notice Function to create quests with ERC20 token payments
+     * @param _solverId Nft id of the solver of the quest
+     * @param _seekerId Nft id of the seeker of the quest
+     * @param _paymentAmount Amount of Native tokens to be paid
+     * @param infoURI Link to the info a bout quest (flexible, decide with backend)
+     * @param _token Address of the paymant token
+     */
+    function createNewQuest(
+        // user identificators
+        uint32 _solverId,
+        uint32 _seekerId,
+        uint256 _paymentAmount,
+        string memory infoURI,
+        address _token
+    ) external payable onlyBarkeeper {
+        IQuest quest = IQuest(Clones.clone(questImplementation));
+        address escrowImpl = escrowTokenImplementation;
+
+        emit QuestCreatedToken(_seekerId, _solverId, address(quest), escrowImpl, _paymentAmount, _token);
+
+        quest.initialize(
+            _solverId,
+            _seekerId,
+            _paymentAmount,
+            infoURI,
+            escrowImpl
+        );
+        
+    }
+       
+       
 
     function confirmNFTOwnership(
         address identity
