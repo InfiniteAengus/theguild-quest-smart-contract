@@ -36,7 +36,7 @@ contract Nexus is INexus {
     event NewTaxManager(address oldTaxManager, address newTaxManager);
     event NewTierManager(address oldTierManager, address newTierManager);
 
-    event NewIssuance(uint32 id, address account);
+    event NewProfileIssuance(uint32 id, address account);
     event LevelChange(address handler, uint8 oldTier, uint8 newTier);
 
     event SelfTaxClaimed(
@@ -159,10 +159,13 @@ contract Nexus is INexus {
         handlerStorage[handlerAd] = true;
 
         address referrerHandler = NFTToHandler[referrerId];
-        IReferralHandler Handler = IReferralHandler(handlerAd);
-        Handler.initialize(referrerHandler);
+        require(referrerHandler != address(0), "Handler can't be 0 address!");
         addToReferrersAbove(1, handlerAd);
-        emit NewIssuance(nftId, handlerAd);
+        IReferralHandler Handler = IReferralHandler(handlerAd);
+        emit NewProfileIssuance(nftId, handlerAd);
+
+        Handler.initialize(referrerHandler);
+       
         return handlerAd;
     }
 
