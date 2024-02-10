@@ -36,12 +36,12 @@ contract EscrowNative is IEscrow {
     Rewarder.handleRewardNative{value: address(this).balance}(solverId);
   }
   
-  // for disputes
-  function proccessResolution(uint32 seekerId, uint32 solverId, uint8 seekerShare, uint8 solverShare) external onlyQuest{
-    //(bool sentSeeker, bytes memory data) = payable(seeker).call{value: (paymentAmount * seekerShare) / 100}("");
-    //require(sentSeeker, "Failed to send Ether");
-    //(bool sentSolver, bytes memory datas) = payable(solver).call{value: (paymentAmount * solverShare) / 100}(""); // change to flexible % 
-    //require(sentSolver, "Failed to send Ether");
+  /**
+   * @notice Proccess the dispute resolution
+   */
+  function proccessResolution(uint32 seekerId, uint32 solverId, uint8 solverShare, address rewarder) external onlyQuest {
+    IRewarder Rewarder  = IRewarder(rewarder);
+    Rewarder.proccessResolutionNative{value: address(this).balance}(seekerId, solverId, solverShare);
   }
 
 }

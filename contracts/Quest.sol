@@ -83,14 +83,13 @@ contract Quest is IQuest {
     }
 
     function resolveDispute(
-        uint8 seekerShare,
         uint8 solverShare
     ) external onlyMagistrate {
         require(beingDisputed, "Dispute not started");
         require(!rewarded, "Rewarded before");
-        require(seekerShare + solverShare == 100, "Shares should sum to 100");
+        require(solverShare <= 100, "Share can't be more than 100");
         rewarded = true;
-        escrow.proccessResolution(seekerId, solverId, seekerShare, solverShare);
+        escrow.proccessResolution(seekerId, solverId, solverShare, getRewarder());
     }
 
     function finishQuest() external onlySolver {
