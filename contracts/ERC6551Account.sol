@@ -18,7 +18,12 @@ import "./interfaces/INexus.sol";
 // import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-
+/**
+ * @title The Guild User Account 
+ * @author @cosmodude
+ * @notice Erc6551 Account + Referral Handler
+ * @dev Implementation contract, instances are created as clones
+ */
 contract ReferralHandlerERC6551Account is
     IERC165,
     IERC1271,

@@ -68,14 +68,14 @@ contract Rewarder is IRewarder {
      * @param token Address of the payment token contract
      * @param amount Amount of the payment in token (with decimals)
      */
-     function handleRewardToken(
+    function handleRewardToken(
         address token,
         uint32 solverId,
         uint256 amount
     ) external override {}
 
     /**
-     * 
+     *
      * @param seekerId Nft Id of the quest seeker
      * @param solverId Nft Id of the quest solver
      * @param solverShare % of the reward allocated to solver
@@ -85,6 +85,13 @@ contract Rewarder is IRewarder {
         uint32 solverId,
         uint8 solverShare
     ) external payable override {}
+
+    function proccessResolutionToken(
+        uint32 seekerId,
+        uint32 solverId,
+        uint8 solverShare,
+        address token
+    ) external override {}
 
     // function handleSolverTax(
     //     address handler,
@@ -123,7 +130,7 @@ contract Rewarder is IRewarder {
         ITaxManager taxManager = getTaxManager();
         address[5] memory referrals; // Used to store above referrals, saving variable space
         uint256[5] memory rewards;
-        // Block Scoping to reduce local Variables spillage
+        
 
         uint256 leftTax = taxValue;
 
@@ -183,6 +190,7 @@ contract Rewarder is IRewarder {
                 }
             }
         }
+
         // Pay out the Refferal rewards
         for (uint8 i = 0; i < 5; ++i) {
             uint256 reward = rewards[i];
@@ -190,7 +198,6 @@ contract Rewarder is IRewarder {
             (bool success, ) = payable(referrals[i]).call{value: reward}("");
             require(success, "Referral rewards pay error;");
         }
-        // // Reward Allocation
         // {
         //     uint256 rewardTaxRate = taxManager.getRewardPoolRate();
         // }
@@ -216,5 +223,6 @@ contract Rewarder is IRewarder {
         uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
         IERC20(_token).transfer(benefactor, tokenBalance);
     }
+
 
 }
