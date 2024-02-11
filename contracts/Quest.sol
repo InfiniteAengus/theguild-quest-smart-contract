@@ -24,7 +24,7 @@ contract Quest is IQuest {
     address public escrowImplemntation; // native or with token
     uint32 public solverId;
     uint32 public seekerId;
-    address public magistrate;
+    address public mediator;
     string public infoURI;
     uint256 public paymentAmount;
     uint256 public rewardTime = 0;
@@ -42,8 +42,8 @@ contract Quest is IQuest {
         _;
     }
 
-    modifier onlyMagistrate() {
-        require(msg.sender == magistrate, "only magistrate");
+    modifier onlyMediator() {
+        require(msg.sender == mediator, "only mediator");
         _;
     }
 
@@ -79,12 +79,12 @@ contract Quest is IQuest {
         require(started, "quest not started");
         require(!beingDisputed, "Dispute started before");
         beingDisputed = true;
-        //magistrate = Tavern.magistrate();
+        //mediator = Tavern.mediator();
     }
 
     function resolveDispute(
         uint8 solverShare
-    ) external onlyMagistrate {
+    ) external onlyMediator {
         require(beingDisputed, "Dispute not started");
         require(!rewarded, "Rewarded before");
         require(solverShare <= 100, "Share can't be more than 100");

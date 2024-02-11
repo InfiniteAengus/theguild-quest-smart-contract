@@ -22,7 +22,7 @@ contract Tavern is AccessControl, ITavern {
     address public seekerFeesTreasury;
     address public solverFeesTreasury;
     address public disputeFeesTreasury;
-    address public counselor; //mediator
+    address public mediator; 
     uint256 public reviewPeriod = 1;
     IProfileNFT private nFT;
 
@@ -171,8 +171,8 @@ contract Tavern is AccessControl, ITavern {
         disputeFeesTreasury = treasury;
     }
 
-    function setCounselor(address _counselor) external onlyOwner {
-        counselor = _counselor;
+    function setMediator(address _mediator) external onlyOwner {
+        mediator = _mediator;
     }
 
     function setReviewPeriod(uint256 period) external onlyOwner {
