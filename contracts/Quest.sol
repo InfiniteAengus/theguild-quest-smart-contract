@@ -8,6 +8,7 @@ import { ITavern } from "./interfaces/Quests/ITavern.sol";
 /**
  * @title Quest Implementation
  * @notice Controls the quest flow
+ * @author @cosmodude
  * @dev Implementation contract, instances are created as ERC1167 clones 
  */
 
@@ -20,9 +21,11 @@ contract Quest is IQuest {
     bool public beingDisputed = false;
     bool public finished = false;
     bool public rewarded = false;
+    bool public withToken;
 
     address public escrowImplemntation; // native or with token
     uint32 public solverId;
+    address public token;
     uint32 public seekerId;
     address public mediator;
     string public infoURI;
@@ -52,7 +55,8 @@ contract Quest is IQuest {
         uint32 _seekerNftId,
         uint256 _paymentAmount,
         string memory _infoURI,
-        address _escrowImplemntation
+        address _escrowImplementation,
+        address _token
     ) external returns (bool) {
         Tavern = ITavern(msg.sender);
         require(!initialized);
@@ -61,19 +65,22 @@ contract Quest is IQuest {
         seekerId = _seekerNftId;
         paymentAmount = _paymentAmount;
         infoURI = _infoURI;
-        escrowImplemntation = _escrowImplemntation;
+        escrowImplemntation = _escrowImplementation;
+        token = _token;
         return true;
     }
 
     function startQuest() external payable onlySeeker {
         require(initialized, "not initialized");
         require(!started, "already started");
-        require(msg.value >= paymentAmount, "wrong payment amount");
-        escrow = IEscrow(Clones.clone(escrowImplemntation));
-        escrow.initialize{value: msg.value}();
+        if(token == address(0)){
+            require(msg.value >= paymentAmount, "wrong payment amount");
+        }
         started = true;
+        escrow = IEscrow(Clones.clone(escrowImplemntation));
+        escrow.initialize{value: msg.value}(token);
     }
-
+    
     // todo
     function startDispute() external onlySeeker {
         require(started, "quest not started");

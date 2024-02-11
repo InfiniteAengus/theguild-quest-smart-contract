@@ -11,6 +11,7 @@ import { ITavern } from "./interfaces/Quests/ITavern.sol";
 /**
  * @title Quest Factory (Tavern)
  * @notice Deploys Quest Contracts and manages them
+ * @author @cosmodude
  */
 contract Tavern is AccessControl, ITavern {
     address public owner;
@@ -22,7 +23,7 @@ contract Tavern is AccessControl, ITavern {
     address public seekerFeesTreasury;
     address public solverFeesTreasury;
     address public disputeFeesTreasury;
-    address public mediator; 
+    address public mediator; // for disputes
     uint256 public reviewPeriod = 1;
     IProfileNFT private nFT;
 
@@ -92,7 +93,8 @@ contract Tavern is AccessControl, ITavern {
             _seekerId,
             _paymentAmount,
             infoURI,
-            escrowImpl
+            escrowImpl,
+            address(0)
         );
         
     }
@@ -123,13 +125,12 @@ contract Tavern is AccessControl, ITavern {
             _seekerId,
             _paymentAmount,
             infoURI,
-            escrowImpl
+            escrowImpl,
+            _token
         );
         
     }
        
-       
-
     function confirmNFTOwnership(
         address identity
     ) public view returns (bool confirmed) {

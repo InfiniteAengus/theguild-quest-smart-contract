@@ -8,8 +8,9 @@ import { IEscrow } from "./interfaces/Quests/IEscrow.sol";
 import { IRewarder } from "./interfaces/IRewarder.sol";
 
 /**
- * @title Quest Escrow 
+ * @title Quest Escrow for Native Tokens
  * @notice Stores reward for quest
+ * @author @cosmodude
  * @dev Implementation contract, instances are created as clones 
  */
 contract EscrowNative is IEscrow {
@@ -24,8 +25,9 @@ contract EscrowNative is IEscrow {
     _;
   }
 
-  function initialize() external payable {   
+  function initialize(address token) external payable {   
     require(!initialized);
+    require(token == address(0));
     initialized = true;
     quest = msg.sender;
     paymentAmount = msg.value;
