@@ -75,12 +75,16 @@ contract Quest is IQuest {
         require(!started, "already started");
         if(token == address(0)){
             require(msg.value >= paymentAmount, "wrong payment amount");
+            // todo tax logic
+
+        } else {
+           // todo tax logic 
         }
         started = true;
         escrow = IEscrow(Clones.clone(escrowImplemntation));
         escrow.initialize{value: msg.value}(token);
     }
-    
+
     // todo
     function startDispute() external onlySeeker {
         require(started, "quest not started");
