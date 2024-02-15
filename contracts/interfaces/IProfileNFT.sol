@@ -6,7 +6,7 @@ interface IProfileNFT {
     function balanceOf(address owner) external view returns (uint256 balance);
     function getTier(uint256) external view returns(uint256);
     function issueProfile(address user, string memory tokenURI) external returns (uint32 nftId);
-    function changeURI(uint256, string memory) external;
+    function changeURI(uint32 tokenID, string memory tokenURI) external;
     
     /**
      * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
