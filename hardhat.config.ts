@@ -6,7 +6,7 @@ import { load } from 'ts-dotenv';
 const env = load({
   INFURA_API_KEY: String,
   INFURA_SECRET_KEY: String,
-  WALLET_PRIVATE_KEY: String,
+  DEV_WALLET_PRIVATE_KEY: String,
   ETHERSCAN_API_KEY: String
 });
 
@@ -41,7 +41,7 @@ const config: HardhatUserConfig = {
   networks: {
     sepolia: {
       url: `https://sepolia.infura.io/v3/${env.INFURA_API_KEY}`,
-      accounts: [env.WALLET_PRIVATE_KEY]
+      accounts: [env.DEV_WALLET_PRIVATE_KEY]
     },
     // mainnet: {
     //   url: `https://mainnet.infura.io/v3/${env.INFURA_API_KEY}`,
@@ -49,7 +49,7 @@ const config: HardhatUserConfig = {
     // },
     spicy: {
       url: `https://spicy-rpc.chiliz.com/`,
-      accounts: [env.WALLET_PRIVATE_KEY]
+      accounts: [env.DEV_WALLET_PRIVATE_KEY]
     },
     // chiliz: {
     //   url: "https://rpc.ankr.com/chiliz",
@@ -58,7 +58,7 @@ const config: HardhatUserConfig = {
     // },
     fuji: {
       url: "https://api.avax-test.network/ext/bc/C/rpc",
-      accounts: [env.WALLET_PRIVATE_KEY], 
+      accounts: [env.DEV_WALLET_PRIVATE_KEY], 
       chainId: 43113,
       gasPrice: 35000000000,
     },
