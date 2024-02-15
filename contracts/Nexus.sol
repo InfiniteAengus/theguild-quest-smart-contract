@@ -88,7 +88,7 @@ contract Nexus is INexus {
         require(isHandler(msg.sender) == true);
         emit LevelChange(msg.sender, oldTier, newTier);
     }
-// 
+
     function notifySelfTaxClaimed(uint256 amount, uint256 timestamp) external {
         // All the handlers notify the Factory when they claim self tax
         require(isHandler(msg.sender) == true);
@@ -153,19 +153,24 @@ contract Nexus is INexus {
             referrerId < nftId,  // 0 in case of no referrer
             "Referrer should have a valid profile id"
         );
+
         address handlerAd = Registry.createAccount(accountImplementation, 0, block.chainid, address(NFT), nftId);
         NFTToHandler[nftId] = handlerAd;
         HandlerToNFT[handlerAd] = nftId;
         handlerStorage[handlerAd] = true;
 
         address referrerHandler = NFTToHandler[referrerId];
-        require(referrerHandler != address(0), "Handler can't be 0 address!");
-        addToReferrersAbove(1, handlerAd);
+        // NOTE: Added check for referrerId, in the case of no referrers
+        if(referrerId != 0 ){
+            require(referrerHandler != address(0), "Handler can't be 0 address!");
+        }
+
         IReferralHandler Handler = IReferralHandler(handlerAd);
         emit NewProfileIssuance(nftId, handlerAd);
 
         Handler.initialize(referrerHandler);
-       
+        addToReferrersAbove(1, handlerAd); // NOTE - Moved so that the referredBy value is initiated before adding to the tree
+
         return handlerAd;
     }
 
