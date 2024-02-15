@@ -19,7 +19,7 @@ contract TierManager {
     address public admin;
     mapping(uint256 => TierParamaters) public tierUpConditions;
     mapping(uint256 => uint256) public transferLimits;
-    mapping(uint256 => string) public tokenURI;
+    mapping(uint32 => string) public tokenURI;
 
     modifier onlyAdmin() {
         // Change this to a list with ROLE library
@@ -40,9 +40,10 @@ contract TierManager {
         admin = account;
     }
 
+    // @audit - Should probably be set during the constructor as well
     function setConditions(
         uint8 tier,
-        uint256 xpPoints,
+        uint256 xpPoints, // NOTE: XP not used for anything
         uint256 novicesReferred,
         uint256 adeptsReferred,
         uint256 mastersReferred,
@@ -56,8 +57,8 @@ contract TierManager {
     }
 
     function validateUserTier(
-        uint256 tier,
-        uint8[5] memory tierCounts
+        uint8 tier,
+        uint32[5] memory tierCounts
     ) public view returns (bool) {
         // Check if user has valid requirements for the tier, if it returns true it means they have the requirement for the tier sent as parameter
         
@@ -70,18 +71,18 @@ contract TierManager {
     }
 
     function setTokenURI(
-        uint256 tier,
+        uint8 tier,
         string memory _tokenURI
     ) public onlyAdmin {
         tokenURI[tier] = _tokenURI;
     }
 
-    function getTokenURI(uint256 tier) public view returns (string memory) {
+    function getTokenURI(uint8 tier) public view returns (string memory) {
         return tokenURI[tier];
     }
 
     function checkTierUpgrade(
-        uint8[5] memory tierCounts
+        uint32[5] memory tierCounts
     ) public view returns (bool) {
         uint8 newTier = IReferralHandler(msg.sender).getTier() + 1;
         return validateUserTier(newTier, tierCounts); // If it returns true it means user is eligible for an upgrade in tier
