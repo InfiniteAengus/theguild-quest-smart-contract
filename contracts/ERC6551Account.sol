@@ -14,9 +14,6 @@ import "./interfaces/IReferralHandler.sol";
 import "./interfaces/ITierManager.sol";
 import "./interfaces/ITaxManager.sol";
 import "./interfaces/INexus.sol";
-//import "./interfaces/IRewarder.sol";
-// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-// import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title The Guild User Account 
@@ -31,13 +28,13 @@ contract ReferralHandlerERC6551Account is
     IERC6551Executable,
     IReferralHandler
 {
-    uint256 private _state;
+    uint256 private _state; // NOTE: Not really used for anything, should be used to track the account's state
 
     receive() external payable {}
     
     //
     //
-    // Hanlder part
+    // Handler part
     //
     //
     //
@@ -45,7 +42,7 @@ contract ReferralHandlerERC6551Account is
 
     //using SafeERC20 for IERC20;
 
-    bool public initialized = false;
+    bool public initialized;
     bool private canLevel;
     uint8 private tier;
     address public referredBy; // maybe changed to referredBy address
@@ -74,7 +71,7 @@ contract ReferralHandlerERC6551Account is
 
     modifier onlyProtocol() {
         require(
-            msg.sender == nexus.master() || msg.sender == address(nexus),
+            msg.sender == nexus.master() || msg.sender == address(nexus), // NOTE: Unable to test from address nexus, because a function doesn't exist to trigger it.
             "only master or nexus"
         );
         _;
@@ -175,8 +172,8 @@ contract ReferralHandlerERC6551Account is
         address referralHandler,
         uint8 _tier
     ) external onlyNexus {
-        require(refDepth <= 4 && refDepth >= 0, "Invalid depth");
-        require(referralHandler != address(0), "Invalid referral address");
+        require(refDepth <= 4 && refDepth >= 1, "Invalid depth"); // NOTE: Depth is hardcoded in the Nexus, should always be within range
+        require(referralHandler != address(0), "Invalid referral address"); // NOTE: Referral Handler is created with CREATE2 through ERC6551, shouldn't be possible to be address zero, but assert should be used here anyways
 
         if (refDepth == 1) {
             firstLevelRefs.push(referralHandler);
@@ -193,10 +190,12 @@ contract ReferralHandlerERC6551Account is
         }
     }
 
+    // @audit - Users can create multiple accounts, and refer each other with no limits, and update the tiers of their referral trees
+    // @audit - this enables these accounts to be tiered up without any real referrals
     function updateReferralTree(uint8 refDepth, uint8 _tier) external {
         // msg.sender should be the handler reffered by this address
         require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
-        require(msg.sender != address(0), "Invalid referred address");
+        require(msg.sender != address(0), "Invalid referred address"); // NOTE: Very unlikely to happen, and probably better to use assert in this situation
 
         if (refDepth == 1) {
             require(
@@ -273,13 +272,13 @@ contract ReferralHandlerERC6551Account is
         } else if (refDepth == 4) {
             return fourthLevelTiers[referralHandler];
         }
-        return 0;
     }
 
     /**
      * @notice Returns number of referrals for each tier
      * @return Returns array of counts for Tiers 1 to 5 under the user
      */
+    // @audit - can be DOS'ed by having a large number of referrals
     function getTierCounts() public view returns (uint32[5] memory) {
         uint32[5] memory tierCounts; // Tiers can be 0 to 4 (Stored 1 to 5 in Handlers)
         for (uint32 i = 0; i < firstLevelRefs.length; ++i) {
@@ -314,27 +313,34 @@ contract ReferralHandlerERC6551Account is
     //
     //
 
+    event ExecutionResult(bool success, bytes result); // NOTE: Added an event to log the result of the execution
+
+    // NOTE: Probably not the best idea to enable arbitrary execution of code using the call function.
     function execute(
         address to,
         uint256 value,
         bytes calldata data,
-        uint8 operation
+        uint8 operation // serves no purpose since
     ) external payable returns (bytes memory result) {
         require(_isValidSigner(msg.sender), "Invalid signer");
         require(operation == 0, "Only call operations are supported");
-
         ++_state;
 
         bool success;
         (success, result) = to.call{value: value}(data);
+        
+        emit ExecutionResult(success, result);
 
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
             }
         }
+
+        return result;
     }
 
+    
     function isValidSigner(
         address signer,
         bytes calldata
@@ -377,13 +383,13 @@ contract ReferralHandlerERC6551Account is
         assembly {
             extcodecopy(address(), add(footer, 0x20), 0x4d, 0x60)
         }
-
+        
         return abi.decode(footer, (uint256, address, uint256));
     }
 
     function owner() public view returns (address) {
         (uint256 chainId, address tokenContract, uint256 tokenId) = token();
-        if (chainId != block.chainid) return address(0);
+        if (chainId != block.chainid) return address(0); // NOTE: Should not be possible to hit this since block.chainid is determined by the nexus through the blockchain itself
 
         return IERC721(tokenContract).ownerOf(tokenId);
     }
