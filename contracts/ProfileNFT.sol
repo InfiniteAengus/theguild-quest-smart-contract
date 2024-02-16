@@ -95,8 +95,16 @@ contract ProfileNFT is ERC721URIStorage {
     function recoverTokens(
         address _token,
         address benefactor
-    ) public onlyCouncelor {
+    ) external onlyCouncelor {
+        if (_token == address(0)) {
+            (bool sent, ) = payable(benefactor).call{
+                value: address(this).balance
+            }("");
+            require(sent, "Send error");
+            return;
+        }
         uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
         IERC20(_token).transfer(benefactor, tokenBalance);
+        return;
     }
 }

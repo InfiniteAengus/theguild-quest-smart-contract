@@ -44,8 +44,8 @@ contract Rewarder is IRewarder {
         require(escrow.balance == 0, "Escrow not empty");
 
         ITaxManager taxManager = getTaxManager();
-        uint256 protocolTaxRate = taxManager.getProtocolTaxRate();
-        uint256 taxRateDivisor = taxManager.getTaxBaseDivisor();
+        uint256 protocolTaxRate = taxManager.protocolTaxRate();
+        uint256 taxRateDivisor = taxManager.taxBaseDivisor();
 
         uint256 rewardValue = msg.value;
         uint256 tax = (rewardValue * protocolTaxRate) / taxRateDivisor;
@@ -203,7 +203,7 @@ contract Rewarder is IRewarder {
         // }
         // Dev Allocation & // Revenue Allocation
         {
-            address revenuePool = taxManager.getRevenuePool();
+            address revenuePool = taxManager.revenuePool();
             (bool success, ) = payable(revenuePool).call{value: leftTax}("");
             require(success, "Revenue pool pay error;");
         }
@@ -212,7 +212,7 @@ contract Rewarder is IRewarder {
     function recoverTokens(
         address _token,
         address benefactor
-    ) public onlySteward {
+    ) external onlySteward {
         if (_token == address(0)) {
             (bool sent, ) = payable(benefactor).call{
                 value: address(this).balance
@@ -222,7 +222,6 @@ contract Rewarder is IRewarder {
         }
         uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
         IERC20(_token).transfer(benefactor, tokenBalance);
-    }
-
-
+        return;
+    } 
 }

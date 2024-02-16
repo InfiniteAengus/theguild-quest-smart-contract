@@ -97,7 +97,7 @@ contract ReferralHandlerERC6551Account is
     function tierUp() external returns (bool) {
         require(getTier() < 4 && canLevel == true, "Can't increase the tier");
         require(
-            getTierManager().checkTierUpgrade(getTierCounts()),
+            getTierManager().checkTierUpgrade(getTierCounts(), address(this), tier),
             "Tier upgrade condition not met"
         );
         uint8 oldTier = getTier();
@@ -251,7 +251,7 @@ contract ReferralHandlerERC6551Account is
 
     /**
      * @notice Checks for existence of the given address on the given depth of the tree
-     * @param refDepth A layer of the referral connection
+     * @param refDepth A layer of the referral connection (from 1 to 4)
      * @param referralHandler Address of the Handler Account of referral
      * @return _tier Returns 0 if it does not exist, else returns the NFT tier
      */

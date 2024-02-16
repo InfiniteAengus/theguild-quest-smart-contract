@@ -6,6 +6,8 @@ import "./interfaces/Quests/IQuest.sol";
 import "./interfaces/INexus.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ITavern } from "./interfaces/Quests/ITavern.sol";
 
 /**
@@ -14,6 +16,8 @@ import { ITavern } from "./interfaces/Quests/ITavern.sol";
  * @author @cosmodude
  */
 contract Tavern is AccessControl, ITavern {
+    using SafeERC20 for IERC20;
+    
     address public owner;
     address private _barkeeper;
     address public nexus;
@@ -96,7 +100,6 @@ contract Tavern is AccessControl, ITavern {
             escrowImpl,
             address(0)
         );
-        
     }
 
     /**
@@ -129,13 +132,6 @@ contract Tavern is AccessControl, ITavern {
             _token
         );
         
-    }
-       
-    function confirmNFTOwnership(
-        address identity
-    ) public view returns (bool confirmed) {
-        confirmed = nFT.balanceOf(identity) > 0;
-        return confirmed;
     }
 
     // in case of backend problem
@@ -196,4 +192,26 @@ contract Tavern is AccessControl, ITavern {
         return nFT.ownerOf(nftId);
     }
 
+    function confirmNFTOwnership(
+        address identity
+    ) public view returns (bool confirmed) {
+        confirmed = nFT.balanceOf(identity) > 0;
+        return confirmed;
+    }
+
+    function recoverTokens(
+        address _token,
+        address benefactor
+    ) public onlyOwner {
+        if (_token == address(0)) {
+            (bool sent, ) = payable(benefactor).call{
+                value: address(this).balance
+            }("");
+            require(sent, "Send error");
+            return;
+        }
+        uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).transfer(benefactor, tokenBalance);
+        return;
+    }
 }
