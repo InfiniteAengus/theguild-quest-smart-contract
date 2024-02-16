@@ -101,7 +101,7 @@ contract ReferralHandlerERC6551Account is
     function tierUp() external returns (bool) {
         require(getTier() < 4 && canLevel == true, "Can't increase the tier");
         require(
-            getTierManager().checkTierUpgrade(getTierCounts()),
+            getTierManager().checkTierUpgrade(getTierCounts(), address(this), tier),
             "Tier upgrade condition not met"
         );
         uint8 oldTier = getTier();
