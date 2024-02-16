@@ -27,6 +27,9 @@ export async function createAndReturnRegistryAccount(
     );
 }
 
+// Searches a specific event name, and returns the parsed object
+// Does not work when there are multiple events with the same name
+// Returns an empty object if the event is not found
 export function parseEventLogs(
     logs: Log[],
     contractInterface: Interface,
