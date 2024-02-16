@@ -21,6 +21,7 @@ import {
     fixture_6551_unit_tests,
 } from "./helpers/fixtures";
 
+// TODO: Replace current impl to parseEventLogs() helper function
 describe("ERC6551", function () {
     async function mockAccounts(): Promise<Signer[]> {
         const [owner, user1, user2, user3, user4, user5, user6] =
