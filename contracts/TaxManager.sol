@@ -2,12 +2,19 @@
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./interfaces/ITaxManager.sol";
 
-contract TaxManager {
+/**
+ * @title Tax Manager contract
+ * @author @cosmodude
+ * @notice Holds tax rates and pool addreses 
+ * @dev Readonly contract; functions devided by pool and rate relation
+ */
+contract TaxManager is ITaxManager {
     using SafeERC20 for IERC20;
-    
-    address public selfTaxPool;
-    address public rightUpTaxPool;
+
+    address public seekerTaxPool;
+    address public solverTaxPool;
     address public maintenancePool;
     address public devPool;
     address public rewardAllocationPool;
@@ -15,198 +22,181 @@ contract TaxManager {
     address public tierPool;
     address public revenuePool;
     address public marketingPool;
-    address public admin;
+    address public custodian; //
 
-    uint256 public selfTaxRate;
-    uint256 public rightUpTaxRate;
+    uint256 public seekerTaxRate;
+    uint256 public solverTaxRate;
     uint256 public maintenanceTaxRate;
     uint256 public protocolTaxRate;
     uint256 public perpetualPoolTaxRate;
     // uint256 public devPoolTaxRate;
     uint256 public rewardPoolTaxRate;
     uint256 public marketingTaxRate;
+    // attention here
     uint256 public constant taxBaseDivisor = 10000;
+
     struct TaxRates {
         uint256 first;
         uint256 second;
         uint256 third;
         uint256 fourth;
     }
-    mapping(uint256 => TaxRates) referralRate;  // tier to refferal rates 
+
+    mapping(uint8 => TaxRates) referralRatesByTier; // tier to refferal rates
     uint256 public tierPoolRate;
 
-    modifier onlyAdmin() {
+    modifier onlyCustodian() {
         // Change this to a list with ROLE library
-        require(msg.sender == admin, "only admin"); // need multiple admins 
+        require(msg.sender == custodian, "only custodian"); // need multiple admins
         _;
     }
 
     constructor() {
-        admin = msg.sender;
+        custodian = msg.sender;
     }
 
-    function setAdmin(address account) public onlyAdmin {
-        admin = account;
+    function setCustodian(address account) public onlyCustodian {
+        custodian = account;
     }
 
-    // Getters and setters for Addresses
-
-    function setSelfTaxPool(address _selfTaxPool) external onlyAdmin {
-        selfTaxPool = _selfTaxPool;
+    /**
+     * @notice Get Referral reward rate 
+     * @param depth  A layer of the referral connection (from 1 to 4)
+     * @param tier A targeted tier 
+     * @return Referral reward rate based on the tier and depth of connection
+     */
+    function getReferralRate(
+        uint8 depth,
+        uint8 tier
+    ) external view returns (uint256) {
+        if (depth == 1) {
+            return referralRatesByTier[tier].first;
+        } else if (depth == 2) {
+            return referralRatesByTier[tier].second;
+        } else if (depth == 3) {
+            return referralRatesByTier[tier].third;
+        } else if (depth == 4) {
+            return referralRatesByTier[tier].fourth;
+        }
+        return 0;
     }
 
-    function getSelfTaxPool() external view returns (address) {
-        return selfTaxPool;
+    //
+    //
+    // Setters for Addresses
+    //
+    //
+
+    function setSeekerTaxPool(address _selfTaxPool) external onlyCustodian {
+        seekerTaxPool = _selfTaxPool;
     }
 
-    function setRightUpTaxPool(address _rightUpTaxPool) external onlyAdmin {
-        rightUpTaxPool = _rightUpTaxPool;
+    function setSolverTaxPool(address _solverTaxPool) external onlyCustodian {
+        solverTaxPool = _solverTaxPool;
     }
 
-    function getRightUpTaxPool() external view returns (address) {
-        return rightUpTaxPool;
-    }
-
-    function setMaintenancePool(address _maintenancePool) external onlyAdmin {
+    function setMaintenancePool(
+        address _maintenancePool
+    ) external onlyCustodian {
         maintenancePool = _maintenancePool;
     }
 
-    function getMaintenancePool() external view returns (address) {
-        return maintenancePool;
-    }
+    // unused pools
 
-    function setDevPool(address _devPool) external onlyAdmin {
+    function setDevPool(address _devPool) external onlyCustodian {
         devPool = _devPool;
     }
 
-    function getDevPool() external view returns (address) {
-        return devPool;
-    }
+ 
 
     function setRewardAllocationPool(
         address _rewardAllocationPool
-    ) external onlyAdmin {
+    ) external onlyCustodian {
         rewardAllocationPool = _rewardAllocationPool;
     }
 
-    function getRewardAllocationPool() external view returns (address) {
-        return rewardAllocationPool;
-    }
 
-    function setPerpetualPool(address _perpetualPool) external onlyAdmin {
+
+    function setPerpetualPool(address _perpetualPool) external onlyCustodian {
         perpetualPool = _perpetualPool;
     }
 
-    function getPerpetualPool() external view returns (address) {
-        return perpetualPool;
-    }
+ 
 
-    function setTierPool(address _tierPool) external onlyAdmin {
+    function setTierPool(address _tierPool) external onlyCustodian {
         tierPool = _tierPool;
     }
 
-    function getTierPool() external view returns (address) {
-        return tierPool;
-    }
 
-    function setMarketingPool(address _marketingPool) external onlyAdmin {
+
+    function setMarketingPool(address _marketingPool) external onlyCustodian {
         marketingPool = _marketingPool;
     }
 
-    function getMarketingPool() external view returns (address) {
-        return marketingPool;
-    }
 
-    function setRevenuePool(address _revenuePool) external onlyAdmin {
+
+    function setRevenuePool(address _revenuePool) external onlyCustodian {
         revenuePool = _revenuePool;
     }
 
-    function getRevenuePool() external view returns (address) {
-        return revenuePool;
+
+    //
+    //
+    // Setters for the Tax Rates
+    //
+    //
+
+    function setSeeker(uint256 _seekerTaxRate) external onlyCustodian {
+        seekerTaxRate = _seekerTaxRate;
     }
 
-    // Getters and setters for the Tax Rates
 
-    function setSelfTaxRate(uint256 _selfTaxRate) external onlyAdmin {
-        selfTaxRate = _selfTaxRate;
+    function setSolverTaxRate(uint256 _solverTaxRate) external onlyCustodian {
+        solverTaxRate = _solverTaxRate;
     }
 
-    function getSelfTaxRate() external view returns (uint256) {
-        return selfTaxRate;
-    }
-
-    function setRightUpTaxRate(uint256 _rightUpTaxRate) external onlyAdmin {
-        rightUpTaxRate = _rightUpTaxRate;
-    }
-
-    function getRightUpTaxRate() external view returns (uint256) {
-        return rightUpTaxRate;
-    }
+    // unused
 
     function setMaintenanceTaxRate(
         uint256 _maintenanceTaxRate
-    ) external onlyAdmin {
+    ) external onlyCustodian {
         maintenanceTaxRate = _maintenanceTaxRate;
     }
 
-    function getMaintenanceTaxRate() external view returns (uint256) {
-        return maintenanceTaxRate;
-    }
-
-    function setProtocolTaxRate(uint256 _protocolTaxRate) external onlyAdmin {
+    function setProtocolTaxRate(
+        uint256 _protocolTaxRate
+    ) external onlyCustodian {
         protocolTaxRate = _protocolTaxRate;
     }
 
-    function getProtocolTaxRate() external view returns (uint256) {
-        return protocolTaxRate + rightUpTaxRate;
-    }
+    // function getProtocolTaxRate() external view returns (uint256) {
+    //     return protocolTaxRate + rightUpTaxRate;
+    // }
 
-    function getTotalTaxAtMint() external view returns (uint256) {
-        return protocolTaxRate + rightUpTaxRate + selfTaxRate;
-    }
+    // function getTotalTaxAtMint() external view returns (uint256) {
+    //     return protocolTaxRate + rightUpTaxRate + selfTaxRate;
+    // }
 
     function setPerpetualPoolTaxRate(
         uint256 _perpetualPoolTaxRate
-    ) external onlyAdmin {
+    ) external onlyCustodian {
         perpetualPoolTaxRate = _perpetualPoolTaxRate;
     }
 
-    function getPerpetualPoolTaxRate() external view returns (uint256) {
-        return perpetualPoolTaxRate;
-    }
-
-    function getTaxBaseDivisor() external pure returns (uint256) {
-        return taxBaseDivisor;
-    }
-
     function setBulkReferralRate(
-        uint256 tier,
+        uint8 tier,
         uint256 first,
         uint256 second,
         uint256 third,
         uint256 fourth
-    ) external onlyAdmin {
-        referralRate[tier].first = first;
-        referralRate[tier].second = second;
-        referralRate[tier].third = third;
-        referralRate[tier].fourth = fourth;
+    ) external onlyCustodian {
+        referralRatesByTier[tier].first = first;
+        referralRatesByTier[tier].second = second;
+        referralRatesByTier[tier].third = third;
+        referralRatesByTier[tier].fourth = fourth;
     }
 
-    function getReferralRate(
-        uint256 depth,
-        uint256 tier
-    ) external view returns (uint256) {
-        if (depth == 1) {
-            return referralRate[tier].first;
-        } else if (depth == 2) {
-            return referralRate[tier].second;
-        } else if (depth == 3) {
-            return referralRate[tier].third;
-        } else if (depth == 4) {
-            return referralRate[tier].fourth;
-        }
-        return 0;
-    }
+ 
 
     // function setDevPoolTaxRate(uint256 _devPoolRate) external {
     //     devPoolTaxRate = _devPoolRate;
@@ -216,32 +206,34 @@ contract TaxManager {
     //     return devPoolTaxRate;
     // }
 
-    function setRewardPoolTaxRate(uint256 _rewardPoolRate) external onlyAdmin {
+    function setRewardPoolTaxRate(
+        uint256 _rewardPoolRate
+    ) external onlyCustodian {
         rewardPoolTaxRate = _rewardPoolRate;
     }
 
-    function getRewardPoolRate() external view returns (uint256) {
-        return rewardPoolTaxRate;
-    }
-
-    function setTierPoolRate(uint256 _tierPoolRate) external onlyAdmin {
+    function setTierPoolRate(uint256 _tierPoolRate) external onlyCustodian {
         tierPoolRate = _tierPoolRate;
     }
 
-    function getTierPoolRate() external view returns (uint256) {
-        return tierPoolRate;
-    }
-
-    function setMarketingTaxRate(uint256 _marketingTaxRate) external onlyAdmin {
+    function setMarketingTaxRate(
+        uint256 _marketingTaxRate
+    ) external onlyCustodian {
         marketingTaxRate = _marketingTaxRate;
     }
 
-    function getMarketingTaxRate() external view returns (uint256) {
-        return marketingTaxRate;
-    }
-
-    function recoverTokens(address token, address benefactor) public onlyAdmin {
-        uint256 tokenBalance = IERC20(token).balanceOf(address(this));
-        IERC20(token).transfer(benefactor, tokenBalance);
+    function recoverTokens(
+        address _token,
+        address benefactor
+    ) public onlyCustodian {
+        if (_token == address(0)) {
+            (bool sent, ) = payable(benefactor).call{
+                value: address(this).balance
+            }("");
+            require(sent, "Send error");
+            return;
+        }
+        uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).transfer(benefactor, tokenBalance);
     }
 }
