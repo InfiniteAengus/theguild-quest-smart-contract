@@ -9,35 +9,34 @@ contract TierManager {
 
     struct TierParamaters {
         uint256 xpPoints;
-        // change naming
         uint256 novicesReferred;
         uint256 adeptsReferred;
         uint256 mastersReferred;
         uint256 godsReferred;
     }
 
-    address public admin;
+    address public magistrate; 
+    address public xpToken;
     mapping(uint256 => TierParamaters) public tierUpConditions;
     mapping(uint256 => uint256) public transferLimits;
     mapping(uint256 => string) public tokenURI;
 
-    modifier onlyAdmin() {
-        // Change this to a list with ROLE library
-        require(msg.sender == admin, "only admin");
+    modifier onlyMagistrate() {
+        require(msg.sender == magistrate, "only magistrate");
         _;
     }
 
-    constructor() {
-        admin = msg.sender;
+    constructor(address _xpToken) {
+        magistrate = msg.sender;
+        xpToken = _xpToken;
     }
 
-    function scaleUpTokens(uint256 amount) public pure returns (uint256) {
-        uint256 scalingFactor = 10 ** 18;
-        return amount * scalingFactor;
+    function setMagistrate(address account) external onlyMagistrate {
+        magistrate = account;
     }
 
-    function setAdmin(address account) public onlyAdmin {
-        admin = account;
+    function setXpToken(address token) external onlyMagistrate{
+        xpToken = token;
     }
 
     function setConditions(
@@ -47,7 +46,7 @@ contract TierManager {
         uint256 adeptsReferred,
         uint256 mastersReferred,
         uint256 godsReferred
-    ) public onlyAdmin {
+    ) external onlyMagistrate {
         tierUpConditions[tier].novicesReferred = novicesReferred;
         tierUpConditions[tier].adeptsReferred = adeptsReferred;
         tierUpConditions[tier].mastersReferred = mastersReferred;
@@ -72,10 +71,12 @@ contract TierManager {
     function setTokenURI(
         uint256 tier,
         string memory _tokenURI
-    ) public onlyAdmin {
+    ) public onlyMagistrate {
         tokenURI[tier] = _tokenURI;
     }
 
+
+// needs discussion 
     function getTokenURI(uint256 tier) public view returns (string memory) {
         return tokenURI[tier];
     }
@@ -87,9 +88,19 @@ contract TierManager {
         return validateUserTier(newTier, tierCounts); // If it returns true it means user is eligible for an upgrade in tier
     }
 
-// needs to be updated 
-    function recoverTokens(address token, address benefactor) public onlyAdmin {
-        uint256 tokenBalance = IERC20(token).balanceOf(address(this));
-        IERC20(token).transfer(benefactor, tokenBalance);
+function recoverTokens(
+        address _token,
+        address benefactor
+    ) external onlyMagistrate {
+        if (_token == address(0)) {
+            (bool sent, ) = payable(benefactor).call{
+                value: address(this).balance
+            }("");
+            require(sent, "Send error");
+            return;
+        }
+        uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).transfer(benefactor, tokenBalance);
+        return;
     }
 }
