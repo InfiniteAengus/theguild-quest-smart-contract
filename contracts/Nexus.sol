@@ -162,7 +162,8 @@ contract Nexus is INexus {
         address referrerHandler = NFTToHandler[referrerId];
         // NOTE: Added check for referrerId, in the case of no referrers
         if(referrerId != 0 ){
-            require(referrerHandler != address(0), "Handler can't be 0 address!");
+            // NOTE: Should not be possible to get address 0 from this contract, the create2 function will return address 0 only when it is trying to create a contract at an address which already exists, but this is handled in Line:54 in ERC6551Registry.sol  
+            require(referrerHandler != address(0), "Handler can't be 0 address!"); 
         }
 
         IReferralHandler Handler = IReferralHandler(handlerAd);
