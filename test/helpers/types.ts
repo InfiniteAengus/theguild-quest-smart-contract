@@ -39,3 +39,8 @@ export type AccountDetails = {
     tokenContract: string;
     tokenId: number;
 };
+
+export type CreatedAccount = {
+    nftId: number;
+    handlerAddress: string;
+};
