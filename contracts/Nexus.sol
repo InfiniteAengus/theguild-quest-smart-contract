@@ -11,7 +11,7 @@ import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract Nexus is INexus {
     address public master; 
-    address public guardian; // needs to be private
+    address public guardian; // needs to be private // NOTE: impossible to be public, can easily be read by looking into the contract's actual storage
 
     address public tierManager;
     address public taxManager;
@@ -85,13 +85,13 @@ contract Nexus is INexus {
 
     function notifyTierUpdate(uint8 oldTier, uint8 newTier) external {
         // All the handlers notify the Factory incase there is a change in levels
-        require(isHandler(msg.sender) == true);
+        require(isHandler(msg.sender) == true, "only handler");
         emit LevelChange(msg.sender, oldTier, newTier);
     }
 
     function notifySelfTaxClaimed(uint256 amount, uint256 timestamp) external {
         // All the handlers notify the Factory when they claim self tax
-        require(isHandler(msg.sender) == true);
+        require(isHandler(msg.sender) == true, "only handler");
         emit SelfTaxClaimed(msg.sender, amount, timestamp);
     }
 
@@ -100,10 +100,10 @@ contract Nexus is INexus {
         uint256 timestamp
     ) external {
         // All the handlers notify the Factory when the claim referral Reward
-        require(isHandler(msg.sender) == true);
+        require(isHandler(msg.sender) == true, "only handler");
         emit RewardClaimed(msg.sender, amount, timestamp);
     }
-//
+
     function setMaster(address newMaster) public onlyMaster {
         address oldMaster = master;
         master = newMaster;

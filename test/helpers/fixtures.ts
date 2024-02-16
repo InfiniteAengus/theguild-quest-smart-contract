@@ -88,3 +88,13 @@ export async function fixture_6551_integration_tests(accounts: Signer[]) {
 
     return { erc6551, nexus, accounts, profileNFT, managers, mockExecutes };
 }
+
+// Fixture for Nexus.sol Unit Tests
+export async function fixture_nexus_unit_tests(accounts: Signer[]) {
+    const { erc6551, nexus } = await nexusSetup(true);
+
+    const profileNFT = await profileNFTSetup(nexus, true);
+    const managers = await managersSetup(true);
+
+    return { erc6551, nexus, profileNFT, managers, accounts };
+}
