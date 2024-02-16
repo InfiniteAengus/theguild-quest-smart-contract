@@ -57,9 +57,9 @@ contract TierManager is ITierManager {
     }
 
     function validateUserTier(
-        uint8[5] memory tierCounts,
+        uint32[5] memory tierCounts,
         address account,
-        uint256 tier
+        uint8 tier
     ) internal view returns (bool) {
         // Check if user has valid requirements for the tier, if it returns true it means they have the requirement for the tier sent as parameter
 
@@ -83,29 +83,17 @@ contract TierManager is ITierManager {
         tokenURI[tier] = _tokenURI;
     }
 
-<<<<<<< HEAD
-    function getTokenURI(uint8 tier) public view returns (string memory) {
-=======
-    // needs discussion
     function getTokenURI(uint32 tier) public view returns (string memory) {
->>>>>>> main
         return tokenURI[tier];
     }
 
     function checkTierUpgrade(
-<<<<<<< HEAD
-        uint32[5] memory tierCounts
-    ) public view returns (bool) {
-        uint8 newTier = IReferralHandler(msg.sender).getTier() + 1;
-        return validateUserTier(newTier, tierCounts); // If it returns true it means user is eligible for an upgrade in tier
-=======
-        uint8[5] memory tierCounts,
+        uint32[5] memory tierCounts,
         address account,
         uint8 tier
-    ) external view returns (bool) {
+    ) external override view returns (bool) {
         uint8 newTier = tier + 1;
         return validateUserTier(tierCounts, account, newTier); // If it returns true it means user is eligible for an upgrade in tier
->>>>>>> main
     }
 
     function recoverTokens(
@@ -124,10 +112,10 @@ contract TierManager is ITierManager {
         return;
     }
 
-    function checkTierUpgrade(
-        uint32[5] memory tierCounts,
-        address account,
-        uint8 tier
-    ) external override returns (bool) {}
+    // function checkTierUpgrade(
+    //     uint32[5] memory tierCounts,
+    //     address account,
+    //     uint8 tier
+    // ) external override returns (bool) {}
 
 }
