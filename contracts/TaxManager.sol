@@ -13,6 +13,8 @@ import "./interfaces/ITaxManager.sol";
 contract TaxManager is ITaxManager {
     using SafeERC20 for IERC20;
 
+    address public custodian;
+
     address public seekerTaxPool;
     address public solverTaxPool;
     address public maintenancePool;
@@ -22,7 +24,6 @@ contract TaxManager is ITaxManager {
     address public tierPool;
     address public revenuePool;
     address public marketingPool;
-    address public custodian; //
 
     uint256 public seekerTaxRate;
     uint256 public solverTaxRate;
@@ -225,7 +226,7 @@ contract TaxManager is ITaxManager {
     function recoverTokens(
         address _token,
         address benefactor
-    ) public onlyCustodian {
+    ) external onlyCustodian {
         if (_token == address(0)) {
             (bool sent, ) = payable(benefactor).call{
                 value: address(this).balance
@@ -235,5 +236,6 @@ contract TaxManager is ITaxManager {
         }
         uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
         IERC20(_token).transfer(benefactor, tokenBalance);
+        return;
     }
 }

@@ -6,6 +6,9 @@ import "./interfaces/IReferralHandler.sol";
 import "./interfaces/IERC6551/IERC6551Registry.sol";
 import "./interfaces/INexus.sol";  
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+import "./interfaces/IReferralHandler.sol";
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // Handler and account were mrged, thus refer to the same contract
 
@@ -214,4 +217,19 @@ contract Nexus is INexus {
         return guardian;
     }
 
+    function recoverTokens(
+        address _token,
+        address benefactor
+    ) external onlyMaster {
+        if (_token == address(0)) {
+            (bool sent, ) = payable(benefactor).call{
+                value: address(this).balance
+            }("");
+            require(sent, "Send error");
+            return;
+        }
+        uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).transfer(benefactor, tokenBalance);
+        return;
+    }
 }
