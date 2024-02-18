@@ -104,10 +104,6 @@ contract ReferralHandlerERC6551Account is
         tier = tier + 1;
         nexus.notifyTierUpdate(oldTier, getTier());
         updateReferrersAbove(tier);
-        string memory tokenURI = getTierManager().getTokenURI(getTier());
-        IProfileNFT NFT = IProfileNFT(getNft());
-        uint32 nftId = getNftId();
-        NFT.changeURI(nftId, tokenURI);
         
         return true;
     }
@@ -124,12 +120,9 @@ contract ReferralHandlerERC6551Account is
         require(_tier >= 0 && _tier <= 4, "Invalid Tier");
         uint8 oldTier = getTier(); // For events
         tier = _tier + 1; // Adding the default +1 offset stored in handlers
-        updateReferrersAbove(tier);
-        string memory tokenURI = getTierManager().getTokenURI(getTier());
-        IProfileNFT NFT = IProfileNFT(getNft());
-        uint32 nftId = getNftId();
-        NFT.changeURI(nftId, tokenURI);
         nexus.notifyTierUpdate(oldTier, getTier());
+        updateReferrersAbove(tier);
+        
     }
 
     function changeEligibility(bool status) public onlyMaster {
