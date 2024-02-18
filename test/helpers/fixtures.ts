@@ -8,6 +8,7 @@ import {
     mockNFTSetup,
     nexusSetup,
     profileNFTSetup,
+    xpSetup,
 } from "./setup";
 import { Signer } from "ethers";
 import { createAndReturnRegistryAccount } from "./utils";
@@ -73,7 +74,9 @@ export async function fixture_6551_integration_tests(accounts: Signer[]) {
 
     await nexus.setNFT(profileNFT.target);
 
-    const managers = await managersSetup(true);
+    const xpToken = await xpSetup(true, accounts[0]);
+
+    const managers = await managersSetup(true, xpToken);
 
     await nexus.setTaxManager(managers.taxManager.target);
     await nexus.setTierManager(managers.tierManager.target);
@@ -83,10 +86,22 @@ export async function fixture_6551_integration_tests(accounts: Signer[]) {
     await managers.tierManager.setTokenURI(3, "Tier3");
 
     await managers.tierManager.setConditions(1, 1, 1, 1, 1, 1);
+    await managers.tierManager.setConditions(2, 1, 1, 1, 1, 1);
+    await managers.tierManager.setConditions(3, 1, 1, 1, 1, 1);
+    await managers.tierManager.setConditions(4, 1, 1, 1, 1, 1);
+    await managers.tierManager.setConditions(5, 1, 1, 1, 1, 1);
 
     const mockExecutes = await deployMockExecutes(true);
 
-    return { erc6551, nexus, accounts, profileNFT, managers, mockExecutes };
+    return {
+        erc6551,
+        nexus,
+        accounts,
+        profileNFT,
+        managers,
+        mockExecutes,
+        xpToken,
+    };
 }
 
 // Fixture for Nexus.sol Unit Tests
@@ -94,7 +109,10 @@ export async function fixture_nexus_unit_tests(accounts: Signer[]) {
     const { erc6551, nexus } = await nexusSetup(true);
 
     const profileNFT = await profileNFTSetup(nexus, true);
-    const managers = await managersSetup(true);
 
-    return { erc6551, nexus, profileNFT, managers, accounts };
+    const xpToken = await xpSetup(true, accounts[0]);
+
+    const managers = await managersSetup(true, xpToken);
+
+    return { erc6551, nexus, profileNFT, managers, accounts, xpToken };
 }

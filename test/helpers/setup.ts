@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import {
     EscrowNative,
+    GuildXp,
     MockExecute,
     MockExecuteEth,
     MockNFT,
@@ -11,6 +12,7 @@ import {
     TierManager,
 } from "../../typechain-types";
 import { ERC6551Setup, Managers, MockExecutes, Nexus6551 } from "./types";
+import { Signer } from "ethers";
 
 // Mock Deployments
 
@@ -145,8 +147,13 @@ export async function questSetup(): Promise<Quest> {
     return quest;
 }
 
-export async function tierManagerSetup(silence: Boolean): Promise<TierManager> {
-    const tierManager = await ethers.deployContract("TierManager");
+export async function tierManagerSetup(
+    silence: Boolean,
+    xpToken: GuildXp
+): Promise<TierManager> {
+    const tierManager = await ethers.deployContract("TierManager", [
+        xpToken.target,
+    ]);
     await tierManager.waitForDeployment();
 
     if (!silence) {
@@ -167,14 +174,33 @@ export async function taxManagerSetup(silence: Boolean) {
     return taxManager;
 }
 
-export async function managersSetup(silence: Boolean): Promise<Managers> {
-    const tierManager = await tierManagerSetup(silence);
+export async function managersSetup(
+    silence: Boolean,
+    xpToken: GuildXp
+): Promise<Managers> {
+    const tierManager = await tierManagerSetup(silence, xpToken);
     const taxManager = await taxManagerSetup(silence);
 
     return {
         tierManager,
         taxManager,
     };
+}
+
+export async function xpSetup(
+    silence: Boolean,
+    signer: Signer
+): Promise<GuildXp> {
+    const guildXp = await ethers.deployContract("GuildXp", [
+        await signer.getAddress(),
+    ]);
+    await guildXp.waitForDeployment();
+
+    if (!silence) {
+        console.log(`GuildXp deployed to ${guildXp.target}`);
+    }
+
+    return guildXp;
 }
 
 // TODO: add actual escrow token instead of using escrowNative for both
