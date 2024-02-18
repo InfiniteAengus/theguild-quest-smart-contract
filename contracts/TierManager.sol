@@ -20,7 +20,6 @@ contract TierManager is ITierManager {
     address public xpToken;
     mapping(uint256 => TierParamaters) public tierUpConditions;
     mapping(uint256 => uint256) public transferLimits;
-    mapping(uint256 => string) public tokenURI;
 
     modifier onlyMagistrate() {
         require(msg.sender == magistrate, "only magistrate");
@@ -73,18 +72,6 @@ contract TierManager is ITierManager {
         if (xp.balanceOf(account) < tierUpConditions[tier].xpPoints)
             return false;
         return true;
-    }
-
-    function setTokenURI(
-        uint256 tier,
-        string memory _tokenURI
-    ) public onlyMagistrate {
-        tokenURI[tier] = _tokenURI;
-    }
-
-    // needs discussion
-    function getTokenURI(uint32 tier) public view returns (string memory) {
-        return tokenURI[tier];
     }
 
     function checkTierUpgrade(
