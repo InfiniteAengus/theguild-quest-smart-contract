@@ -81,10 +81,6 @@ export async function fixture_6551_integration_tests(accounts: Signer[]) {
     await nexus.setTaxManager(managers.taxManager.target);
     await nexus.setTierManager(managers.tierManager.target);
 
-    await managers.tierManager.setTokenURI(1, "Tier1");
-    await managers.tierManager.setTokenURI(2, "Tier2");
-    await managers.tierManager.setTokenURI(3, "Tier3");
-
     await managers.tierManager.setConditions(1, 1, 1, 1, 1, 1);
     await managers.tierManager.setConditions(2, 1, 1, 1, 1, 1);
     await managers.tierManager.setConditions(3, 1, 1, 1, 1, 1);
