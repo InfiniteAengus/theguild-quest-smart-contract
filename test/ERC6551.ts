@@ -14,6 +14,7 @@ import {
     ReferralHandlerERC6551Account,
     ProfileNFT,
     Nexus,
+    GuildXp,
 } from "../typechain-types";
 import {
     fixture_6551,
@@ -431,7 +432,8 @@ describe("ERC6551", function () {
                 createdAccount_: ReferralHandlerERC6551Account,
                 createdAccount2_: ReferralHandlerERC6551Account,
                 managers_: Managers,
-                mockExecutes_: MockExecutes;
+                mockExecutes_: MockExecutes,
+                xpToken_: GuildXp;
 
             it("Should be able to get the correct token details for Profile NFT", async function () {
                 const {
@@ -441,6 +443,7 @@ describe("ERC6551", function () {
                     erc6551,
                     managers,
                     mockExecutes,
+                    xpToken,
                 } = await loadFixture(fixture_integration_tests);
 
                 // Create a new profile and account
@@ -506,6 +509,7 @@ describe("ERC6551", function () {
                 accounts_ = accounts;
                 erc6551_ = erc6551;
                 managers_ = managers;
+                xpToken_ = xpToken;
 
                 createdAccount_ = accountInstance;
 
@@ -963,6 +967,9 @@ describe("ERC6551", function () {
             });
 
             it("Should be able to tier up after the the referral tree is updated by the referrers", async function () {
+                // Transfers xp token to user to enable tier up
+                await xpToken_.mint(createdAccount_.target, 2);
+
                 let tierLevel = await createdAccount_.getTier();
 
                 // Tier level should be at 0 before tierUp
