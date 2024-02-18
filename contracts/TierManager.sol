@@ -63,6 +63,8 @@ contract TierManager is ITierManager {
     ) internal view returns (bool) {
         // Check if user has valid requirements for the tier, if it returns true it means they have the requirement for the tier sent as parameter
 
+        // NOTE: Crucial that these values are set after deployment, or users would be able to upgrade without meeting the requirements
+
         if (tierCounts[0] < tierUpConditions[tier].novicesReferred)
             return false;
         if (tierCounts[1] < tierUpConditions[tier].adeptsReferred) return false;
