@@ -312,10 +312,9 @@ contract ReferralHandlerERC6551Account is
         address to,
         uint256 value,
         bytes calldata data,
-        uint8 operation // serves no purpose since
+        uint8
     ) external payable returns (bytes memory result) {
         require(_isValidSigner(msg.sender), "Invalid signer");
-        require(operation == 0, "Only call operations are supported");
         ++_state;
 
         bool success;
