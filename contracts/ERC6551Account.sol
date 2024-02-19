@@ -70,7 +70,7 @@ contract ReferralHandlerERC6551Account is
 
     modifier onlyProtocol() {
         require(
-            msg.sender == nexus.master() || msg.sender == address(nexus), // NOTE: Unable to test from address nexus, because a function doesn't exist to trigger it.
+            msg.sender == nexus.master() || msg.sender == address(nexus),
             "only master or nexus"
         );
         _;
@@ -305,8 +305,6 @@ contract ReferralHandlerERC6551Account is
     //
     //
 
-    event ExecutionResult(bool success, bytes result); // NOTE: Added an event to log the result of the execution
-
     // NOTE: Probably not the best idea to enable arbitrary execution of code using the call function.
     function execute(
         address to,
@@ -320,8 +318,6 @@ contract ReferralHandlerERC6551Account is
         bool success;
         (success, result) = to.call{value: value}(data);
         
-        emit ExecutionResult(success, result);
-
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
