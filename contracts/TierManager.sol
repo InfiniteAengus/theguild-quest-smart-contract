@@ -42,7 +42,7 @@ contract TierManager is ITierManager {
     // @audit - Should probably be set during the constructor as well
     function setConditions(
         uint8 tier,
-        uint256 xpPoints, // NOTE: XP not used for anything
+        uint256 xpPoints,
         uint256 novicesReferred,
         uint256 adeptsReferred,
         uint256 mastersReferred,
@@ -101,11 +101,4 @@ contract TierManager is ITierManager {
         IERC20(_token).transfer(benefactor, tokenBalance);
         return;
     }
-
-    // function checkTierUpgrade(
-    //     uint32[5] memory tierCounts,
-    //     address account,
-    //     uint8 tier
-    // ) external override returns (bool) {}
-
 }

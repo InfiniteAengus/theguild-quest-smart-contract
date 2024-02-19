@@ -187,7 +187,7 @@ contract ReferralHandlerERC6551Account is
     function updateReferralTree(uint8 refDepth, uint8 _tier) external {
         // msg.sender should be the handler reffered by this address
         require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
-        require(msg.sender != address(0), "Invalid referred address"); // NOTE: Very unlikely to happen, and probably better to use assert in this situation
+        require(msg.sender != address(0), "Invalid referred address");
 
         if (refDepth == 1) {
             require(

@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Nexus is INexus {
     address public master; 
-    address public guardian; // needs to be private // NOTE: impossible to be public, can easily be read by looking into the contract's actual storage
+    address public guardian; // needs to be private
 
     address public tierManager;
     address public taxManager;
@@ -169,7 +169,7 @@ contract Nexus is INexus {
         emit NewProfileIssuance(nftId, handlerAd);
 
         Handler.initialize(referrerHandler);
-        addToReferrersAbove(1, handlerAd); // NOTE - Moved so that the referredBy value is initiated before adding to the tree
+        addToReferrersAbove(1, handlerAd);
 
         return handlerAd;
     }
