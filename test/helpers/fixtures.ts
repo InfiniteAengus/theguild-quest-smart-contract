@@ -112,3 +112,25 @@ export async function fixture_nexus_unit_tests(accounts: Signer[]) {
 
     return { erc6551, nexus, profileNFT, managers, accounts, xpToken };
 }
+
+// Fixture for ProfileNFT.sol Unit Tests
+export async function fixture_profile_nft_unit_tests(accounts: Signer[]) {
+    const { nexus } = await nexusSetup(true);
+
+    const profileNFT = await profileNFTSetup(nexus, true);
+
+    await profileNFT.setNexus(await accounts[0].getAddress());
+
+    return { profileNFT, accounts, nexus };
+}
+
+// Fixture for ProfileNFT.sol Integration Tests
+export async function fixture_profile_nft_integration_tests(
+    accounts: Signer[]
+) {
+    const { nexus } = await nexusSetup(true);
+
+    const profileNFT = await profileNFTSetup(nexus, true);
+
+    return { profileNFT, accounts, nexus };
+}

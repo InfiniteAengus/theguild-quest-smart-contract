@@ -5,9 +5,11 @@ import {
     MockExecute,
     MockExecuteEth,
     MockNFT,
+    MockToken,
     Nexus,
     ProfileNFT,
     Quest,
+    SelfDestruct,
     Tavern,
     TierManager,
 } from "../../typechain-types";
@@ -63,6 +65,41 @@ export async function mockNFTSetup(silence: Boolean): Promise<MockNFT> {
     }
 
     return mockNFT;
+}
+
+export async function mockTokenSetup(silence: Boolean): Promise<MockToken> {
+    const mockToken = await ethers.deployContract("MockToken");
+    await mockToken.waitForDeployment();
+
+    if (!silence) {
+        console.log(`MockToken deployed to ${mockToken.target}`);
+    }
+
+    return mockToken;
+}
+
+export async function selfDestructSetup(
+    silence: Boolean
+): Promise<SelfDestruct> {
+    const selfDestruct = await ethers.deployContract("SelfDestruct");
+    await selfDestruct.waitForDeployment();
+
+    if (!silence) {
+        console.log(`SelfDestruct deployed to ${selfDestruct.target}`);
+    }
+
+    return selfDestruct;
+}
+
+export async function mockFailReceiverSetup(silence: Boolean) {
+    const mockFailReceiver = await ethers.deployContract("MockFailReceiver");
+    await mockFailReceiver.waitForDeployment();
+
+    if (!silence) {
+        console.log(`MockFailReceiver deployed to ${mockFailReceiver.target}`);
+    }
+
+    return mockFailReceiver;
 }
 
 // Contract Setups
