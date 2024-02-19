@@ -162,7 +162,7 @@ contract Nexus is INexus {
         handlerStorage[handlerAd] = true;
 
         address referrerHandler = NFTToHandler[referrerId];
-        require(referrerHandler != address(0), "Handler can't be 0 address!");
+        
         addToReferrersAbove(1, handlerAd);
         IReferralHandler Handler = IReferralHandler(handlerAd);
         emit NewProfileIssuance(nftId, handlerAd);
