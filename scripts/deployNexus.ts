@@ -22,7 +22,7 @@ async function main() {
     `Profile NFT deployed to ${nft.target}`
   );
 
-  const account = await ethers.deployContract("ReferralHandlerERC6551Account", [nexus.target]);
+  const account = await ethers.deployContract("ReferralHandlerERC6551Account");
 
   await account.waitForDeployment();
 
@@ -38,16 +38,16 @@ async function main() {
 
   console.log("Account impl set to ", account.target);
 
-  const guardian = await nexus.setGuardian("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
-  //const guardian = await nexus.setGuardian(myWallet);
+  //const guardian = await nexus.setGuardian("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
+  const guardian = await nexus.setGuardian(myWallet);
   guardian.wait(2);
 
   console.log("Guardian set to ", await nexus.guardian());
 
-  const master = await nexus.setMaster("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
+  //const master = await nexus.setMaster("0x4CA23B523c2b0f730bC9BBc5152A286953159Fe5");
   //const master = await nexus.setMaster(myWallet);
 
-  master.wait();
+  //master.wait();
   console.log("Master set to ", await nexus.master());
 
 }
