@@ -63,6 +63,10 @@ contract TierManager is ITierManager {
         // Check if user has valid requirements for the tier, if it returns true it means they have the requirement for the tier sent as parameter
 
         // NOTE: Crucial that these values are set after deployment, or users would be able to upgrade without meeting the requirements
+        require(
+            tierUpConditions[tier].xpPoints != 0,
+            "Tier conditions not set"
+        );
 
         if (tierCounts[0] < tierUpConditions[tier].novicesReferred)
             return false;
