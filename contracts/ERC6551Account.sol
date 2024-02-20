@@ -134,18 +134,17 @@ contract ReferralHandlerERC6551Account is
     function updateReferrersAbove() internal {
         address firstRef = referredBy;
         if (firstRef != address(0)) {
-            IReferralHandler(firstRef).updateReferralTree(1, firstRef);
+            IReferralHandler(firstRef).updateReferralTree(1);
             address secondRef = IReferralHandler(firstRef).referredBy();
             if (secondRef != address(0)) {
-                IReferralHandler(secondRef).updateReferralTree(2, secondRef);
+                IReferralHandler(secondRef).updateReferralTree(2);
                 address thirdRef = IReferralHandler(secondRef).referredBy();
                 if (thirdRef != address(0)) {
-                    IReferralHandler(thirdRef).updateReferralTree(3, thirdRef);
+                    IReferralHandler(thirdRef).updateReferralTree(3);
                     address fourthRef = IReferralHandler(thirdRef).referredBy();
                     if (fourthRef != address(0))
                         IReferralHandler(fourthRef).updateReferralTree(
-                            4,
-                            fourthRef
+                            4
                         );
                 }
             }
@@ -184,12 +183,12 @@ contract ReferralHandlerERC6551Account is
     // @audit - Users can create multiple accounts, and refer each other with no limits, and update the tiers of their referral trees
     // @audit - this enables these accounts to be tiered up without any real referrals
     // CIRTICAL - NOTE: Change param, check tiers, call the account, and get the actual tier from the contract
-    function updateReferralTree(uint8 refDepth, address referralHandler) external {
+    function updateReferralTree(uint8 refDepth) external {
         // msg.sender should be the handler reffered by this address
         require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
         require(msg.sender != address(0), "Invalid referred address");
 
-        uint8 _tier = IReferralHandler(referralHandler).getTier() + 1;
+        uint8 _tier = IReferralHandler(msg.sender).getTier() + 1;
 
         if (refDepth == 1) {
             require(
