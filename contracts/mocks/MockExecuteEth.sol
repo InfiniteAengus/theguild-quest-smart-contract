@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 contract MockExecuteEth {
     
+    event ChangedValue(bytes32 _newValue, bool _success );
+
     bytes32 public value;
 
     constructor() {
@@ -13,6 +15,9 @@ contract MockExecuteEth {
 
     function changeValue(bytes32 _newValue) external returns (bool) {
         value = _newValue;
+
+        emit ChangedValue(_newValue, true);
+
         return true;
     }
 }

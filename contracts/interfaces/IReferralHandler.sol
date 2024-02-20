@@ -12,6 +12,6 @@ interface IReferralHandler {
     function referredBy() external view returns (address referrerHandler);
     function owner() external view returns (address owner);
     function getTier() external view returns (uint8 _tier);
-    function updateReferralTree(uint8 refDepth, uint8 _tier) external;
+    function updateReferralTree(uint8 refDepth, address referralHandler) external;
     function addToReferralTree(uint8 refDepth, address referralHandler , uint8 _tier) external;
 }

@@ -103,7 +103,7 @@ contract ReferralHandlerERC6551Account is
         uint8 oldTier = getTier();
         tier = tier + 1;
         nexus.notifyTierUpdate(oldTier, getTier());
-        updateReferrersAbove(tier);
+        updateReferrersAbove();
         
         return true;
     }
@@ -121,7 +121,7 @@ contract ReferralHandlerERC6551Account is
         uint8 oldTier = getTier(); // For events
         tier = _tier + 1; // Adding the default +1 offset stored in handlers
         nexus.notifyTierUpdate(oldTier, getTier());
-        updateReferrersAbove(tier);
+        updateReferrersAbove();
         
     }
 
@@ -131,21 +131,21 @@ contract ReferralHandlerERC6551Account is
 
     // Internal/Utility functions
 
-    function updateReferrersAbove(uint8 _tier) internal {
+    function updateReferrersAbove() internal {
         address firstRef = referredBy;
         if (firstRef != address(0)) {
-            IReferralHandler(firstRef).updateReferralTree(1, _tier);
+            IReferralHandler(firstRef).updateReferralTree(1, firstRef);
             address secondRef = IReferralHandler(firstRef).referredBy();
             if (secondRef != address(0)) {
-                IReferralHandler(secondRef).updateReferralTree(2, _tier);
+                IReferralHandler(secondRef).updateReferralTree(2, secondRef);
                 address thirdRef = IReferralHandler(secondRef).referredBy();
                 if (thirdRef != address(0)) {
-                    IReferralHandler(thirdRef).updateReferralTree(3, _tier);
+                    IReferralHandler(thirdRef).updateReferralTree(3, thirdRef);
                     address fourthRef = IReferralHandler(thirdRef).referredBy();
                     if (fourthRef != address(0))
                         IReferralHandler(fourthRef).updateReferralTree(
                             4,
-                            _tier
+                            fourthRef
                         );
                 }
             }
@@ -164,9 +164,8 @@ contract ReferralHandlerERC6551Account is
         address referralHandler,
         uint8 _tier
     ) external onlyNexus {
-        require(refDepth <= 4 && refDepth >= 1, "Invalid depth"); // NOTE: Depth is hardcoded in the Nexus, should always be within range
-        require(referralHandler != address(0), "Invalid referral address"); // NOTE: Referral Handler is created with CREATE2 through ERC6551, shouldn't be possible to be address zero, but assert should be used here anyways
-
+        require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
+        require(referralHandler != address(0), "Invalid referral address");
         if (refDepth == 1) {
             firstLevelRefs.push(referralHandler);
             firstLevelTiers[referralHandler] = _tier;
@@ -184,10 +183,13 @@ contract ReferralHandlerERC6551Account is
 
     // @audit - Users can create multiple accounts, and refer each other with no limits, and update the tiers of their referral trees
     // @audit - this enables these accounts to be tiered up without any real referrals
-    function updateReferralTree(uint8 refDepth, uint8 _tier) external {
+    // CIRTICAL - NOTE: Change param, check tiers, call the account, and get the actual tier from the contract
+    function updateReferralTree(uint8 refDepth, address referralHandler) external {
         // msg.sender should be the handler reffered by this address
         require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
         require(msg.sender != address(0), "Invalid referred address");
+
+        uint8 _tier = IReferralHandler(referralHandler).getTier() + 1;
 
         if (refDepth == 1) {
             require(
@@ -305,7 +307,6 @@ contract ReferralHandlerERC6551Account is
     //
     //
 
-    // NOTE: Probably not the best idea to enable arbitrary execution of code using the call function.
     function execute(
         address to,
         uint256 value,
@@ -376,7 +377,7 @@ contract ReferralHandlerERC6551Account is
 
     function owner() public view returns (address) {
         (uint256 chainId, address tokenContract, uint256 tokenId) = token();
-        if (chainId != block.chainid) return address(0); // NOTE: Should not be possible to hit this since block.chainid is determined by the nexus through the blockchain itself
+        if (chainId != block.chainid) return address(0);
 
         return IERC721(tokenContract).ownerOf(tokenId);
     }

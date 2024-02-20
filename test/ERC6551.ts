@@ -21,6 +21,7 @@ import {
     fixture_6551_integration_tests,
     fixture_6551_unit_tests,
 } from "./helpers/fixtures";
+import { parseEventLogs } from "./helpers/utils";
 
 // TODO: Replace current impl to parseEventLogs() helper function
 describe("ERC6551", function () {
@@ -225,24 +226,6 @@ describe("ERC6551", function () {
                 expect(validSignature).to.equal("0x00000000");
             });
 
-            it("Should not be able to support an operation that is not supported", async function () {
-                await accounts[0].sendTransaction({
-                    to: newAccountInstance.target,
-                    value: 10000,
-                });
-
-                await expect(
-                    newAccountInstance
-                        .connect(accounts[0])
-                        .execute(
-                            mockExecutes.mockExecuteEth.target,
-                            10000,
-                            "0x",
-                            1
-                        )
-                ).to.be.revertedWith("Only call operations are supported");
-            });
-
             it("Should be able to execute a simple transfer to a contract as an account", async function () {
                 await accounts[0].sendTransaction({
                     to: newAccountInstance.target,
@@ -290,19 +273,19 @@ describe("ERC6551", function () {
 
                 expect(receipt).to.be.ok;
 
-                const eventLogs = receipt.logs.find(
-                    (log) =>
-                        erc6551.account.interface.parseLog(log as any)?.name ===
-                        "ExecutionResult"
+                const keys = ["newValue", "success"];
+
+                const changedValue = parseEventLogs(
+                    receipt.logs,
+                    mockExecutes.mockExecuteEth.interface,
+                    "ChangedValue",
+                    keys
                 );
 
-                expect(eventLogs).to.be.ok;
-
-                const eventLogArgs = (eventLogs as FilteredLogEvent | EventLog)
-                    .args;
-
-                expect(BigInt(eventLogArgs[0]).toString()).to.equal("1");
-                expect(BigInt(eventLogArgs[1]).toString()).to.equal("1");
+                expect(changedValue.newValue.toString()).to.equal(
+                    ethers.encodeBytes32String("Hello world!")
+                );
+                expect(changedValue.success).to.be.true;
             });
 
             it("Should not be able to transfer to an address that doesn't accept ETH", async function () {
@@ -875,25 +858,33 @@ describe("ERC6551", function () {
 
             it("Should not be able to updateReferralTree if values out of range", async function () {
                 await expect(
-                    createdAccount_.updateReferralTree(10, 10)
+                    createdAccount_.updateReferralTree(
+                        10,
+                        createdAccount2_.target
+                    )
                 ).to.be.revertedWith("Invalid depth");
             });
 
-            it("Should be able to change the tiers of the accounts as the account owners", async function () {
+            it("Should not be able to change the tiers of the accounts as the account owners through the execute function", async function () {
+                let tierCounts = await createdAccount_.getTierCounts();
+
+                // Account 1's tier count should start with
+                expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+
                 const account3Data =
                     createdAccount3_.interface.encodeFunctionData(
                         "updateReferralTree",
-                        [2, 2]
+                        [2, createdAccount3_.target]
                     );
                 const account4Data =
                     createdAccount4_.interface.encodeFunctionData(
                         "updateReferralTree",
-                        [3, 3]
+                        [3, createdAccount4_.target]
                     );
                 const account5Data =
                     createdAccount5_.interface.encodeFunctionData(
                         "updateReferralTree",
-                        [4, 4]
+                        [4, createdAccount5_.target]
                     );
 
                 await createdAccount3_
@@ -908,31 +899,43 @@ describe("ERC6551", function () {
                     .connect(accounts_[5])
                     .execute(createdAccount_.target, 0, account5Data, 0);
 
-                const tierCounts = await createdAccount_.getTierCounts();
+                tierCounts = await createdAccount_.getTierCounts();
 
-                // Account 1's tier count should be updated like so
-                expect(tierCounts).to.deep.equal([1n, 1n, 1n, 1n, 0n]);
+                // Account 1's tier count should not be updated
+                expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
             });
 
             it("Should not be able to update a non-existent referral tree entry", async function () {
                 await expect(
-                    createdAccount_.updateReferralTree(1, 1)
+                    createdAccount_.updateReferralTree(
+                        1,
+                        createdAccount_.target
+                    )
                 ).to.be.revertedWith("Cannot update non-existant entry");
 
                 await expect(
-                    createdAccount_.updateReferralTree(2, 1)
+                    createdAccount_.updateReferralTree(
+                        2,
+                        createdAccount_.target
+                    )
                 ).to.be.revertedWith("Cannot update non-existant entry");
 
                 await expect(
-                    createdAccount_.updateReferralTree(3, 1)
+                    createdAccount_.updateReferralTree(
+                        3,
+                        createdAccount_.target
+                    )
                 ).to.be.revertedWith("Cannot update non-existant entry");
 
                 await expect(
-                    createdAccount_.updateReferralTree(4, 1)
+                    createdAccount_.updateReferralTree(
+                        4,
+                        createdAccount_.target
+                    )
                 ).to.be.revertedWith("Cannot update non-existant entry");
             });
 
-            it("checkReferralExistence tier level for the accounts should be updated", async function () {
+            it("checkReferralExistence tier level for the accounts should not be updated and remain at correct tier", async function () {
                 let referralExistence =
                     await createdAccount_.checkReferralExistence(
                         1,
@@ -947,7 +950,7 @@ describe("ERC6551", function () {
                         createdAccount3_.target
                     );
 
-                expect(referralExistence).to.equal(2);
+                expect(referralExistence).to.equal(1);
 
                 referralExistence =
                     await createdAccount_.checkReferralExistence(
@@ -955,7 +958,7 @@ describe("ERC6551", function () {
                         createdAccount4_.target
                     );
 
-                expect(referralExistence).to.equal(3);
+                expect(referralExistence).to.equal(1);
 
                 referralExistence =
                     await createdAccount_.checkReferralExistence(
@@ -963,10 +966,10 @@ describe("ERC6551", function () {
                         createdAccount5_.target
                     );
 
-                expect(referralExistence).to.equal(4);
+                expect(referralExistence).to.equal(1);
             });
 
-            it("Should be able to tier up after the the referral tree is updated by the referrers", async function () {
+            it("Should not be able to tier up after the the referral tree is updated by the referrers", async function () {
                 // Transfers xp token to user to enable tier up
                 await xpToken_.mint(createdAccount_.target, 2);
 
@@ -975,12 +978,9 @@ describe("ERC6551", function () {
                 // Tier level should be at 0 before tierUp
                 expect(tierLevel).to.equal(0);
 
-                await createdAccount_.tierUp();
-
-                tierLevel = await createdAccount_.getTier();
-
-                // Tier level should increase to 1 after tierUp
-                expect(tierLevel).to.equal(1);
+                await expect(createdAccount_.tierUp()).to.be.revertedWith(
+                    "Tier upgrade condition not met"
+                );
             });
 
             it("Only the protocol should be able to set the tier", async function () {
@@ -1004,88 +1004,94 @@ describe("ERC6551", function () {
 
                 tierCount = await createdAccount2_.getTierCounts();
 
-                // Account 2's tier counts should be updated to reflect the change
-                expect(tierCount).to.deep.equal([3n, 0n, 0n, 1n, 0n]);
+                // Account 2's tier counts should not be updated to reflect the change
+                expect(tierCount).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+
+                // Only account 5's tier should be updated
+                const tier = await createdAccount5_.getTier();
+
+                // Account 5's tier should be updated
+                expect(tier).to.equal(3);
             });
 
-            it("Should be able to setTier for an account that does not have any referrals within some of the depths", async function () {
+            it("Should not be able to setTier for an account that does not have any referrals within some of the depths", async function () {
                 let tierCount = await createdAccount_.getTierCounts();
 
-                // Account 1's original tier counts should all be level 1
-                expect(tierCount).to.deep.equal([1n, 1n, 1n, 1n, 0n]);
+                // Account 1's original tier counts should all be tier 1
+                expect(tierCount).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
 
                 await createdAccount_.setTier(2);
 
                 tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's tier should not have any changes
-                expect(tierCount).to.deep.equal([1n, 1n, 1n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
-                // Account 2's original tier counts should have 3 at level 1 and 1 at level 4
-                expect(tierCount).to.deep.equal([3n, 0n, 0n, 1n, 0n]);
+                // Account 2's original tier counts should all be tier 1
+                expect(tierCount).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
 
                 await createdAccount2_.setTier(2);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's should not have any changes
-                expect(tierCount).to.deep.equal([3n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
 
                 tierCount = await createdAccount_.getTierCounts();
 
-                // Account 1's should have a change at level 3
-                expect(tierCount).to.deep.equal([0n, 1n, 2n, 1n, 0n]);
+                // Account 1's should have a change at tier 3
+                expect(tierCount).to.deep.equal([3n, 0n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount3_.getTierCounts();
 
-                // Account 3's original tier counts should all be level 1 but 1 at level 4
-                expect(tierCount).to.deep.equal([2n, 0n, 0n, 1n, 0n]);
+                // Account 3's original tier counts should all be tier 1
+                expect(tierCount).to.deep.equal([3n, 0n, 0n, 0n, 0n]);
 
                 await createdAccount3_.setTier(2);
 
                 tierCount = await createdAccount3_.getTierCounts();
 
                 // Account 3's should not have any changes
-                expect(tierCount).to.deep.equal([2n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([3n, 0n, 0n, 0n, 0n]);
 
                 tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's should have a change at level 3
-                expect(tierCount).to.deep.equal([0n, 0n, 3n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([2n, 0n, 2n, 0n, 0n]);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's should have a change at level 3
-                expect(tierCount).to.deep.equal([2n, 0n, 1n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([3n, 0n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount4_.getTierCounts();
 
                 // Account 4's original tier counts should be at level 1 and at level 4
-                expect(tierCount).to.deep.equal([1n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
 
                 await createdAccount4_.setTier(2);
 
                 tierCount = await createdAccount4_.getTierCounts();
 
                 // Account 4's should not have any changes
-                expect(tierCount).to.deep.equal([1n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
 
                 tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's should have a change at level 3
-                expect(tierCount).to.deep.equal([0n, 0n, 3n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([1n, 0n, 3n, 0n, 0n]);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's should have a change at level 3
-                expect(tierCount).to.deep.equal([1n, 0n, 2n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([2n, 0n, 2n, 0n, 0n]);
 
                 tierCount = await createdAccount3_.getTierCounts();
 
                 // Account 3's should have a change at level 3
-                expect(tierCount).to.deep.equal([1n, 0n, 1n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([2n, 0n, 1n, 0n, 0n]);
             });
 
             it("Only the master should be able to set the nexus contract address", async function () {

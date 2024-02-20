@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract ProfileNFT is ERC721URIStorage {
     using SafeERC20 for IERC20;
     
-    uint32 private _tokenCounter; // NOTE: Could be made public, and be used as totalSupply
+    uint32 private _tokenCounter;
 
     address public councelor;
     address public nexus;
@@ -38,7 +38,7 @@ contract ProfileNFT is ERC721URIStorage {
     ) public onlyNexus returns (uint32) {
         uint32 newNFTId = _tokenCounter;
         _tokenCounter++;
-        _mint(user, newNFTId); // NOTE: Using mint means we don't check if the receiver is a valid address to receive the nft
+        _mint(user, newNFTId);
         _setTokenURI(newNFTId, _tokenURI);
         return newNFTId;
     }
@@ -67,7 +67,7 @@ contract ProfileNFT is ERC721URIStorage {
         _setTokenURI(tokenID, _tokenURI);
     }
 
-    // NOTE: Can probably use a two step ownership pattern instead. Same for other contracts
+    // NOTE: Add two stp ownership to contracts
     function setCouncelor(address account) public onlyCouncelor {
         councelor = account;
     }
@@ -80,20 +80,6 @@ contract ProfileNFT is ERC721URIStorage {
         address handler = INexus(nexus).getHandler(tokenID);
         return IReferralHandler(handler).getTier(); 
     }
-
-    /**
-     * @dev Returns whether `tokenId` exists.
-     *
-     * Tokens can be managed by their owner or approved accounts via {approve} or {setApprovalForAll}.
-     *
-     * Tokens start existing when they are minted (`_mint`),
-     * and stop existing when they are burned (`_burn`).
-     */
-    // NOTE: Not required, can just use ownerOf(tokenId) public function
-	// NOTE: Also not used with anything else in the contract, nor is it required for the standard's interface
-    // function _exists(uint256 tokenId) internal view virtual returns (bool) {
-    //     return _ownerOf(tokenId) != address(0);
-    // }
 
     function recoverTokens(
         address _token,
