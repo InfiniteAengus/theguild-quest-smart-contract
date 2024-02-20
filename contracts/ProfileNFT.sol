@@ -26,7 +26,7 @@ contract ProfileNFT is ERC721URIStorage {
         _;
     }
 
-    constructor(address _factory) ERC721("The Guild profike NFT", "GuildNFT") {
+    constructor(address _factory) ERC721("The Guild profile NFT", "GuildNFT") {
         councelor = msg.sender;
         nexus = _factory;
         _tokenCounter++; // Start Token IDs from 1 instead of 0, we use 0 to indicate absense of NFT on a wallet

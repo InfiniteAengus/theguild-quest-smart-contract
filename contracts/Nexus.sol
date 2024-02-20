@@ -71,7 +71,7 @@ contract Nexus is INexus {
     ) {
         master = msg.sender;
         accountImplementation = _accountImplementation;
-        Registry = IERC6551Registry(_registry);
+        Registry = IERC6551Registry(_registry);  // NOTE functions to updatye registry required
     }
 
     function getHandler(uint32 tokenID) external view returns (address) {
