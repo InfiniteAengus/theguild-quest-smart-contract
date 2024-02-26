@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IEscrow } from "./interfaces/Quests/IEscrow.sol";
+import { IEscrow, IEscrowNative } from "./interfaces/Quests/IEscrow.sol";
 import { IRewarder } from "./interfaces/IRewarder.sol";
 
 /**
@@ -13,12 +13,12 @@ import { IRewarder } from "./interfaces/IRewarder.sol";
  * @author @cosmodude
  * @dev Implementation contract, instances are created as clones 
  */
-contract EscrowNative is IEscrow {
+contract EscrowNative is IEscrow, IEscrowNative {
   using SafeERC20 for IERC20;
 
-  bool public initialized = false;
+  bool public initialized;
   address public quest;
-  uint256 paymentAmount;
+  uint256 public paymentAmount;
 
   modifier onlyQuest() {
     require(msg.sender == quest, "only quest");
