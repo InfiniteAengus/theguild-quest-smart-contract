@@ -4,10 +4,17 @@ import { ERC6551Setup, Nexus6551 } from "./types";
 import {
     deployMockExecutes,
     erc6551Setup,
+    escrowNativeSetup,
+    escrowTokenSetup,
     managersSetup,
     mockNFTSetup,
+    mockRewarderSetup,
+    mockTavernSetup,
+    mockTokenSetup,
     nexusSetup,
     profileNFTSetup,
+    questSetup,
+    tavernSetup,
     xpSetup,
 } from "./setup";
 import { Signer } from "ethers";
@@ -133,4 +140,68 @@ export async function fixture_profile_nft_integration_tests(
     const profileNFT = await profileNFTSetup(nexus, true);
 
     return { profileNFT, accounts, nexus };
+}
+
+// Fixture for the Escrow Contract Unit Tests
+export async function fixture_escrow_unit_tests(accounts: Signer[]) {
+    const escrow = await escrowNativeSetup(true);
+    const mockRewarder = await mockRewarderSetup(true, accounts[0]);
+
+    return { escrow, accounts, mockRewarder };
+}
+
+export async function fixture_quest_unit_tests(accounts: Signer[]) {
+    const escrowNative = await escrowNativeSetup(true);
+    const escrowToken = await escrowTokenSetup(true);
+    const mockRewarder = await mockRewarderSetup(true, accounts[0]);
+
+    const quest = await questSetup(true);
+
+    const mockTavern = await mockTavernSetup(
+        true,
+        escrowNative,
+        escrowToken,
+        quest,
+        accounts,
+        mockRewarder
+    );
+
+    return {
+        mockTavern,
+        quest,
+        accounts,
+        escrowNative,
+        escrowToken,
+        mockRewarder,
+    };
+}
+
+export async function fixture_tavern_unit_tests(accounts: Signer[]) {
+    const escrowNative = await escrowNativeSetup(true);
+    const escrowToken = await escrowTokenSetup(true);
+    const mockRewarder = await mockRewarderSetup(true, accounts[0]);
+
+    const mockNft = await mockNFTSetup(true);
+    const mockERC20 = await mockTokenSetup(true);
+
+    const quest = await questSetup(true);
+
+    const tavern = await tavernSetup(
+        quest,
+        escrowNative,
+        escrowToken,
+        mockNft,
+        true
+    );
+
+    return {
+        quest,
+        escrowNative,
+        escrowToken,
+        mockNft,
+        tavern,
+        mockRewarder,
+        accounts,
+        mockERC20,
+    };
 }

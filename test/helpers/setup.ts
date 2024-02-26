@@ -1,10 +1,12 @@
 import { ethers } from "hardhat";
 import {
     EscrowNative,
+    EscrowToken,
     GuildXp,
     MockExecute,
     MockExecuteEth,
     MockNFT,
+    MockRewarder,
     MockToken,
     Nexus,
     ProfileNFT,
@@ -102,6 +104,42 @@ export async function mockFailReceiverSetup(silence: Boolean) {
     return mockFailReceiver;
 }
 
+export async function mockRewarderSetup(silence: Boolean, account: Signer) {
+    const mockRewarder = await ethers.deployContract("MockRewarder", [account]);
+    await mockRewarder.waitForDeployment();
+
+    if (!silence) {
+        console.log(`MockRewarder deployed to ${mockRewarder.target}`);
+    }
+
+    return mockRewarder;
+}
+
+export async function mockTavernSetup(
+    silence: Boolean,
+    escrowNative: EscrowNative,
+    escrowToken: EscrowToken,
+    quest: Quest,
+    accounts: Signer[],
+    rewarder: MockRewarder
+) {
+    const mockTavern = await ethers.deployContract("MockTavern", [
+        escrowNative.target,
+        escrowToken.target,
+        quest.target,
+        await accounts[0].getAddress(),
+        await accounts[1].getAddress(),
+        rewarder.target,
+    ]);
+    await mockTavern.waitForDeployment();
+
+    if (!silence) {
+        console.log(`MockTavern deployed to ${mockTavern.target}`);
+    }
+
+    return mockTavern;
+}
+
 // Contract Setups
 
 export async function erc6551Setup(silence: Boolean): Promise<ERC6551Setup> {
@@ -163,23 +201,40 @@ export async function profileNFTSetup(
     return profileNFT;
 }
 
-// TODO: only deploys escrowNative for now
-export async function escrowSetup(): Promise<EscrowNative> {
+export async function escrowNativeSetup(
+    silence: Boolean
+): Promise<EscrowNative> {
     const escrow = await ethers.deployContract("EscrowNative");
 
     await escrow.waitForDeployment();
 
-    console.log(`Escrow deployed to ${escrow.target}`);
+    if (!silence) {
+        console.log(`Escrow deployed to ${escrow.target}`);
+    }
 
     return escrow;
 }
 
-export async function questSetup(): Promise<Quest> {
+export async function escrowTokenSetup(silence: Boolean): Promise<EscrowToken> {
+    const escrow = await ethers.deployContract("EscrowToken");
+
+    await escrow.waitForDeployment();
+
+    if (!silence) {
+        console.log(`Escrow deployed to ${escrow.target}`);
+    }
+
+    return escrow;
+}
+
+export async function questSetup(silence: Boolean): Promise<Quest> {
     const quest = await ethers.deployContract("Quest");
 
     await quest.waitForDeployment();
 
-    console.log(`Quest deployed to ${quest.target}`);
+    if (!silence) {
+        console.log(`Quest deployed to ${quest.target}`);
+    }
 
     return quest;
 }
@@ -240,12 +295,12 @@ export async function xpSetup(
     return guildXp;
 }
 
-// TODO: add actual escrow token instead of using escrowNative for both
 export async function tavernSetup(
     quest: Quest,
     escrowNative: EscrowNative,
-    escrowToken: EscrowNative,
-    profileNFT: ProfileNFT
+    escrowToken: EscrowToken,
+    profileNFT: any,
+    silence: Boolean
 ): Promise<Tavern> {
     const tavern = await ethers.deployContract("Tavern", [
         quest.target,
@@ -256,7 +311,9 @@ export async function tavernSetup(
 
     await tavern.waitForDeployment();
 
-    console.log(`Tavern deployed to ${tavern.target}`);
+    if (!silence) {
+        console.log(`Tavern deployed to ${tavern.target}`);
+    }
 
     return tavern;
 }
@@ -265,10 +322,17 @@ export async function setup(silence: Boolean) {
     const { nexus, erc6551 } = await nexusSetup(silence);
     const profileNFT = await profileNFTSetup(nexus, silence);
 
-    const escrow = await escrowSetup();
-    const quest = await questSetup();
+    const escrowNative = await escrowNativeSetup(silence);
+    const escrowToken = await escrowTokenSetup(silence);
+    const quest = await questSetup(true);
 
-    const tavern = await tavernSetup(quest, escrow, escrow, profileNFT);
+    const tavern = await tavernSetup(
+        quest,
+        escrowNative,
+        escrowToken,
+        profileNFT,
+        true
+    );
 
     return {
         erc6551,
