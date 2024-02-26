@@ -15,24 +15,19 @@ contract TaxManager is ITaxManager {
 
     address public custodian;
 
-    address public seekerTaxPool;
     address public solverTaxPool;
-    address public maintenancePool;
-    address public devPool;
-    address public rewardAllocationPool;
-    address public perpetualPool;
-    address public tierPool;
     address public revenuePool;
-    address public marketingPool;
 
-    uint256 public seekerTaxRate;
+    // Tax Receiver Addresses
+    address private referralTaxReceiver;
+    address private platformTaxReceiver;
+
+    SeekerFees public seekerFees;
+
     uint256 public solverTaxRate;
-    uint256 public maintenanceTaxRate;
+
     uint256 public protocolTaxRate;
-    uint256 public perpetualPoolTaxRate;
-    // uint256 public devPoolTaxRate;
-    uint256 public rewardPoolTaxRate;
-    uint256 public marketingTaxRate;
+
     // attention here
     uint256 public constant taxBaseDivisor = 10000;
 
@@ -49,6 +44,11 @@ contract TaxManager is ITaxManager {
     modifier onlyCustodian() {
         // Change this to a list with ROLE library
         require(msg.sender == custodian, "only custodian"); // need multiple admins
+        _;
+    }
+
+    modifier validTaxRate(uint256 _taxRate){
+        require(_taxRate < taxBaseDivisor, "Tax rate too high");
         _;
     }
 
@@ -84,62 +84,51 @@ contract TaxManager is ITaxManager {
 
     //
     //
+    // Getters for Addresses
+    //
+    //
+
+    function getReferralTaxReceiver() external view returns (address) {
+        return referralTaxReceiver;
+    }
+
+    function getPlatformTaxReceiver() external view returns (address) {
+        return platformTaxReceiver;
+    }
+
+    //
+    //
     // Setters for Addresses
     //
     //
 
-    function setSeekerTaxPool(address _selfTaxPool) external onlyCustodian {
-        seekerTaxPool = _selfTaxPool;
+    function setreferralTaxReceiver(address _referralTaxReceiver) external onlyCustodian {
+        require(_referralTaxReceiver != address(0), "Zero address");
+        referralTaxReceiver = _referralTaxReceiver;
+    }
+
+    function setPlatformTaxReceiver(address _platformTaxReceiver) external onlyCustodian {
+        require(_platformTaxReceiver != address(0), "Zero address");
+        platformTaxReceiver = _platformTaxReceiver;
     }
 
     function setSolverTaxPool(address _solverTaxPool) external onlyCustodian {
         solverTaxPool = _solverTaxPool;
     }
 
-    function setMaintenancePool(
-        address _maintenancePool
-    ) external onlyCustodian {
-        maintenancePool = _maintenancePool;
+    //
+    //
+    // Getters for the Tax Rates
+    //
+    //
+
+    function getSeekerTaxRate() external view returns (uint256) {
+        return seekerFees.referralRewards + seekerFees.platformRevenue;
     }
 
-    // unused pools
-
-    function setDevPool(address _devPool) external onlyCustodian {
-        devPool = _devPool;
+    function getSeekerFees() external view returns (SeekerFees memory) {
+        return seekerFees;
     }
-
- 
-
-    function setRewardAllocationPool(
-        address _rewardAllocationPool
-    ) external onlyCustodian {
-        rewardAllocationPool = _rewardAllocationPool;
-    }
-
-
-
-    function setPerpetualPool(address _perpetualPool) external onlyCustodian {
-        perpetualPool = _perpetualPool;
-    }
-
- 
-
-    function setTierPool(address _tierPool) external onlyCustodian {
-        tierPool = _tierPool;
-    }
-
-
-
-    function setMarketingPool(address _marketingPool) external onlyCustodian {
-        marketingPool = _marketingPool;
-    }
-
-
-
-    function setRevenuePool(address _revenuePool) external onlyCustodian {
-        revenuePool = _revenuePool;
-    }
-
 
     //
     //
@@ -147,41 +136,24 @@ contract TaxManager is ITaxManager {
     //
     //
 
-    function setSeeker(uint256 _seekerTaxRate) external onlyCustodian {
-        seekerTaxRate = _seekerTaxRate;
+    function setSeekerFees(
+        uint256 _referralRewards,
+        uint256 _platformRevenue
+    ) 
+        external 
+        onlyCustodian 
+        validTaxRate(_referralRewards) 
+        validTaxRate(_platformRevenue) 
+    {
+        require(_referralRewards + _platformRevenue < taxBaseDivisor, "Tax rate too high");
+        seekerFees.referralRewards = _referralRewards;
+        seekerFees.platformRevenue = _platformRevenue;
     }
 
-
-    function setSolverTaxRate(uint256 _solverTaxRate) external onlyCustodian {
+    function setSolverTaxRate(
+        uint256 _solverTaxRate
+    ) external onlyCustodian validTaxRate(_solverTaxRate) {
         solverTaxRate = _solverTaxRate;
-    }
-
-    // unused
-
-    function setMaintenanceTaxRate(
-        uint256 _maintenanceTaxRate
-    ) external onlyCustodian {
-        maintenanceTaxRate = _maintenanceTaxRate;
-    }
-
-    function setProtocolTaxRate(
-        uint256 _protocolTaxRate
-    ) external onlyCustodian {
-        protocolTaxRate = _protocolTaxRate;
-    }
-
-    // function getProtocolTaxRate() external view returns (uint256) {
-    //     return protocolTaxRate + rightUpTaxRate;
-    // }
-
-    // function getTotalTaxAtMint() external view returns (uint256) {
-    //     return protocolTaxRate + rightUpTaxRate + selfTaxRate;
-    // }
-
-    function setPerpetualPoolTaxRate(
-        uint256 _perpetualPoolTaxRate
-    ) external onlyCustodian {
-        perpetualPoolTaxRate = _perpetualPoolTaxRate;
     }
 
     function setBulkReferralRate(
@@ -190,37 +162,18 @@ contract TaxManager is ITaxManager {
         uint256 second,
         uint256 third,
         uint256 fourth
-    ) external onlyCustodian {
+    ) 
+        external 
+        onlyCustodian 
+        validTaxRate(first)
+        validTaxRate(second)
+        validTaxRate(third)
+        validTaxRate(fourth)
+    {
         referralRatesByTier[tier].first = first;
         referralRatesByTier[tier].second = second;
         referralRatesByTier[tier].third = third;
         referralRatesByTier[tier].fourth = fourth;
-    }
-
- 
-
-    // function setDevPoolTaxRate(uint256 _devPoolRate) external {
-    //     devPoolTaxRate = _devPoolRate;
-    // }
-
-    // function getDevPoolRate() external view returns (uint256) {
-    //     return devPoolTaxRate;
-    // }
-
-    function setRewardPoolTaxRate(
-        uint256 _rewardPoolRate
-    ) external onlyCustodian {
-        rewardPoolTaxRate = _rewardPoolRate;
-    }
-
-    function setTierPoolRate(uint256 _tierPoolRate) external onlyCustodian {
-        tierPoolRate = _tierPoolRate;
-    }
-
-    function setMarketingTaxRate(
-        uint256 _marketingTaxRate
-    ) external onlyCustodian {
-        marketingTaxRate = _marketingTaxRate;
     }
 
     function recoverTokens(
@@ -238,4 +191,5 @@ contract TaxManager is ITaxManager {
         IERC20(_token).transfer(benefactor, tokenBalance);
         return;
     }
+
 }
