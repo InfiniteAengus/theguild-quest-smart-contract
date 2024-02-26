@@ -9,7 +9,9 @@ import {
     EscrowNative,
     MockRewarder,
     MockTavern,
+    Nexus,
     Quest,
+    TaxManager,
 } from "../typechain-types";
 import {
     fixture_profile_nft_integration_tests,
@@ -42,7 +44,9 @@ describe("Quest", function () {
             escrowNative_: EscrowNative,
             escrowToken_: EscrowToken,
             mockTavern_: MockTavern,
-            mockRewarder_: MockRewarder;
+            mockRewarder_: MockRewarder,
+            taxManager_: TaxManager,
+            nexus_: Nexus;
 
         it("Quest should be deployed, but not yet initialized", async function () {
             const {
@@ -52,9 +56,20 @@ describe("Quest", function () {
                 escrowToken,
                 escrowNative,
                 mockRewarder,
+                taxManager,
+                nexus,
             } = await loadFixture(fixture_unit_tests);
 
             expect(await quest.initialized()).to.be.false;
+
+            // Tax manager setup
+            await nexus.setTaxManager(taxManager.target);
+            await taxManager.setreferralTaxReceiver(
+                await accounts[0].getAddress()
+            );
+            await taxManager.setPlatformTaxReceiver(
+                await accounts[0].getAddress()
+            );
 
             accounts_ = accounts;
             quest_ = quest;
@@ -62,6 +77,8 @@ describe("Quest", function () {
             escrowToken_ = escrowToken;
             mockTavern_ = mockTavern;
             mockRewarder_ = mockRewarder;
+            taxManager_ = taxManager;
+            nexus_ = nexus;
         });
 
         it("Should be able to initialize the contract and update values", async function () {
@@ -71,7 +88,8 @@ describe("Quest", function () {
                 1000,
                 "Quest URI",
                 escrowNative_.target,
-                ethers.ZeroAddress
+                ethers.ZeroAddress,
+                taxManager_.target
             );
 
             expect(await quest_.initialized()).to.be.true;
@@ -145,7 +163,7 @@ describe("Quest", function () {
 
         it("Only seeker should be able to start quest", async function () {
             await expect(
-                questInstance.connect(accounts_[1]).startQuest()
+                questInstance.connect(accounts_[1]).startQuest(1000)
             ).to.be.revertedWith("only Seeker");
         });
 
@@ -164,7 +182,7 @@ describe("Quest", function () {
         let snapshot;
 
         it("Should be able to start quest, and create an escrow contract", async function () {
-            await questInstance.startQuest({ value: 1000 });
+            await questInstance.startQuest(1000, { value: 1000 });
 
             expect(await questInstance.started()).to.be.true;
 
@@ -173,7 +191,7 @@ describe("Quest", function () {
 
         it("Should not be able to start a quest again if it has already starter", async function () {
             await expect(
-                questInstance.startQuest({ value: 1000 })
+                questInstance.startQuest(1000, { value: 1000 })
             ).to.be.revertedWith("already started");
         });
 

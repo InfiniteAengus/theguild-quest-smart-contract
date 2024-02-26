@@ -117,6 +117,7 @@ export async function mockRewarderSetup(silence: Boolean, account: Signer) {
 
 export async function mockTavernSetup(
     silence: Boolean,
+    nexus: Nexus,
     escrowNative: EscrowNative,
     escrowToken: EscrowToken,
     quest: Quest,
@@ -130,6 +131,7 @@ export async function mockTavernSetup(
         await accounts[0].getAddress(),
         await accounts[1].getAddress(),
         rewarder.target,
+        nexus.target,
     ]);
     await mockTavern.waitForDeployment();
 
@@ -300,6 +302,7 @@ export async function tavernSetup(
     escrowNative: EscrowNative,
     escrowToken: EscrowToken,
     profileNFT: any,
+    nexus: Nexus,
     silence: Boolean
 ): Promise<Tavern> {
     const tavern = await ethers.deployContract("Tavern", [
@@ -307,6 +310,7 @@ export async function tavernSetup(
         escrowNative.target,
         escrowToken.target,
         profileNFT.target,
+        nexus.target,
     ]);
 
     await tavern.waitForDeployment();
@@ -331,6 +335,7 @@ export async function setup(silence: Boolean) {
         escrowNative,
         escrowToken,
         profileNFT,
+        nexus,
         true
     );
 

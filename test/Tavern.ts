@@ -11,8 +11,10 @@ import {
     MockNFT,
     MockRewarder,
     MockToken,
+    Nexus,
     Quest,
     Tavern,
+    TaxManager,
 } from "../typechain-types";
 import {
     fixture_profile_nft_integration_tests,
@@ -46,7 +48,9 @@ describe("Tavern", function () {
             mockRewarder_: MockRewarder,
             mockNft_: MockNFT,
             tavern_: Tavern,
-            mockERC20_: MockToken;
+            mockERC20_: MockToken,
+            nexus_: Nexus,
+            taxManager_: TaxManager;
 
         it("Tavern should be deployed, and initialized", async function () {
             const {
@@ -58,9 +62,17 @@ describe("Tavern", function () {
                 mockNft,
                 tavern,
                 mockERC20,
+                nexus,
+                taxManager,
             } = await loadFixture(fixture_unit_tests);
 
             expect(await quest.initialized()).to.be.false;
+
+            // TaxManager setup
+            await nexus.setTaxManager(taxManager.target);
+            await taxManager.setPlatformTaxReceiver(
+                await accounts[0].getAddress()
+            );
 
             accounts_ = accounts;
             quest_ = quest;
@@ -70,6 +82,8 @@ describe("Tavern", function () {
             mockNft_ = mockNft;
             tavern_ = tavern;
             mockERC20_ = mockERC20;
+            nexus_ = nexus;
+            taxManager_ = taxManager;
         });
 
         it("Initialized values should be correct", async function () {

@@ -15,6 +15,7 @@ import {
     profileNFTSetup,
     questSetup,
     tavernSetup,
+    taxManagerSetup,
     xpSetup,
 } from "./setup";
 import { Signer } from "ethers";
@@ -154,11 +155,15 @@ export async function fixture_quest_unit_tests(accounts: Signer[]) {
     const escrowNative = await escrowNativeSetup(true);
     const escrowToken = await escrowTokenSetup(true);
     const mockRewarder = await mockRewarderSetup(true, accounts[0]);
+    const taxManager = await taxManagerSetup(true);
+
+    const { nexus } = await nexusSetup(true);
 
     const quest = await questSetup(true);
 
     const mockTavern = await mockTavernSetup(
         true,
+        nexus,
         escrowNative,
         escrowToken,
         quest,
@@ -173,13 +178,18 @@ export async function fixture_quest_unit_tests(accounts: Signer[]) {
         escrowNative,
         escrowToken,
         mockRewarder,
+        taxManager,
+        nexus,
     };
 }
 
 export async function fixture_tavern_unit_tests(accounts: Signer[]) {
+    const { nexus } = await nexusSetup(true);
+
     const escrowNative = await escrowNativeSetup(true);
     const escrowToken = await escrowTokenSetup(true);
     const mockRewarder = await mockRewarderSetup(true, accounts[0]);
+    const taxManager = await taxManagerSetup(true);
 
     const mockNft = await mockNFTSetup(true);
     const mockERC20 = await mockTokenSetup(true);
@@ -191,6 +201,7 @@ export async function fixture_tavern_unit_tests(accounts: Signer[]) {
         escrowNative,
         escrowToken,
         mockNft,
+        nexus,
         true
     );
 
@@ -203,5 +214,7 @@ export async function fixture_tavern_unit_tests(accounts: Signer[]) {
         mockRewarder,
         accounts,
         mockERC20,
+        taxManager,
+        nexus,
     };
 }
