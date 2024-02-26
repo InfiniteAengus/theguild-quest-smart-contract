@@ -15,6 +15,9 @@ import { ITavern } from "./interfaces/Quests/ITavern.sol";
  * @notice Deploys Quest Contracts and manages them
  * @author @cosmodude
  */
+
+// NOTE: the access control library isnt actually used, local access control is used instead
+
 contract Tavern is AccessControl, ITavern {
     using SafeERC20 for IERC20;
     
@@ -80,6 +83,7 @@ contract Tavern is AccessControl, ITavern {
      * @param _paymentAmount Amount of Native tokens to be paid
      * @param infoURI Link to the info a bout quest (flexible, decide with backend)
      */
+    // NOTE: No way to check created quests on-chain
     function createNewQuest(
         // user identificators
         uint32 _solverId,
@@ -90,7 +94,7 @@ contract Tavern is AccessControl, ITavern {
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowNativeImplementation;
    
-        emit QuestCreatedNative(_seekerId, _solverId, address(quest), escrowImpl, _paymentAmount);
+        emit QuestCreatedNative(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount);
 
         quest.initialize(
             _solverId,
@@ -110,6 +114,7 @@ contract Tavern is AccessControl, ITavern {
      * @param infoURI Link to the info a bout quest (flexible, decide with backend)
      * @param _token Address of the paymant token
      */
+    // NOTE: should check and only use supported ERC20 tokens~
     function createNewQuest(
         // user identificators
         uint32 _solverId,
@@ -121,7 +126,7 @@ contract Tavern is AccessControl, ITavern {
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowTokenImplementation;
 
-        emit QuestCreatedToken(_seekerId, _solverId, address(quest), escrowImpl, _paymentAmount, _token);
+        emit QuestCreatedToken(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount, _token);
 
         quest.initialize(
             _solverId,
@@ -131,7 +136,6 @@ contract Tavern is AccessControl, ITavern {
             escrowImpl,
             _token
         );
-        
     }
 
     // in case of backend problem
@@ -145,7 +149,7 @@ contract Tavern is AccessControl, ITavern {
     }
 
     function setQuestImplementation(address impl) external onlyOwner {
-        escrowNativeImplementation = impl;
+        questImplementation = impl;
     }
 
     function setEscrowNativeImplementation(address impl) external onlyOwner {
