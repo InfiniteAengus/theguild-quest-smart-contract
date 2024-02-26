@@ -39,7 +39,7 @@ describe("ProfileNFT", function () {
         return await fixture_profile_nft_integration_tests(accounts);
     }
 
-    // Unit tests to test the ERC6551 Specific Core Requirements
+    // Unit tests to test the ProfileNFT contract
     describe("Unit Tests", function () {
         let accounts_: Signer[], profileNFT_: ProfileNFT;
 

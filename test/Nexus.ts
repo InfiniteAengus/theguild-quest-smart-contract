@@ -24,7 +24,7 @@ describe("Nexus", function () {
         return await fixture_nexus_unit_tests(accounts);
     }
 
-    // Unit tests to test the ERC6551 Specific Core Requirements
+    // Unit tests to test the Nexus contract
     describe("Unit Tests", function () {
         let nexus_: Nexus,
             erc6551_: ERC6551Setup,

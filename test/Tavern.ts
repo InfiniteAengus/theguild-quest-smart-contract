@@ -1,139 +1,407 @@
 import {
-    time,
-    loadFixture
+    loadFixture,
+    impersonateAccount,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Address } from "../typechain-types";
-  
+import { ContractTransactionReceipt, Signer } from "ethers";
+import {
+    EscrowNative,
+    EscrowToken,
+    MockNFT,
+    MockRewarder,
+    MockToken,
+    Quest,
+    Tavern,
+} from "../typechain-types";
+import {
+    fixture_profile_nft_integration_tests,
+    fixture_tavern_unit_tests,
+} from "./helpers/fixtures";
+import { parseEventLogs } from "./helpers/utils";
+
 describe("Tavern", function () {
-  // We define a fixture to reuse the same setup in every test.
-  // We use loadFixture to run this setup once, snapshot that state,
-  // and reset Hardhat Network to that snapshot in every test.
-  async function deployTavernFixture() {
+    async function mockAccounts(): Promise<Signer[]> {
+        const [owner, user1, user2, user3, user4, user5, user6] =
+            await ethers.getSigners();
 
-    const ONE_GWEI = 1_000_000_000;
+        return [owner, user1, user2, user3, user4, user5, user6];
+    }
 
-    const lockedAmount = ONE_GWEI;
+    async function fixture_unit_tests() {
+        const accounts = await mockAccounts();
+        return await fixture_tavern_unit_tests(accounts);
+    }
 
-    // Contracts are deployed using the first signer/account by default
-    const [owner, seeker, solver] = await ethers.getSigners();
-    
-    const QuestImplementation = await ethers.getContractFactory("Quest");
-    const EscrowImplementation = await ethers.getContractFactory("Escrow");
+    async function fixture_intergration_tests() {
+        const accounts = await mockAccounts();
+        return await fixture_profile_nft_integration_tests(accounts);
+    }
 
-    const questImpl = await QuestImplementation.deploy();
-    const escrowImpl = await EscrowImplementation.deploy([]);
+    describe("Unit Tests", function () {
+        let accounts_: Signer[],
+            quest_: Quest,
+            escrowNative_: EscrowNative,
+            escrowToken_: EscrowToken,
+            mockRewarder_: MockRewarder,
+            mockNft_: MockNFT,
+            tavern_: Tavern,
+            mockERC20_: MockToken;
 
-    const Tavern = await ethers.getContractFactory("Tavern");
-    const tavern = await Tavern.deploy(questImpl.target, escrowImpl.target);
+        it("Tavern should be deployed, and initialized", async function () {
+            const {
+                accounts,
+                quest,
+                escrowNative,
+                escrowToken,
+                mockRewarder,
+                mockNft,
+                tavern,
+                mockERC20,
+            } = await loadFixture(fixture_unit_tests);
 
-    return { tavern, questImpl, escrowImpl, owner, seeker, solver };
-  }
+            expect(await quest.initialized()).to.be.false;
 
-  describe("Deployment", function () {
-    it("Should set the right quest and escrow implementation addresses", async function () {
-      const { tavern, questImpl, escrowImpl } = await loadFixture(deployTavernFixture);
+            accounts_ = accounts;
+            quest_ = quest;
+            escrowNative_ = escrowNative;
+            escrowToken_ = escrowToken;
+            mockRewarder_ = mockRewarder;
+            mockNft_ = mockNft;
+            tavern_ = tavern;
+            mockERC20_ = mockERC20;
+        });
 
-      expect(await tavern.escrowImplementation()).to.equal(escrowImpl.target);
-      expect(await tavern.questImplementation()).to.equal(questImpl.target);
+        it("Initialized values should be correct", async function () {
+            expect(await tavern_.escrowNativeImplementation()).to.equal(
+                escrowNative_.target
+            );
+
+            expect(await tavern_.escrowTokenImplementation()).to.equal(
+                escrowToken_.target
+            );
+
+            expect(await tavern_.questImplementation()).to.equal(quest_.target);
+
+            expect(await tavern_.getProfileNFT()).to.equal(mockNft_.target);
+        });
+
+        it("Should not be able to create a new quest unless barkeeper", async function () {
+            // Creating nfts for solver and seeker
+            await mockNft_.mint(await accounts_[0].getAddress());
+            await mockNft_.mint(await accounts_[1].getAddress());
+
+            await expect(
+                tavern_["createNewQuest(uint32,uint32,uint256,string)"](
+                    0,
+                    1,
+                    1000,
+                    "Quest URI"
+                )
+            ).to.be.revertedWith("only barkeeper");
+        });
+
+        it("Should not be able to set the barkeeper, if not owner", async function () {
+            await expect(
+                tavern_
+                    .connect(accounts_[1])
+                    .setBarkeeper(await accounts_[0].getAddress())
+            ).to.be.revertedWith("only owner");
+        });
+
+        it("Owner should be able to set the barkeeper", async function () {
+            await tavern_.setBarkeeper(await accounts_[0].getAddress());
+
+            expect(await tavern_.getBarkeeper()).to.equal(
+                await accounts_[0].getAddress()
+            );
+        });
+
+        let nativeQuest_: Quest, tokenQuest_: Quest;
+
+        it("Barkeeper should be able to create a new native quest", async function () {
+            const trx = await tavern_[
+                "createNewQuest(uint32,uint32,uint256,string)"
+            ](0, 1, 1000, "Quest URI");
+
+            const receipt = (await trx.wait()) as ContractTransactionReceipt;
+
+            expect(receipt).to.be.ok;
+
+            const keys = [
+                "solverId",
+                "seekerId",
+                "quest",
+                "escrowImplementation",
+                "paymentAmount",
+            ];
+
+            const createdQuest = parseEventLogs(
+                receipt.logs,
+                tavern_.interface,
+                "QuestCreatedNative",
+                keys
+            );
+
+            expect(createdQuest).to.be.ok;
+
+            expect(createdQuest.solverId).to.equal(0n);
+            expect(createdQuest.seekerId).to.equal(1n);
+            expect(createdQuest.quest).to.not.equal(ethers.ZeroAddress);
+            expect(createdQuest.escrowImplementation).to.equal(
+                escrowNative_.target
+            );
+            expect(createdQuest.paymentAmount).to.equal(1000);
+
+            const nativeQuest = await ethers.getContractAt(
+                "Quest",
+                createdQuest.quest
+            );
+
+            nativeQuest_ = nativeQuest;
+        });
+
+        it("Should be able to create an erc20 token quest", async function () {
+            const trx = await tavern_[
+                "createNewQuest(uint32,uint32,uint256,string,address)"
+            ](0, 1, 1000, "Quest URI", mockERC20_.target);
+
+            const receipt = (await trx.wait()) as ContractTransactionReceipt;
+
+            expect(receipt).to.be.ok;
+
+            const keys = [
+                "solverId",
+                "seekerId",
+                "quest",
+                "escrowImplementation",
+                "paymentAmount",
+                "token",
+            ];
+
+            const createdQuest = parseEventLogs(
+                receipt.logs,
+                tavern_.interface,
+                "QuestCreatedToken",
+                keys
+            );
+
+            expect(createdQuest).to.be.ok;
+
+            expect(createdQuest.solverId).to.equal(0n);
+            expect(createdQuest.seekerId).to.equal(1n);
+            expect(createdQuest.quest).to.not.equal(ethers.ZeroAddress);
+            expect(createdQuest.escrowImplementation).to.equal(
+                escrowToken_.target
+            );
+            expect(createdQuest.paymentAmount).to.equal(1000);
+
+            const tokenQuest = await ethers.getContractAt(
+                "Quest",
+                createdQuest.quest
+            );
+
+            tokenQuest_ = tokenQuest;
+        });
+
+        it("Should be able to confirmNFTOwnership of an address with an nft from the tavern contract", async function () {
+            // A valid account should return true
+            expect(
+                await tavern_.confirmNFTOwnership(
+                    await accounts_[0].getAddress()
+                )
+            ).to.be.true;
+
+            // An invalid account should return false
+            expect(
+                await tavern_.confirmNFTOwnership(
+                    await accounts_[2].getAddress()
+                )
+            ).to.be.false;
+        });
+
+        it("Should be able to get the owner of an NFT from the tavern contract", async function () {
+            expect(await tavern_.ownerOf(0)).to.equal(
+                await accounts_[0].getAddress()
+            );
+        });
+
+        it("Should not be able to set profileNFT unless owner", async function () {
+            await expect(
+                tavern_.connect(accounts_[1]).setProfileNft(mockNft_.target)
+            ).to.be.revertedWith("only owner");
+
+            expect(await tavern_.getProfileNFT()).to.equal(mockNft_.target);
+
+            await tavern_.setProfileNft(await accounts_[1].getAddress());
+
+            expect(await tavern_.getProfileNFT()).to.equal(
+                await accounts_[1].getAddress()
+            );
+        });
+
+        it("Should not be able to setQuestImplementation unless owner", async function () {
+            await expect(
+                tavern_
+                    .connect(accounts_[1])
+                    .setQuestImplementation(quest_.target)
+            ).to.be.revertedWith("only owner");
+
+            expect(await tavern_.questImplementation()).to.equal(quest_.target);
+
+            await tavern_.setQuestImplementation(
+                await accounts_[1].getAddress()
+            );
+
+            expect(await tavern_.questImplementation()).to.equal(
+                await accounts_[1].getAddress()
+            );
+        });
+
+        it("Should not be able to setEscrowNativeImplementation unless owner", async function () {
+            await expect(
+                tavern_
+                    .connect(accounts_[1])
+                    .setEscrowNativeImplementation(escrowNative_.target)
+            ).to.be.revertedWith("only owner");
+
+            expect(await tavern_.escrowNativeImplementation()).to.equal(
+                escrowNative_.target
+            );
+
+            await tavern_.setEscrowNativeImplementation(
+                await accounts_[1].getAddress()
+            );
+
+            expect(await tavern_.escrowNativeImplementation()).to.equal(
+                await accounts_[1].getAddress()
+            );
+        });
+
+        it("Should not be able to setEscrowTokenImplementation unless owner", async function () {
+            await expect(
+                tavern_
+                    .connect(accounts_[1])
+                    .setEscrowTokenImplementation(escrowToken_.target)
+            ).to.be.revertedWith("only owner");
+
+            expect(await tavern_.escrowTokenImplementation()).to.equal(
+                escrowToken_.target
+            );
+
+            await tavern_.setEscrowTokenImplementation(
+                await accounts_[1].getAddress()
+            );
+
+            expect(await tavern_.escrowTokenImplementation()).to.equal(
+                await accounts_[1].getAddress()
+            );
+        });
+
+        it("Should not be able to setSeekerTreasury unless owner", async function () {
+            await expect(
+                tavern_
+                    .connect(accounts_[1])
+                    .setSeekerTreasury(await accounts_[0].getAddress())
+            ).to.be.revertedWith("only owner");
+
+            expect(await tavern_.seekerFeesTreasury()).to.equal(
+                ethers.ZeroAddress
+            );
+
+            await tavern_.setSeekerTreasury(await accounts_[1].getAddress());
+
+            expect(await tavern_.seekerFeesTreasury()).to.equal(
+                await accounts_[1].getAddress()
+            );
+        });
+
+        it("Should not be able to setSolverTreasury unless owner", async function () {
+            await expect(
+                tavern_
+                    .connect(accounts_[1])
+                    .setSolverTreasury(await accounts_[0].getAddress())
+            ).to.be.revertedWith("only owner");
+
+            expect(await tavern_.solverFeesTreasury()).to.equal(
+                ethers.ZeroAddress
+            );
+
+            await tavern_.setSolverTreasury(await accounts_[1].getAddress());
+
+            expect(await tavern_.solverFeesTreasury()).to.equal(
+                await accounts_[1].getAddress()
+            );
+        });
+
+        it("Should not be able to setDisputeTreasuryAddress unless owner", async function () {
+            await expect(
+                tavern_
+                    .connect(accounts_[1])
+                    .setDisputeTreasuryAddress(await accounts_[0].getAddress())
+            ).to.be.revertedWith("only owner");
+
+            expect(await tavern_.disputeFeesTreasury()).to.equal(
+                ethers.ZeroAddress
+            );
+
+            await tavern_.setDisputeTreasuryAddress(
+                await accounts_[1].getAddress()
+            );
+
+            expect(await tavern_.disputeFeesTreasury()).to.equal(
+                await accounts_[1].getAddress()
+            );
+        });
+
+        it("Should not be able to setMediator unless owner", async function () {
+            await expect(
+                tavern_
+                    .connect(accounts_[1])
+                    .setMediator(await accounts_[0].getAddress())
+            ).to.be.revertedWith("only owner");
+
+            expect(await tavern_.mediator()).to.equal(ethers.ZeroAddress);
+
+            await tavern_.setMediator(await accounts_[1].getAddress());
+
+            expect(await tavern_.mediator()).to.equal(
+                await accounts_[1].getAddress()
+            );
+        });
+
+        it("Should not be able to setReviewPeriod unless owner", async function () {
+            await expect(
+                tavern_.connect(accounts_[1]).setReviewPeriod(1000)
+            ).to.be.revertedWith("only owner");
+
+            expect(await tavern_.reviewPeriod()).to.equal(1n);
+
+            await tavern_.setReviewPeriod(1000n);
+
+            expect(await tavern_.reviewPeriod()).to.equal(1000n);
+        });
+
+        it("Should not be able to recoverTokens unless owner", async function () {
+            await mockERC20_.mint(tavern_.target, 1000);
+
+            expect(await mockERC20_.balanceOf(tavern_.target)).to.equal(1000);
+
+            expect(
+                await mockERC20_.balanceOf(await accounts_[0].getAddress())
+            ).to.equal(0);
+
+            await expect(
+                tavern_
+                    .connect(accounts_[1])
+                    .recoverTokens(
+                        mockERC20_.target,
+                        await accounts_[0].getAddress()
+                    )
+            ).to.be.revertedWith("only owner");
+        });
     });
 
-    it("Should set the right owner", async function () {
-      const { tavern, owner } = await loadFixture(deployTavernFixture);
-
-      expect(await tavern.owner()).to.equal(owner.address);
-    });
-
-
-
-  //   it("Should fail if the unlockTime is not in the future", async function () {
-  //     // We don't use the fixture here because we want a different deployment
-  //     const latestTime = await time.latest();
-  //     const Lock = await ethers.getContractFactory("Lock");
-  //     await expect(Lock.deploy(latestTime, { value: 1 })).to.be.revertedWith(
-  //       "Unlock time should be in the future"
-  //     );
-  //   });
-  });
-
-  describe("Quests", function () {
-    let quest: Address;
-    let escrow: Address;
-    describe("Creation", function () {
-      it("should emit a creation event", async function () {
-          const { tavern, seeker, solver } = await loadFixture(deployTavernFixture)
-          
-          const questCreation = await tavern.startNewQuest(solver.address, seeker.address, 100n, "");
-          const receipt = await ethers.provider.getTransactionReceipt(questCreation.hash);
-
-          let log = receipt?.logs[0]
-          if (log !== undefined) {
-            let eventLog = tavern.interface.parseLog({topics: log.topics as unknown as string[] , data: log.data});
-            console.log("Event ", eventLog);
-            quest = eventLog?.args[2];
-            escrow = eventLog?.args[3];
-          }
-
-          expect(questCreation).to.emit(tavern,"QuestCreated").withArgs([seeker, solver, quest, escrow]);
-      });
-      
-      // it("Should revert with the right error if called from another account", async function () {
-      //   const { lock, unlockTime, otherAccount } = await loadFixture(
-      //     deployOneYearLockFixture
-      //   );
-
-      //   // We can increase the time in Hardhat Network
-      //   await time.increaseTo(unlockTime);
-
-      //   // We use lock.connect() to send a transaction from another account
-      //   await expect(lock.connect(otherAccount).withdraw()).to.be.revertedWith(
-      //     "You aren't the owner"
-      //   );
-      });
-
-      // it("Shouldn't fail if the unlockTime has arrived and the owner calls it", async function () {
-      //   const { lock, unlockTime } = await loadFixture(
-      //     deployOneYearLockFixture
-      //   );
-
-      //   // Transactions are sent using the first signer by default
-      //   await time.increaseTo(unlockTime);
-
-      //   await expect(lock.withdraw()).not.to.be.reverted;
-      // });
-    });
-
-//       describe("Events", function () {
-//         it("Should emit an event on withdrawals", async function () {
-//           const { lock, unlockTime, lockedAmount } = await loadFixture(
-//             deployOneYearLockFixture
-//           );
-
-//           await time.increaseTo(unlockTime);
-
-//           await expect(lock.withdraw())
-//             .to.emit(lock, "Withdrawal")
-//             .withArgs(lockedAmount, anyValue); // We accept any value as `when` arg
-//         });
-//       });
-
-//       describe("Transfers", function () {
-//         it("Should transfer the funds to the owner", async function () {
-//           const { lock, unlockTime, lockedAmount, owner } = await loadFixture(
-//             deployOneYearLockFixture
-//           );
-
-//           await time.increaseTo(unlockTime);
-
-//           await expect(lock.withdraw()).to.changeEtherBalances(
-//             [owner, lock],
-//             [lockedAmount, -lockedAmount]
-//           );
-//         });
-//       });
-//     });
-//   });
-
+    // Dependencies contracts aren't quite done yet
+    describe("Integration Tests", function () {});
 });
