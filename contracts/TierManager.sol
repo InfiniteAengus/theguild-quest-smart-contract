@@ -39,6 +39,7 @@ contract TierManager is ITierManager {
         xpToken = token;
     }
 
+    // @audit - Should probably be set during the constructor as well
     function setConditions(
         uint8 tier,
         uint256 xpPoints,
@@ -55,11 +56,17 @@ contract TierManager is ITierManager {
     }
 
     function validateUserTier(
-        uint8[5] memory tierCounts,
+        uint32[5] memory tierCounts,
         address account,
-        uint256 tier
+        uint8 tier
     ) internal view returns (bool) {
         // Check if user has valid requirements for the tier, if it returns true it means they have the requirement for the tier sent as parameter
+
+        // NOTE: Crucial that these values are set after deployment, or users would be able to upgrade without meeting the requirements
+        require(
+            tierUpConditions[tier].xpPoints != 0,
+            "Tier conditions not set"
+        );
 
         if (tierCounts[0] < tierUpConditions[tier].novicesReferred)
             return false;
@@ -75,10 +82,10 @@ contract TierManager is ITierManager {
     }
 
     function checkTierUpgrade(
-        uint8[5] memory tierCounts,
+        uint32[5] memory tierCounts,
         address account,
         uint8 tier
-    ) external view returns (bool) {
+    ) external override view returns (bool) {
         uint8 newTier = tier + 1;
         return validateUserTier(tierCounts, account, newTier); // If it returns true it means user is eligible for an upgrade in tier
     }
@@ -98,11 +105,4 @@ contract TierManager is ITierManager {
         IERC20(_token).transfer(benefactor, tokenBalance);
         return;
     }
-
-    function checkTierUpgrade(
-        uint32[5] memory tierCounts,
-        address account,
-        uint8 tier
-    ) external override returns (bool) {}
-
 }

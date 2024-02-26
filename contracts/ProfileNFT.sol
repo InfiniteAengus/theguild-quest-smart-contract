@@ -34,12 +34,12 @@ contract ProfileNFT is ERC721URIStorage {
 
     function issueProfile(
         address user,
-        string memory tokenURI
+        string memory _tokenURI
     ) public onlyNexus returns (uint32) {
         uint32 newNFTId = _tokenCounter;
         _tokenCounter++;
         _mint(user, newNFTId);
-        _setTokenURI(newNFTId, tokenURI);
+        _setTokenURI(newNFTId, _tokenURI);
         return newNFTId;
     }
 
@@ -61,12 +61,13 @@ contract ProfileNFT is ERC721URIStorage {
         super.safeTransferFrom(msg.sender, _to, _tokenId);
     }
 
-    function changeURI(uint32 tokenID, string memory tokenURI) external {
+    function changeURI(uint32 tokenID, string memory _tokenURI) external {
         address handler = INexus(nexus).getHandler(tokenID);
         require(msg.sender == handler, "Only Handler can update Token's URI");
-        _setTokenURI(tokenID, tokenURI);
+        _setTokenURI(tokenID, _tokenURI);
     }
 
+    // NOTE: Add two stp ownership to contracts
     function setCouncelor(address account) public onlyCouncelor {
         councelor = account;
     }
@@ -78,18 +79,6 @@ contract ProfileNFT is ERC721URIStorage {
     function getTier(uint32 tokenID) public view returns (uint8) {
         address handler = INexus(nexus).getHandler(tokenID);
         return IReferralHandler(handler).getTier(); 
-    }
-
-    /**
-     * @dev Returns whether `tokenId` exists.
-     *
-     * Tokens can be managed by their owner or approved accounts via {approve} or {setApprovalForAll}.
-     *
-     * Tokens start existing when they are minted (`_mint`),
-     * and stop existing when they are burned (`_burn`).
-     */
-    function _exists(uint256 tokenId) internal view virtual returns (bool) {
-        return _ownerOf(tokenId) != address(0);
     }
 
     function recoverTokens(

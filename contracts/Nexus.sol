@@ -88,13 +88,13 @@ contract Nexus is INexus {
 
     function notifyTierUpdate(uint8 oldTier, uint8 newTier) external {
         // All the handlers notify the Factory incase there is a change in levels
-        require(isHandler(msg.sender) == true);
+        require(isHandler(msg.sender) == true, "only handler");
         emit LevelChange(msg.sender, oldTier, newTier);
     }
-// 
+
     function notifySelfTaxClaimed(uint256 amount, uint256 timestamp) external {
         // All the handlers notify the Factory when they claim self tax
-        require(isHandler(msg.sender) == true);
+        require(isHandler(msg.sender) == true, "only handler");
         emit SelfTaxClaimed(msg.sender, amount, timestamp);
     }
 
@@ -103,10 +103,10 @@ contract Nexus is INexus {
         uint256 timestamp
     ) external {
         // All the handlers notify the Factory when the claim referral Reward
-        require(isHandler(msg.sender) == true);
+        require(isHandler(msg.sender) == true, "only handler");
         emit RewardClaimed(msg.sender, amount, timestamp);
     }
-//
+
     function setMaster(address newMaster) public onlyMaster {
         address oldMaster = master;
         master = newMaster;
@@ -156,6 +156,7 @@ contract Nexus is INexus {
             referrerId < nftId,  // 0 in case of no referrer
             "Referrer should have a valid profile id"
         );
+
         address handlerAd = Registry.createAccount(accountImplementation, 0, block.chainid, address(NFT), nftId);
         NFTToHandler[nftId] = handlerAd;
         HandlerToNFT[handlerAd] = nftId;
@@ -168,7 +169,8 @@ contract Nexus is INexus {
         emit NewProfileIssuance(nftId, handlerAd);
 
         Handler.initialize(referrerHandler);
-       
+        addToReferrersAbove(1, handlerAd);
+
         return handlerAd;
     }
 

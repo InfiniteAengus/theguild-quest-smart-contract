@@ -1,10 +1,14 @@
 //SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import { IEscrow } from "./interfaces/Quests/IEscrow.sol";
+import { IEscrowNative, IEscrowToken, IEscrow } from "./interfaces/Quests/IEscrow.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { IQuest } from "./interfaces/Quests/IQuest.sol";
 import { ITavern } from "./interfaces/Quests/ITavern.sol";
+import { ITaxManager } from "./interfaces/ITaxManager.sol";
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 /**
  * @title Quest Implementation
  * @notice Controls the quest flow
@@ -13,14 +17,16 @@ import { ITavern } from "./interfaces/Quests/ITavern.sol";
  */
 
 contract Quest is IQuest {
+    using SafeERC20 for IERC20;
+
     // state variables
-    bool public initialized = false;
-    bool public started = false;
-    bool public submitted = false;
-    bool public extended = false;
-    bool public beingDisputed = false;
-    bool public finished = false;
-    bool public rewarded = false;
+    bool public initialized;
+    bool public started;
+    bool public submitted;
+    bool public extended;
+    bool public beingDisputed;
+    bool public finished;
+    bool public rewarded;
     bool public withToken;
 
     address public escrowImplemntation; // native or with token
@@ -30,18 +36,20 @@ contract Quest is IQuest {
     address public mediator;
     string public infoURI;
     uint256 public paymentAmount;
-    uint256 public rewardTime = 0;
+    uint256 public rewardTime;
     
-    ITavern private Tavern;
-    IEscrow private escrow;
+    ITavern private tavern;
+    ITaxManager private taxManager;
+
+    address private escrow;
     
     modifier onlySeeker() {
-        require(Tavern.ownerOf(seekerId) == msg.sender, "only Seeker");
+        require(tavern.ownerOf(seekerId) == msg.sender, "only Seeker");
         _;
     }
 
     modifier onlySolver() {
-        require(Tavern.ownerOf(solverId) == msg.sender, "only Solver");
+        require(tavern.ownerOf(solverId) == msg.sender, "only Solver");
         _;
     }
 
@@ -56,9 +64,10 @@ contract Quest is IQuest {
         uint256 _paymentAmount,
         string memory _infoURI,
         address _escrowImplementation,
-        address _token
+        address _token,
+        address _taxManager
     ) external returns (bool) {
-        Tavern = ITavern(msg.sender);
+        tavern = ITavern(msg.sender);
         require(!initialized);
         initialized = true;
         solverId = _solverNftId;
@@ -67,22 +76,33 @@ contract Quest is IQuest {
         infoURI = _infoURI;
         escrowImplemntation = _escrowImplementation;
         token = _token;
+        taxManager = ITaxManager(_taxManager);
+        
         return true;
     }
 
-    function startQuest() external payable onlySeeker {
+    function startQuest(uint256 _bountyAmount) external payable onlySeeker {
         require(initialized, "not initialized");
         require(!started, "already started");
-        if(token == address(0)){
-            require(msg.value >= paymentAmount, "wrong payment amount");
-            // todo tax logic
 
-        } else {
-           // todo tax logic 
-        }
+        ITaxManager.SeekerFees memory seekerFees = taxManager.getSeekerFees();
+
         started = true;
-        escrow = IEscrow(Clones.clone(escrowImplemntation));
-        escrow.initialize{value: msg.value}(token);
+        escrow = Clones.clone(escrowImplemntation);
+
+        uint256 referralTax = (_bountyAmount * seekerFees.referralRewards) / taxManager.taxBaseDivisor();
+        uint256 platformTax = (_bountyAmount * seekerFees.platformRevenue) / taxManager.taxBaseDivisor();
+        uint256 totalTax = referralTax + platformTax;
+
+        if(token == address(0)){
+            require(msg.value >= _bountyAmount + totalTax, "Insufficient payment amount");
+            _transferTax(address(0), referralTax, platformTax);
+            IEscrowNative(escrow).initialize{value: _bountyAmount}(token);
+        } else {
+            _transferTax(token, referralTax, platformTax);
+            IERC20(token).transferFrom(msg.sender, escrow, paymentAmount);
+            IEscrowToken(escrow).initialize(token, paymentAmount);
+        }
     }
 
     // todo
@@ -90,7 +110,7 @@ contract Quest is IQuest {
         require(started, "quest not started");
         require(!beingDisputed, "Dispute started before");
         beingDisputed = true;
-        //mediator = Tavern.mediator();
+        mediator = tavern.mediator();
     }
 
     function resolveDispute(
@@ -100,7 +120,7 @@ contract Quest is IQuest {
         require(!rewarded, "Rewarded before");
         require(solverShare <= 100, "Share can't be more than 100");
         rewarded = true;
-        escrow.proccessResolution(seekerId, solverId, solverShare, getRewarder());
+        IEscrow(escrow).proccessResolution(seekerId, solverId, solverShare, getRewarder());  
     }
 
     function finishQuest() external onlySolver {
@@ -108,15 +128,15 @@ contract Quest is IQuest {
         require(started, "quest not started");
 
         finished = true;
-        rewardTime = block.timestamp + Tavern.reviewPeriod(); // arbitrary time
+        rewardTime = block.timestamp + tavern.reviewPeriod(); // arbitrary time
     }
 
     function extend() external onlySeeker {
         require(finished, "Quest not finished");
-        require(!rewarded, "Was rewarded before");
         require(!extended, "Was extended before");
+        require(!rewarded, "Was rewarded before");
         extended = true;
-        rewardTime += Tavern.reviewPeriod();
+        rewardTime += tavern.reviewPeriod();
     }
 
     function receiveReward() external onlySolver {
@@ -125,10 +145,27 @@ contract Quest is IQuest {
         require(!beingDisputed, "Is under dispute");
         require(rewardTime <= block.timestamp, "Not reward time yet");
         rewarded = true;
-        escrow.proccessPayment(solverId, getRewarder());
+        IEscrow(escrow).proccessPayment(solverId, getRewarder());
     }
 
     function getRewarder() public view returns (address) {
-        return Tavern.getRewarder();
+        return tavern.getRewarder();
+    }
+
+    function _transferTax(address _token, uint256 _referralTax, uint256 _platformTax) private {
+        address referralTaxReceiver = taxManager.getReferralTaxReceiver();
+        address platformTaxReceiver = taxManager.getPlatformTaxReceiver();
+
+        require(referralTaxReceiver != address(0) && platformTaxReceiver != address(0), "Referral tax receiver not set");
+
+        if(token == address(0)){
+            (bool success, ) = payable(referralTaxReceiver).call{value: _referralTax}("");
+            require(success, "Referral tax transfer error");
+            (success, ) = payable(platformTaxReceiver).call{value: _platformTax}("");
+            require(success, "Platform tax transfer error");
+        } else {
+            IERC20(_token).transferFrom(msg.sender, referralTaxReceiver, _referralTax);
+            IERC20(_token).transferFrom(msg.sender, platformTaxReceiver, _platformTax);
+        }
     }
 }

@@ -93,35 +93,6 @@ contract Rewarder is IRewarder {
         address token
     ) external override {}
 
-    // function handleSolverTax(
-    //     address handler,
-    //     uint256 balance,
-    //     uint256 protocolTaxRate,
-    //     uint256 taxDivisor
-    // ) internal {
-    //     address owner = IReferralHandler(handler).ownedBy();
-    //     ITaxManager taxManager = getTaxManager();
-    //     uint256 selfTaxRate = taxManager.getSelfTaxRate();
-    //     // uint256 taxedAmountReward = balance * selfTaxRate / divisor;
-    //     // uint256 protocolTaxed = taxedAmountReward * protocolTaxRate / divisor;
-    //     uint256 reward = 0;//taxedAmountReward - protocolTaxed;
-
-    //     IReferralHandler(handler).notifyNexus(reward, block.timestamp); // change to notify
-    // }
-
-    // function handlePayment(
-    //     address handler,
-    //     uint256 taxRate,
-    //     uint256 protocolTaxRate,
-    //     uint256 divisor
-    // ) internal {
-    //     ITaxManager taxManager = getTaxManager(nexus);
-    //     uint256 taxedAmountReward = balance * taxRate / divisor;
-    //     uint256 protocolTaxed = taxedAmountReward * protocolTaxRate /divisor;
-    //     uint256 reward = taxedAmountReward - protocolTaxed;
-    //     address referrer = IReferralHandler(handler).referredBy();
-    // }
-
     function rewardReferrers(
         address handler,
         uint256 taxValue,

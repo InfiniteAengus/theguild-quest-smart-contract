@@ -10,13 +10,9 @@ import "./interfaces/IERC6551/IER6551Executable.sol";
 
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/IProfileNFT.sol";
-import "./interfaces/IReferralHandler.sol";
 import "./interfaces/ITierManager.sol";
 import "./interfaces/ITaxManager.sol";
 import "./interfaces/INexus.sol";
-//import "./interfaces/IRewarder.sol";
-// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-// import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title The Guild User Account 
@@ -31,13 +27,13 @@ contract ReferralHandlerERC6551Account is
     IERC6551Executable,
     IReferralHandler
 {
-    uint256 private _state;
+    uint256 private _state; // NOTE: Not really used for anything, should be used to track the account's state
 
     receive() external payable {}
     
     //
     //
-    // Hanlder part
+    // Handler part
     //
     //
     //
@@ -45,7 +41,7 @@ contract ReferralHandlerERC6551Account is
 
     //using SafeERC20 for IERC20;
 
-    bool public initialized = false;
+    bool public initialized;
     bool private canLevel;
     uint8 private tier;
     address public referredBy; // maybe changed to referredBy address
@@ -107,7 +103,7 @@ contract ReferralHandlerERC6551Account is
         uint8 oldTier = getTier();
         tier = tier + 1;
         nexus.notifyTierUpdate(oldTier, getTier());
-        updateReferrersAbove(tier);
+        updateReferrersAbove();
         
         return true;
     }
@@ -125,7 +121,7 @@ contract ReferralHandlerERC6551Account is
         uint8 oldTier = getTier(); // For events
         tier = _tier + 1; // Adding the default +1 offset stored in handlers
         nexus.notifyTierUpdate(oldTier, getTier());
-        updateReferrersAbove(tier);
+        updateReferrersAbove();
         
     }
 
@@ -135,21 +131,20 @@ contract ReferralHandlerERC6551Account is
 
     // Internal/Utility functions
 
-    function updateReferrersAbove(uint8 _tier) internal {
+    function updateReferrersAbove() internal {
         address firstRef = referredBy;
         if (firstRef != address(0)) {
-            IReferralHandler(firstRef).updateReferralTree(1, _tier);
+            IReferralHandler(firstRef).updateReferralTree(1);
             address secondRef = IReferralHandler(firstRef).referredBy();
             if (secondRef != address(0)) {
-                IReferralHandler(secondRef).updateReferralTree(2, _tier);
+                IReferralHandler(secondRef).updateReferralTree(2);
                 address thirdRef = IReferralHandler(secondRef).referredBy();
                 if (thirdRef != address(0)) {
-                    IReferralHandler(thirdRef).updateReferralTree(3, _tier);
+                    IReferralHandler(thirdRef).updateReferralTree(3);
                     address fourthRef = IReferralHandler(thirdRef).referredBy();
                     if (fourthRef != address(0))
                         IReferralHandler(fourthRef).updateReferralTree(
-                            4,
-                            _tier
+                            4
                         );
                 }
             }
@@ -168,9 +163,8 @@ contract ReferralHandlerERC6551Account is
         address referralHandler,
         uint8 _tier
     ) external onlyNexus {
-        require(refDepth <= 4 && refDepth >= 0, "Invalid depth");
+        require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
         require(referralHandler != address(0), "Invalid referral address");
-
         if (refDepth == 1) {
             firstLevelRefs.push(referralHandler);
             firstLevelTiers[referralHandler] = _tier;
@@ -186,10 +180,15 @@ contract ReferralHandlerERC6551Account is
         }
     }
 
-    function updateReferralTree(uint8 refDepth, uint8 _tier) external {
+    // @audit - Users can create multiple accounts, and refer each other with no limits, and update the tiers of their referral trees
+    // @audit - this enables these accounts to be tiered up without any real referrals
+    // CIRTICAL - NOTE: Change param, check tiers, call the account, and get the actual tier from the contract
+    function updateReferralTree(uint8 refDepth) external {
         // msg.sender should be the handler reffered by this address
         require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
         require(msg.sender != address(0), "Invalid referred address");
+
+        uint8 _tier = IReferralHandler(msg.sender).getTier() + 1;
 
         if (refDepth == 1) {
             require(
@@ -266,13 +265,13 @@ contract ReferralHandlerERC6551Account is
         } else if (refDepth == 4) {
             return fourthLevelTiers[referralHandler];
         }
-        return 0;
     }
 
     /**
      * @notice Returns number of referrals for each tier
      * @return Returns array of counts for Tiers 1 to 5 under the user
      */
+    // @audit - can be DOS'ed by having a large number of referrals
     function getTierCounts() public view returns (uint32[5] memory) {
         uint32[5] memory tierCounts; // Tiers can be 0 to 4 (Stored 1 to 5 in Handlers)
         for (uint32 i = 0; i < firstLevelRefs.length; ++i) {
@@ -311,23 +310,24 @@ contract ReferralHandlerERC6551Account is
         address to,
         uint256 value,
         bytes calldata data,
-        uint8 operation
+        uint8
     ) external payable returns (bytes memory result) {
         require(_isValidSigner(msg.sender), "Invalid signer");
-        require(operation == 0, "Only call operations are supported");
-
         ++_state;
 
         bool success;
         (success, result) = to.call{value: value}(data);
-
+        
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
             }
         }
+
+        return result;
     }
 
+    
     function isValidSigner(
         address signer,
         bytes calldata
@@ -370,7 +370,7 @@ contract ReferralHandlerERC6551Account is
         assembly {
             extcodecopy(address(), add(footer, 0x20), 0x4d, 0x60)
         }
-
+        
         return abi.decode(footer, (uint256, address, uint256));
     }
 
