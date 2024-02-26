@@ -2,6 +2,16 @@
 pragma solidity ^0.8.0;
 
 interface ITaxManager {
+    struct SeekerFees {
+        uint256 referralRewards;
+        uint256 platformRevenue;
+    }
+
+    function getSeekerFees() external view returns (SeekerFees memory);
+
+    function getReferralTaxReceiver() external view returns (address);
+    function getPlatformTaxReceiver() external view returns (address);
+
     function seekerTaxPool() external returns (address);
     function solverTaxPool() external view returns (address);
     function maintenancePool() external view returns (address);

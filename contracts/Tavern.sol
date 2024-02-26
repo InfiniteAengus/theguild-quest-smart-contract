@@ -23,7 +23,6 @@ contract Tavern is AccessControl, ITavern {
     
     address public owner;
     address private _barkeeper;
-    address public nexus;
     address public escrowNativeImplementation; // for native blockchain tokens
     address public escrowTokenImplementation; // for ERC20 tokens
     address public questImplementation;
@@ -32,7 +31,9 @@ contract Tavern is AccessControl, ITavern {
     address public disputeFeesTreasury;
     address public mediator; // for disputes
     uint256 public reviewPeriod = 1;
-    IProfileNFT private nFT;
+    
+    IProfileNFT private nft;
+    INexus public nexus;
 
     modifier onlyBarkeeper() {
         require(msg.sender == _barkeeper, "only barkeeper");
@@ -44,36 +45,19 @@ contract Tavern is AccessControl, ITavern {
         _;
     }
 
-    // quests with paymants in native token
-    event QuestCreatedNative(
-        uint32 solverId,
-        uint32 seekerId,
-        address quest,
-        address escrowImplementation,
-        uint256 paymentAmount
-    );
-    
-    // quests with token payments
-    event QuestCreatedToken(
-        uint32 solverId,
-        uint32 seekerId,
-        address quest,
-        address escrowImplementation,
-        uint256 paymentAmount,
-        address token
-    );
-
     constructor(
         address _questImplementation,
         address _escrowNativeImplementation,
         address _escrowTokenImplementation,
-        address _profileNft
+        address _profileNft,
+        address _nexus
     ) {
         escrowNativeImplementation = _escrowNativeImplementation;
         escrowTokenImplementation = _escrowTokenImplementation;
         questImplementation = _questImplementation;
         owner = msg.sender;
-        nFT = IProfileNFT(_profileNft);
+        nft = IProfileNFT(_profileNft);
+        nexus = INexus(_nexus);
     }
 
     /**
@@ -93,8 +77,18 @@ contract Tavern is AccessControl, ITavern {
     ) external payable onlyBarkeeper {
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowNativeImplementation;
+        address taxManager = INexus(nexus).taxManager();
+
+        require(taxManager != address(0), "TaxManager not set");
    
-        emit QuestCreatedNative(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount);
+        emit QuestCreatedNative(
+            _solverId, 
+            _seekerId, 
+            address(quest), 
+            escrowImpl, 
+            _paymentAmount, 
+            taxManager
+        );
 
         quest.initialize(
             _solverId,
@@ -102,7 +96,8 @@ contract Tavern is AccessControl, ITavern {
             _paymentAmount,
             infoURI,
             escrowImpl,
-            address(0)
+            address(0),
+            taxManager
         );
     }
 
@@ -125,8 +120,19 @@ contract Tavern is AccessControl, ITavern {
     ) external payable onlyBarkeeper {
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowTokenImplementation;
+        address taxManager = INexus(nexus).taxManager();
 
-        emit QuestCreatedToken(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount, _token);
+        require(taxManager != address(0), "TaxManager not set");
+
+        emit QuestCreatedToken(
+            _solverId, 
+            _seekerId, 
+            address(quest), 
+            escrowImpl, 
+            _paymentAmount, 
+            _token, 
+            taxManager
+        );
 
         quest.initialize(
             _solverId,
@@ -134,7 +140,8 @@ contract Tavern is AccessControl, ITavern {
             _paymentAmount,
             infoURI,
             escrowImpl,
-            _token
+            _token,
+            taxManager
         );
     }
 
@@ -144,8 +151,8 @@ contract Tavern is AccessControl, ITavern {
     }
 
     // in case of serious emergency
-    function setProfileNft(address nft) external onlyOwner {
-        nFT = IProfileNFT(nft);
+    function setProfileNft(address _nft) external onlyOwner {
+        nft = IProfileNFT(_nft);
     }
 
     function setQuestImplementation(address impl) external onlyOwner {
@@ -189,17 +196,17 @@ contract Tavern is AccessControl, ITavern {
     }
 
     function getProfileNFT() public view returns (address) {
-        return address(nFT);
+        return address(nft);
     }
 
     function ownerOf(uint32 nftId) external view returns (address) {
-        return nFT.ownerOf(nftId);
+        return nft.ownerOf(nftId);
     }
 
     function confirmNFTOwnership(
         address identity
     ) public view returns (bool confirmed) {
-        confirmed = nFT.balanceOf(identity) > 0;
+        confirmed = nft.balanceOf(identity) > 0;
         return confirmed;
     }
 

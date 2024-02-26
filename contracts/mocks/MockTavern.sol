@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "../interfaces/IProfileNFT.sol";
 import "../interfaces/Quests/IQuest.sol";
+import "../interfaces/INexus.sol";
+
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -31,6 +33,7 @@ contract MockTavern is ITavern {
     address public rewarder;
     uint256 public reviewPeriod = 1;
     IProfileNFT private nft;
+    INexus public nexus;
 
     modifier onlyBarkeeper() {
         require(msg.sender == _barkeeper, "only barkeeper");
@@ -42,32 +45,14 @@ contract MockTavern is ITavern {
         _;
     }
 
-    // quests with paymants in native token
-    event QuestCreatedNative(
-        uint32 solverId,
-        uint32 seekerId,
-        address quest,
-        address escrowImplementation,
-        uint256 paymentAmount
-    );
-    
-    // quests with token payments
-    event QuestCreatedToken(
-        uint32 solverId,
-        uint32 seekerId,
-        address quest,
-        address escrowImplementation,
-        uint256 paymentAmount,
-        address token
-    );
-
     constructor(
         address _escrowNativeImplementation,
         address _escrowTokenImplementation,
         address _questImplementation,
         address _seeker,
         address _solver,
-        address _rewarder
+        address _rewarder,
+        address _nexus
     ) {
         escrowNativeImplementation = _escrowNativeImplementation;
         escrowTokenImplementation = _escrowTokenImplementation;
@@ -76,6 +61,7 @@ contract MockTavern is ITavern {
         seeker = _seeker;
         solver = _solver;
         rewarder = _rewarder;
+        nexus = INexus(_nexus);
     }
 
     function createNewQuest(
@@ -87,8 +73,11 @@ contract MockTavern is ITavern {
     ) external payable onlyBarkeeper {
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowNativeImplementation;
-   
-        emit QuestCreatedNative(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount);
+        address taxManager = INexus(nexus).taxManager();
+
+        require(taxManager != address(0), "TaxManager not set");
+
+        emit QuestCreatedNative(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount, taxManager);
 
         quest.initialize(
             _solverId,
@@ -96,7 +85,8 @@ contract MockTavern is ITavern {
             _paymentAmount,
             infoURI,
             escrowImpl,
-            address(0)
+            address(0),
+            taxManager
         );
     }
 
@@ -110,8 +100,11 @@ contract MockTavern is ITavern {
     ) external payable onlyBarkeeper {     
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowTokenImplementation;
+        address taxManager = INexus(nexus).taxManager();
 
-        emit QuestCreatedToken(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount, _token);
+        require(taxManager != address(0), "TaxManager not set");
+
+        emit QuestCreatedToken(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount, _token, taxManager);
 
         quest.initialize(
             _solverId,
@@ -119,7 +112,8 @@ contract MockTavern is ITavern {
             _paymentAmount,
             infoURI,
             escrowImpl,
-            _token
+            _token,
+            taxManager
         );   
     }
 
