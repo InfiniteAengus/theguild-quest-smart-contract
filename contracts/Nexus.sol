@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Nexus is INexus {
     address public master; 
-    address public guardian; // needs to be private
+    address public guardian; 
 
     address public tierManager;
     address public taxManager;
@@ -213,10 +213,6 @@ contract Nexus is INexus {
                 }
             }
         }
-    }
-
-    function getGuardian() external view onlyMaster returns(address){
-        return guardian;
     }
 
     function recoverTokens(
