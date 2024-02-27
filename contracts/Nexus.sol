@@ -164,7 +164,6 @@ contract Nexus is INexus {
 
         address referrerHandler = NFTToHandler[referrerId];
         
-        addToReferrersAbove(1, handlerAd);
         IReferralHandler Handler = IReferralHandler(handlerAd);
         emit NewProfileIssuance(nftId, handlerAd);
 
