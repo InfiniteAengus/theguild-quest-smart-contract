@@ -93,6 +93,7 @@ contract Rewarder is IRewarder {
         address token
     ) external override {}
 
+    // Emit events for rewards distribution
     function rewardReferrers(
         address handler,
         uint256 taxValue,

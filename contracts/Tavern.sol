@@ -67,7 +67,6 @@ contract Tavern is AccessControl, ITavern {
      * @param _paymentAmount Amount of Native tokens to be paid
      * @param infoURI Link to the info a bout quest (flexible, decide with backend)
      */
-    // NOTE: No way to check created quests on-chain
     function createNewQuest(
         // user identificators
         uint32 _solverId,
