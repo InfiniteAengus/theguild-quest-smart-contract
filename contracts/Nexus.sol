@@ -132,8 +132,8 @@ contract Nexus is INexus {
     }
 
     function setAccountImpl(address _acc) external onlyMaster {
-        address oldAcc = address(NFT);
-        accountImplementation = _acc; // Set address of the NFT contract
+        address oldAcc = address(accountImplementation);
+        accountImplementation = _acc; // Set address of the account implementation contract
         emit NewAccountImpl(oldAcc, _acc);
     }
 

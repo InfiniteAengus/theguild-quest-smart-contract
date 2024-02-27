@@ -155,6 +155,7 @@ contract Tavern is AccessControl, ITavern {
         nft = IProfileNFT(_nft);
     }
 
+    // CON-01 was fixed 
     function setQuestImplementation(address impl) external onlyOwner {
         questImplementation = impl;
     }
