@@ -81,7 +81,8 @@ contract Quest is IQuest {
         return true;
     }
 
-    function startQuest(uint256 _bountyAmount) external payable onlySeeker {
+    // Use Rewarder
+    function startQuest() external payable onlySeeker {
         require(initialized, "not initialized");
         require(!started, "already started");
 
@@ -90,14 +91,14 @@ contract Quest is IQuest {
         started = true;
         escrow = Clones.clone(escrowImplemntation);
 
-        uint256 referralTax = (_bountyAmount * seekerFees.referralRewards) / taxManager.taxBaseDivisor();
-        uint256 platformTax = (_bountyAmount * seekerFees.platformRevenue) / taxManager.taxBaseDivisor();
+        uint256 referralTax = (paymentAmount * seekerFees.referralRewards) / taxManager.taxBaseDivisor();
+        uint256 platformTax = (paymentAmount * seekerFees.platformRevenue) / taxManager.taxBaseDivisor();
         uint256 totalTax = referralTax + platformTax;
 
         if(token == address(0)){
-            require(msg.value >= _bountyAmount + totalTax, "Insufficient payment amount");
+            require(msg.value >= paymentAmount + totalTax, "Insufficient payment amount");
             _transferTax(address(0), referralTax, platformTax);
-            IEscrowNative(escrow).initialize{value: _bountyAmount}(token);
+            IEscrowNative(escrow).initialize{value: paymentAmount}(token);
         } else {
             _transferTax(token, referralTax, platformTax);
             IERC20(token).transferFrom(msg.sender, escrow, paymentAmount);
