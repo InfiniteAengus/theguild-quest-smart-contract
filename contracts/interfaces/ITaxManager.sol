@@ -16,6 +16,9 @@ interface ITaxManager {
     function solverTaxPool() external view returns (address);
     function revenuePool() external view returns (address);
     
+    function seekerFeesTreasury() external view returns (address);
+    function solverFeesTreasury() external view returns (address);
+    function disputeFeesTreasury() external view returns (address);
     
     function solverTaxRate() external view returns (uint256);
     function taxBaseDivisor() external view returns (uint256);
