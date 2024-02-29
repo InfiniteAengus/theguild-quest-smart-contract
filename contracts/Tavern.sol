@@ -26,14 +26,11 @@ contract Tavern is AccessControl, ITavern {
     address public escrowNativeImplementation; // for native blockchain tokens
     address public escrowTokenImplementation; // for ERC20 tokens
     address public questImplementation;
-    address public seekerFeesTreasury;
-    address public solverFeesTreasury;
-    address public disputeFeesTreasury;
     address public mediator; // for disputes
     uint256 public reviewPeriod = 1;
     
     IProfileNFT private nft;
-    INexus public nexus;
+    address public nexus;
 
     modifier onlyBarkeeper() {
         require(msg.sender == _barkeeper, "only barkeeper");
@@ -57,7 +54,7 @@ contract Tavern is AccessControl, ITavern {
         questImplementation = _questImplementation;
         owner = msg.sender;
         nft = IProfileNFT(_profileNft);
-        nexus = INexus(_nexus);
+        nexus = _nexus;
     }
 
     /**
@@ -67,7 +64,6 @@ contract Tavern is AccessControl, ITavern {
      * @param _paymentAmount Amount of Native tokens to be paid
      * @param infoURI Link to the info a bout quest (flexible, decide with backend)
      */
-    // NOTE: No way to check created quests on-chain
     function createNewQuest(
         // user identificators
         uint32 _solverId,
@@ -96,8 +92,7 @@ contract Tavern is AccessControl, ITavern {
             _paymentAmount,
             infoURI,
             escrowImpl,
-            address(0),
-            taxManager
+            address(0)
         );
     }
 
@@ -140,8 +135,7 @@ contract Tavern is AccessControl, ITavern {
             _paymentAmount,
             infoURI,
             escrowImpl,
-            _token,
-            taxManager
+            _token
         );
     }
 
@@ -166,18 +160,6 @@ contract Tavern is AccessControl, ITavern {
 
     function setEscrowTokenImplementation(address impl) external onlyOwner {
         escrowTokenImplementation = impl;
-    }
-
-    function setSeekerTreasury(address treasury) external onlyOwner {
-        seekerFeesTreasury = treasury;
-    }
-
-    function setSolverTreasury(address treasury) external onlyOwner {
-        solverFeesTreasury = treasury;
-    }
-
-    function setDisputeTreasuryAddress(address treasury) external onlyOwner {
-        disputeFeesTreasury = treasury;
     }
 
     function setMediator(address _mediator) external onlyOwner {

@@ -24,9 +24,14 @@ contract TaxManager is ITaxManager {
 
     SeekerFees public seekerFees;
 
+    // Tax Rates variables
     uint256 public solverTaxRate;
-
     uint256 public protocolTaxRate;
+
+    // Treasury addresses
+    address public seekerFeesTreasury;
+    address public solverFeesTreasury;
+    address public disputeFeesTreasury;
 
     // attention here
     uint256 public constant taxBaseDivisor = 10000;
@@ -114,6 +119,18 @@ contract TaxManager is ITaxManager {
 
     function setSolverTaxPool(address _solverTaxPool) external onlyCustodian {
         solverTaxPool = _solverTaxPool;
+    }
+
+    function setSeekerTreasury(address treasury) external onlyCustodian {
+        seekerFeesTreasury = treasury;
+    }
+
+    function setSolverTreasury(address treasury) external onlyCustodian {
+        solverFeesTreasury = treasury;
+    }
+
+    function setDisputeTreasuryAddress(address treasury) external onlyCustodian {
+        disputeFeesTreasury = treasury;
     }
 
     //

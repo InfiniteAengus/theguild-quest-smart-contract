@@ -52,15 +52,54 @@ contract MockRewarder is IRewarder {
 
     function handleRewardToken(
         address token,
-        uint32,
+        uint32 solverId,
         uint256 amount
-    ) external override {
-        uint256 balance = IERC20(token).balanceOf(msg.sender);
-        require(balance == 0, "Escrow not empty");
-        
-        IERC20(token).safeTransfer(tx.origin, amount);
+    ) external {
 
-        emit RewardClaimed(tx.origin, msg.sender, amount);
+    }
+
+    function calculateSeekerTax(uint256 _paymentAmount)
+        public
+        view
+        returns (uint256 platformTax_, uint256 referralTax_)
+    {
+        ITaxManager taxManager = getTaxManager();
+        (platformTax_, referralTax_) = _calculateSeekerTax(taxManager, _paymentAmount);
+    }
+
+    function _calculateSeekerTax(ITaxManager _taxManager, uint256 _paymentAmount) 
+        internal 
+        view
+        returns 
+    (
+        uint256 platformTax_, 
+        uint256 referralTax_
+    ){
+        ITaxManager.SeekerFees memory seekerFees = _taxManager.getSeekerFees();
+        uint256 taxRateDivisor = _taxManager.taxBaseDivisor();
+
+        referralTax_ = (_paymentAmount * seekerFees.referralRewards) /
+            taxRateDivisor;
+
+        platformTax_ = (_paymentAmount * seekerFees.platformRevenue) /
+            taxRateDivisor;
+
+        return (referralTax_, platformTax_);
+    }
+
+    function handleSeekerTaxNative(
+        uint32 solverId,
+        uint256 referralTax,
+        uint256 platformTax
+    ) external payable {
+    }
+
+    function handleSeekerTaxToken(
+        uint32 solverId,
+        uint256 referralTax,
+        uint256 platformTax,
+        address token
+    ) external {
     }
 
     function proccessResolutionNative(
@@ -75,7 +114,7 @@ contract MockRewarder is IRewarder {
         uint32 seekerId,
         uint32 solverId,
         uint8 solverShare,
-        address token
+        address
     ) external override {
         emit ResolutionProccessed(seekerId, solverId, solverShare);
     }

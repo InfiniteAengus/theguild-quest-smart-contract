@@ -8,12 +8,12 @@ interface IQuest {
         uint256 paymentAmount, 
         string memory infoURI, 
         address escrowImplementation, 
-        address token,
-        address taxManager
-    ) external returns (bool);
+        address token
+    ) external;
     
     function startDispute() external;
     function resolveDispute(uint8 solverShare) external;
     function finishQuest() external;
     function receiveReward() external;
+    function getRewarder() external view returns (address);
 }
