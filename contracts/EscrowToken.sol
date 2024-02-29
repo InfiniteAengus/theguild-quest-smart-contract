@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IEscrow } from "./interfaces/Quests/IEscrow.sol";
 import { IRewarder } from "./interfaces/IRewarder.sol";
+import { IQuest } from "./interfaces/Quests/IQuest.sol";
 
 /**
  * @title Quest Escrow for ERC20 Tokens
@@ -14,65 +15,64 @@ import { IRewarder } from "./interfaces/IRewarder.sol";
  * @dev Implementation contract, instances are created as clones 
  */
 contract EscrowToken is IEscrow {
-  using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20;
 
-  bool public initialized;
-  address public quest;
-  IERC20 public token;
+    bool public initialized;
+    IQuest public quest;
+    IERC20 public token;
 
-  uint32 public seekerId;
-  uint32 public solverId;
+    uint32 public seekerId;
+    uint32 public solverId;
 
-  uint256 public paymentAmount;
+    uint256 public paymentAmount;
 
-  IRewarder public rewarder;
+    modifier onlyQuest() {
+        require(msg.sender == address(quest), "only quest");
+        _;
+    }
 
-  modifier onlyQuest() {
-    require(msg.sender == quest, "only quest");
-    _;
-  }
+    function initialize(
+        address _token, 
+        uint32 _seekerId,
+        uint32 _solverId, 
+        uint256 _paymentAmount
+    ) external payable {   
+        require(!initialized);
+        require(_token != address(0), "Invalid token address");
 
-  function initialize(
-    address _token, 
-    address _rewarder,
-    uint32 _seekerId,
-    uint32 _solverId, 
-    uint256 _paymentAmount
-  ) external payable {   
-    require(!initialized);
-    require(_token != address(0), "Invalid token address");
+        initialized = true;
 
-    initialized = true;
+        quest = IQuest(msg.sender);
+        token = IERC20(_token);
+        
+        seekerId = _seekerId;
+        solverId = _solverId;
 
-    quest = msg.sender;
-    token = IERC20(_token);
+        paymentAmount = _paymentAmount;
+
+        address rewarder = quest.getRewarder();
+
+        (uint256 referralTax, uint256 platformTax) = IRewarder(rewarder).calculateSeekerTax(paymentAmount);
+
+        require(IERC20(token).balanceOf(address(this)) == paymentAmount + referralTax + platformTax, "Insufficient amount sent");
     
-    seekerId = _seekerId;
-    solverId = _solverId;
+        IERC20(token).approve(address(rewarder), referralTax + platformTax);
 
-    paymentAmount = _paymentAmount;
+        IRewarder(rewarder).handleSeekerTaxToken(_solverId, referralTax, platformTax, address(token));
+    }
 
-    rewarder = IRewarder(_rewarder);
-
-    (uint256 referralTax, uint256 platformTax) = rewarder.calculateSeekerTax(paymentAmount);
-
-    require(IERC20(token).balanceOf(address(this)) == paymentAmount + referralTax + platformTax, "Insufficient amount sent");
+    function proccessPayment() external onlyQuest{
+        address rewarder = quest.getRewarder();
+        IERC20(token).approve(address(rewarder), paymentAmount);
+        IRewarder(rewarder).handleRewardToken(address(token), solverId, paymentAmount);
+    }
   
-    IERC20(token).approve(address(rewarder), referralTax + platformTax);
-
-    rewarder.handleSeekerTaxToken(_solverId, referralTax, platformTax, address(token));
-  }
-
-  function proccessPayment() external onlyQuest{
-    IERC20(token).approve(address(rewarder), paymentAmount);
-    rewarder.handleRewardToken(address(token), solverId, paymentAmount);
-  }
-  
-  /**
-   * @notice Proccess the dispute resolution
-   */
-  function proccessResolution(uint8 solverShare) external onlyQuest {
-    rewarder.proccessResolutionToken(seekerId, solverId, solverShare, address(token));
-  }
+    /**
+     * @notice Proccess the dispute resolution
+     */
+    function proccessResolution(uint8 solverShare) external onlyQuest {
+        address rewarder = quest.getRewarder();
+        IRewarder(rewarder).proccessResolutionToken(seekerId, solverId, solverShare, address(token));
+    }
 
 }
