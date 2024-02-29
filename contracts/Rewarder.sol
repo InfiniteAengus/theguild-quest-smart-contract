@@ -229,7 +229,6 @@ contract Rewarder is IRewarder {
         address[5] memory referrals; // Used to store above referrals, saving variable space
         uint256[5] memory rewards;
         
-
         uint256 leftTax = taxValue;
 
         referrals[1] = IReferralHandler(handler).referredBy();

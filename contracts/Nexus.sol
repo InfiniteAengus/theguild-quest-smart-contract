@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Nexus is INexus {
     address public master; 
-    address public guardian; // needs to be private
+    address public guardian; 
 
     address public tierManager;
     address public taxManager;
@@ -132,8 +132,8 @@ contract Nexus is INexus {
     }
 
     function setAccountImpl(address _acc) external onlyMaster {
-        address oldAcc = address(NFT);
-        accountImplementation = _acc; // Set address of the NFT contract
+        address oldAcc = address(accountImplementation);
+        accountImplementation = _acc; // Set address of the account implementation contract
         emit NewAccountImpl(oldAcc, _acc);
     }
 
@@ -164,7 +164,6 @@ contract Nexus is INexus {
 
         address referrerHandler = NFTToHandler[referrerId];
         
-        addToReferrersAbove(1, handlerAd);
         IReferralHandler Handler = IReferralHandler(handlerAd);
         emit NewProfileIssuance(nftId, handlerAd);
 
@@ -213,10 +212,6 @@ contract Nexus is INexus {
                 }
             }
         }
-    }
-
-    function getGuardian() external view onlyMaster returns(address){
-        return guardian;
     }
 
     function recoverTokens(

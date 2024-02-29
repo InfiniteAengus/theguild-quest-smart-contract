@@ -70,7 +70,7 @@ contract ReferralHandlerERC6551Account is
 
     modifier onlyProtocol() {
         require(
-            msg.sender == nexus.master() || msg.sender == address(nexus),
+            msg.sender == nexus.guardian() || msg.sender == address(nexus),
             "only master or nexus"
         );
         _;
