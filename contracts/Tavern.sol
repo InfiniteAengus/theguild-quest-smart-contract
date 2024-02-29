@@ -30,7 +30,7 @@ contract Tavern is AccessControl, ITavern {
     uint256 public reviewPeriod = 1;
     
     IProfileNFT private nft;
-    INexus public nexus;
+    address public nexus;
 
     modifier onlyBarkeeper() {
         require(msg.sender == _barkeeper, "only barkeeper");
@@ -54,7 +54,7 @@ contract Tavern is AccessControl, ITavern {
         questImplementation = _questImplementation;
         owner = msg.sender;
         nft = IProfileNFT(_profileNft);
-        nexus = INexus(_nexus);
+        nexus = _nexus;
     }
 
     /**

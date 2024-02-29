@@ -24,6 +24,7 @@ interface ITavern {
         address taxManager
     );
 
+    function nexus() external view returns (address);
     function confirmNFTOwnership(address seeker) external view returns (bool); 
     function escrowNativeImplementation() external view returns (address);
     function escrowTokenImplementation() external view returns (address);
