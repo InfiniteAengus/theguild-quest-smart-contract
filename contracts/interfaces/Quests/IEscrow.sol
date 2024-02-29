@@ -9,7 +9,6 @@ interface IEscrow {
 
     function initialize(
         address _token, 
-        address _rewarder, 
         uint32 _seekerId, 
         uint32 _solverId, 
         uint256 _paymentAmount
