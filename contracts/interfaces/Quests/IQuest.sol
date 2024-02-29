@@ -15,4 +15,5 @@ interface IQuest {
     function resolveDispute(uint8 solverShare) external;
     function finishQuest() external;
     function receiveReward() external;
+    function getRewarder() external view returns (address);
 }
