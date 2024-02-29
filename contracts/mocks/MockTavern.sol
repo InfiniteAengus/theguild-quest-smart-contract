@@ -85,8 +85,7 @@ contract MockTavern is ITavern {
             _paymentAmount,
             infoURI,
             escrowImpl,
-            address(0),
-            taxManager
+            address(0)
         );
     }
 
@@ -112,8 +111,7 @@ contract MockTavern is ITavern {
             _paymentAmount,
             infoURI,
             escrowImpl,
-            _token,
-            taxManager
+            _token
         );   
     }
 
