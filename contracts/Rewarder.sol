@@ -21,8 +21,9 @@ contract Rewarder is IRewarder {
         uint256 solverReward
     );
 
-    constructor(address _steward) {
+    constructor(address _steward, address _nexus) {
         steward = _steward;
+        nexus = INexus(_nexus);
     }
 
     modifier onlySteward() {
