@@ -89,7 +89,6 @@ contract Quest is IQuest {
         if(token == address(0)){
             IEscrow(escrow).initialize{value: msg.value}(
                 token, 
-                getRewarder(),
                 seekerId,
                 solverId, 
                 paymentAmount
@@ -98,7 +97,6 @@ contract Quest is IQuest {
             IERC20(token).transferFrom(msg.sender, escrow, paymentAmount);
             IEscrow(escrow).initialize(
                 token, 
-                getRewarder(),
                 seekerId,
                 solverId,
                 paymentAmount
