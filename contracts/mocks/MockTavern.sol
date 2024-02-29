@@ -33,7 +33,7 @@ contract MockTavern is ITavern {
     address public rewarder;
     uint256 public reviewPeriod = 1;
     IProfileNFT private nft;
-    INexus public nexus;
+    address public nexus;
 
     modifier onlyBarkeeper() {
         require(msg.sender == _barkeeper, "only barkeeper");
@@ -61,7 +61,7 @@ contract MockTavern is ITavern {
         seeker = _seeker;
         solver = _solver;
         rewarder = _rewarder;
-        nexus = INexus(_nexus);
+        nexus = _nexus;
     }
 
     function createNewQuest(
