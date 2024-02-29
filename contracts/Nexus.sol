@@ -30,7 +30,6 @@ contract Nexus is INexus {
     // Set events
     event NewMaster(address oldMaster, address newMaster);
     event NewGuardian(address oldGuardian, address newGuardian);
-    event NewURI(string oldTokenURI, string newTokenURI);
     event NewRewarder(address oldRewarder, address newRewarder);
     event NewNFT(address oldNFT, address newNFT);
     event NewAccountImpl(address oldAcc, address newAcc);

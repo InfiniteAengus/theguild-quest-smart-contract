@@ -16,6 +16,8 @@ contract ProfileNFT is ERC721URIStorage {
     address public councelor;
     address public nexus;
 
+    event NewURI(string oldTokenURI, string newTokenURI);
+
     modifier onlyNexus() { // nexus / hub
         require(msg.sender == nexus, "only nexus");
         _;
@@ -61,10 +63,13 @@ contract ProfileNFT is ERC721URIStorage {
         super.safeTransferFrom(msg.sender, _to, _tokenId);
     }
 
+    // needs fixes
     function changeURI(uint32 tokenID, string memory _tokenURI) external {
-        address handler = INexus(nexus).getHandler(tokenID);
-        require(msg.sender == handler, "Only Handler can update Token's URI");
+        address guardian = INexus(nexus).guardian();
+        require(msg.sender == guardian, "Only Guardian can update Token's URI");
+        string memory oldURI = tokenURI(tokenID);
         _setTokenURI(tokenID, _tokenURI);
+        emit NewURI(oldURI, _tokenURI);
     }
 
     // NOTE: Add two stp ownership to contracts
