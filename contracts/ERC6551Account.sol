@@ -43,7 +43,8 @@ contract ReferralHandlerERC6551Account is
 
     bool public initialized;
     bool private canLevel;
-    uint8 private tier;
+    // Default tier is 1 instead of 0, since solidity 0 can also mean non-existant, all tiers in contract are real tiers 
+    uint8 private tier; // 0 to 5 ( 6 in total ); 0 tier - banned 
     address public referredBy; // maybe changed to referredBy address
     uint256 public mintTime;
 
@@ -57,7 +58,7 @@ contract ReferralHandlerERC6551Account is
     INexus public nexus;
 
     // todo: bad practice of repeated tiers storing, expensive tier updates
-    // Mapping of the above Handler list and their corresponding NFT tiers, tiers are public (tier + 1)
+    // Mapping of the above Handler list and their corresponding NFT tiers
     mapping(address => uint8) public firstLevelTiers;
     mapping(address => uint8) public secondLevelTiers;
     mapping(address => uint8) public thirdLevelTiers;
@@ -87,7 +88,7 @@ contract ReferralHandlerERC6551Account is
         initialized = true;
         referredBy = _referredBy;
         mintTime = block.timestamp;
-        tier = 1; // Default tier is 1 instead of 0, since solidity 0 can also mean non-existant, all tiers on contract are + 1
+        tier = 1; // Default tier is 1 instead of 0, since solidity 0 can also mean non-existant
         canLevel = true;
     }
 
@@ -95,7 +96,7 @@ contract ReferralHandlerERC6551Account is
      * @dev Can be called by anyone
      */
     function tierUp() external returns (bool) {
-        require(getTier() < 4 && canLevel == true, "Can't increase the tier");
+        require(getTier() < 4 && canLevel, "Can't increase the tier");
         require(
             getTierManager().checkTierUpgrade(getTierCounts(), address(this), tier),
             "Tier upgrade condition not met"
@@ -116,13 +117,16 @@ contract ReferralHandlerERC6551Account is
         nexus = INexus(account);
     }
 
+    /**
+     * Update the user tier 
+     * @param _tier New tier to be set for user (from 0 to 5)
+     */
     function setTier(uint8 _tier) public onlyProtocol {
-        require(_tier >= 0 && _tier <= 4, "Invalid Tier");
-        uint8 oldTier = getTier(); // For events
-        tier = _tier + 1; // Adding the default +1 offset stored in handlers
+        require(_tier >= 0 && _tier <= 5, "Invalid Tier");
+        uint8 oldTier = getTier(); 
+        tier = _tier;
         nexus.notifyTierUpdate(oldTier, getTier());
         updateReferrersAbove();
-        
     }
 
     function changeEligibility(bool status) public onlyMaster {
@@ -180,15 +184,12 @@ contract ReferralHandlerERC6551Account is
         }
     }
 
-    // @audit - Users can create multiple accounts, and refer each other with no limits, and update the tiers of their referral trees
-    // @audit - this enables these accounts to be tiered up without any real referrals
-    // CIRTICAL - NOTE: Change param, check tiers, call the account, and get the actual tier from the contract
     function updateReferralTree(uint8 refDepth) external {
         // msg.sender should be the handler reffered by this address
         require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
         require(msg.sender != address(0), "Invalid referred address");
 
-        uint8 _tier = IReferralHandler(msg.sender).getTier() + 1;
+        uint8 _tier = IReferralHandler(msg.sender).getTier();
 
         if (refDepth == 1) {
             require(
@@ -230,7 +231,7 @@ contract ReferralHandlerERC6551Account is
     }
 
     function getTier() public view returns (uint8) {
-        return tier - 1;
+        return tier;
     }
 
     function getTierManager() public view returns (ITierManager) {
@@ -273,26 +274,34 @@ contract ReferralHandlerERC6551Account is
      */
     // @audit - can be DOS'ed by having a large number of referrals
     function getTierCounts() public view returns (uint32[5] memory) {
-        uint32[5] memory tierCounts; // Tiers can be 0 to 4 (Stored 1 to 5 in Handlers)
+        uint32[5] memory tierCounts; // Tiers can be 0 to 5, here we account only tiers 1 to 5 
         for (uint32 i = 0; i < firstLevelRefs.length; ++i) {
             address referral = firstLevelRefs[i];
-            uint8 _tier = firstLevelTiers[referral] - 1;
-            tierCounts[_tier]++;
+            uint8 _tier = firstLevelTiers[referral];
+            if(tier!=0){
+                tierCounts[_tier]++;
+            }
         }
         for (uint32 i = 0; i < secondLevelRefs.length; ++i) {
             address referral = secondLevelRefs[i];
-            uint8 _tier = secondLevelTiers[referral] - 1;
-            tierCounts[_tier]++;
+            uint8 _tier = secondLevelTiers[referral] ;
+            if(tier!=0){
+                tierCounts[_tier]++;
+            }
         }
         for (uint32 i = 0; i < thirdLevelRefs.length; ++i) {
             address referral = thirdLevelRefs[i];
-            uint8 _tier = thirdLevelTiers[referral] - 1;
-            tierCounts[_tier]++;
+            uint8 _tier = thirdLevelTiers[referral];
+            if(tier!=0){
+                tierCounts[_tier]++;
+            }
         }
         for (uint32 i = 0; i < fourthLevelRefs.length; ++i) {
             address referral = fourthLevelRefs[i];
-            uint8 _tier = fourthLevelTiers[referral] - 1;
-            tierCounts[_tier]++;
+            uint8 _tier = fourthLevelTiers[referral];
+            if(tier!=0){
+                tierCounts[_tier]++;
+            }
         }
         return tierCounts;
     }
