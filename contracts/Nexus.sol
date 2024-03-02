@@ -33,10 +33,9 @@ contract Nexus is INexus {
     event NewRewarder(address oldRewarder, address newRewarder);
     event NewNFT(address oldNFT, address newNFT);
     event NewAccountImpl(address oldAcc, address newAcc);
-    event NewRebaser(address oldRebaser, address newRebaser);
-    event NewToken(address oldToken, address newToken);
     event NewTaxManager(address oldTaxManager, address newTaxManager);
     event NewTierManager(address oldTierManager, address newTierManager);
+    event NewRegistry(address oldRegistry, address newRegistry);
 
     event NewProfileIssuance(uint32 id, address account);
     event LevelChange(address handler, uint8 oldTier, uint8 newTier);
@@ -146,6 +145,12 @@ contract Nexus is INexus {
         address oldManager = tierManager;
         tierManager = _tierManager;
         emit NewTierManager(oldManager, _tierManager);
+    }
+
+    function setRegistry(address _registry) external onlyMaster {
+        address oldRegistry = address(Registry);
+        Registry = IERC6551Registry(_registry);
+        emit NewRegistry(oldRegistry, address(Registry));
     }
 
     function createProfile(uint32 referrerId, address recipient, string memory profileLink) external onlyGuardian returns (address) {
