@@ -86,13 +86,13 @@ contract Nexus is INexus {
 
     function notifyTierUpdate(uint8 oldTier, uint8 newTier) external {
         // All the handlers notify the Factory incase there is a change in levels
-        require(isHandler(msg.sender) == true, "only handler");
+        require(isHandler(msg.sender), "only handler");
         emit LevelChange(msg.sender, oldTier, newTier);
     }
 
     function notifySelfTaxClaimed(uint256 amount, uint256 timestamp) external {
         // All the handlers notify the Factory when they claim self tax
-        require(isHandler(msg.sender) == true, "only handler");
+        require(isHandler(msg.sender), "only handler");
         emit SelfTaxClaimed(msg.sender, amount, timestamp);
     }
 
@@ -101,7 +101,7 @@ contract Nexus is INexus {
         uint256 timestamp
     ) external {
         // All the handlers notify the Factory when the claim referral Reward
-        require(isHandler(msg.sender) == true, "only handler");
+        require(isHandler(msg.sender), "only handler");
         emit RewardClaimed(msg.sender, amount, timestamp);
     }
 
