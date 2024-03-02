@@ -65,7 +65,7 @@ contract Quest is IQuest {
         address _token
     ) external {
         tavern = ITavern(msg.sender);
-        require(!initialized);
+        require(!initialized, "Already Initialized");
         initialized = true;
 
         token = _token;

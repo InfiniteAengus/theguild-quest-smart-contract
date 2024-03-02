@@ -37,7 +37,7 @@ contract EscrowToken is IEscrow {
         uint32 _solverId, 
         uint256 _paymentAmount
     ) external payable {   
-        require(!initialized);
+        require(!initialized, "Already Initialized");
         require(_token != address(0), "Invalid token address");
 
         initialized = true;
