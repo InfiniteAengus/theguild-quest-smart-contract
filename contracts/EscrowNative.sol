@@ -62,6 +62,14 @@ contract EscrowNative is IEscrow {
     }
 
     /**
+     * @notice Proccess the dispute start
+     */
+    function proccessStartDispute() external payable onlyQuest {
+        address rewarder = quest.getRewarder();
+        IRewarder(rewarder).handleStartDisputeNative{value: msg.value}(paymentAmount);
+    }
+
+    /**
      * @notice Proccess the dispute resolution
      */
     function proccessResolution(uint8 solverShare) external onlyQuest {
