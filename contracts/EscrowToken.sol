@@ -63,7 +63,7 @@ contract EscrowToken is IEscrow {
 
     function proccessPayment() external onlyQuest{
         address rewarder = quest.getRewarder();
-        IERC20(token).approve(address(rewarder), paymentAmount);
+        token.approve(address(rewarder), paymentAmount);
         IRewarder(rewarder).handleRewardToken(address(token), solverId, paymentAmount);
     }
   
@@ -72,6 +72,7 @@ contract EscrowToken is IEscrow {
      */
     function proccessResolution(uint8 solverShare) external onlyQuest {
         address rewarder = quest.getRewarder();
+        token.approve(rewarder, paymentAmount);
         IRewarder(rewarder).proccessResolutionToken(seekerId, solverId, solverShare, address(token));
     }
 
