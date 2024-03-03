@@ -210,14 +210,15 @@ contract Rewarder is IRewarder {
         _processPayment(disputeTreasury, address(0), deposit);
     }
 
-    function handleStartDisputeToken(uint256 paymentAmount) external payable {
-        // ITaxManager taxManager = getTaxManager();
-        // uint256 disputeDepositRate = taxManager.disputeDepositRate();
-        // uint256 baseDivisor = taxManager.taxBaseDivisor();
-        // uint256 deposit = msg.value;
-        // require(deposit == ((paymentAmount * baseDivisor) / disputeDepositRate), "Wrong dispute deposit");
-        // address disputeTreasury = taxManager.disputeFeesTreasury();
-        // _processPayment(disputeTreasury, address(0), deposit);
+    function handleStartDisputeToken(uint256 paymentAmount, address token) external payable {
+        ITaxManager taxManager = getTaxManager();
+        uint256 disputeDepositRate = taxManager.disputeDepositRate();
+        uint256 baseDivisor = taxManager.taxBaseDivisor();
+        uint256 deposit = ((paymentAmount * baseDivisor) / disputeDepositRate);
+        // use tx.origin, not to pass the seeker as argument
+        IERC20(token).safeTransferFrom(tx.origin, address(this), deposit);
+        address disputeTreasury = taxManager.disputeFeesTreasury();
+        _processPayment(disputeTreasury, token, deposit);
     }
 
     /**

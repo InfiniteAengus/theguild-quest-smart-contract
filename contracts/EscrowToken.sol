@@ -66,6 +66,14 @@ contract EscrowToken is IEscrow {
         token.approve(address(rewarder), paymentAmount);
         IRewarder(rewarder).handleRewardToken(address(token), solverId, paymentAmount);
     }
+
+    /**
+     * @notice Proccess the dispute start
+     */
+    function proccessStartDispute() external payable onlyQuest {
+        address rewarder = quest.getRewarder();
+        IRewarder(rewarder).handleStartDisputeToken{value: 0}(paymentAmount, address(token));
+    }
   
     /**
      * @notice Proccess the dispute resolution

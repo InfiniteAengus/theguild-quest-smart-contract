@@ -104,18 +104,19 @@ contract Quest is IQuest {
         }
     }
 
+    /**
+     * @dev ERC20 Tokens should be approved on rewarder
+     */
     function startDispute() external payable onlySeeker {
         require(started, "quest not started");
         require(!beingDisputed, "Dispute started before");
+        beingDisputed = true;
+        mediator = tavern.mediator();
         if (token == address(0)){
-            beingDisputed = true;
-            mediator = tavern.mediator();
             IEscrow(escrow).proccessStartDispute{value: msg.value}();
         }
         else{
-            require(msg.value == 0 , "Dispute started before");
-            beingDisputed = true;
-            mediator = tavern.mediator();
+            require(msg.value == 0 , "Native token sent");
             IEscrow(escrow).proccessStartDispute{value: 0}();
         }
     }
