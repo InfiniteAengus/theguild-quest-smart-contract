@@ -68,6 +68,21 @@ contract ProfileNFT is ERC721URIStorage {
         revert("Use safeTransferFrom");
     }
 
+    function safeTransferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
+        revert("Use safeTransferFrom");
+
+        if (to == address(0)) {
+            revert ERC721InvalidReceiver(address(0));
+        }
+        // Setting an "auth" arguments enables the `_isAuthorized` check which verifies that the token exists
+        // (from != 0). Therefore, it is not needed to verify that the return value is not 0 here.
+        address previousOwner = _update(to, tokenId, _msgSender());
+        if (previousOwner != from) {
+            revert ERC721IncorrectOwner(from, tokenId, previousOwner);
+        }
+        super.ERC721Utils.checkOnERC721Received(_msgSender(), from, to, tokenId, data);
+    }
+
     // needs fixes
     function changeURI(uint32 tokenID, string memory _tokenURI) external {
         address guardian = INexus(nexus).guardian();
