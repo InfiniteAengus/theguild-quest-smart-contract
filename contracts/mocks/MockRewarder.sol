@@ -41,7 +41,7 @@ contract MockRewarder is IRewarder {
         return ITaxManager(taxManager);
     }
 
-    function handleRewardNative(uint32) public payable {
+    function handleRewardNative(uint32, uint256) public payable {
         address escrow = msg.sender;
         require(escrow.balance == 0, "Escrow not empty");
 
@@ -111,7 +111,7 @@ contract MockRewarder is IRewarder {
     ) external {
     }
 
-    function proccessResolutionNative(
+    function processResolutionNative(
         uint32 seekerId,
         uint32 solverId,
         uint8 solverShare
@@ -119,7 +119,7 @@ contract MockRewarder is IRewarder {
         emit ResolutionProccessed(seekerId, solverId, solverShare);
     }
 
-    function proccessResolutionToken(
+    function processResolutionToken(
         uint32 seekerId,
         uint32 solverId,
         uint8 solverShare,

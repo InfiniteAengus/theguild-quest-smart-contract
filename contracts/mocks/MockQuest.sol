@@ -103,7 +103,7 @@ contract MockQuest is IQuest {
     function resolveDispute(
         uint8 _solverShare
     ) external {
-        IEscrow(escrow).proccessResolution(_solverShare);  
+        IEscrow(escrow).processResolution(_solverShare);  
     }
 
     function finishQuest() external {
@@ -113,7 +113,7 @@ contract MockQuest is IQuest {
     }
 
     function receiveReward() external {
-        IEscrow(escrow).proccessPayment();
+        IEscrow(escrow).processPayment();
     }
 
     function getRewarder() public view returns (address) {
