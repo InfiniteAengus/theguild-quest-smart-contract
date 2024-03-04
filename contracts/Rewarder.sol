@@ -59,6 +59,12 @@ contract Rewarder is IRewarder, Pausable {
         address token
     );
 
+    event referralRewardReceived(
+        address account,
+        uint256 amount,
+        address token
+    );
+
     constructor(address _steward, address _nexus) {
         steward = _steward;
         nexus = INexus(_nexus);
@@ -475,10 +481,11 @@ contract Rewarder is IRewarder, Pausable {
         for (uint8 i = 0; i < 5; ++i) {
             uint256 reward = rewards[i];
             rewards[i] = 0;
+            emit referralRewardReceived(referrals[i], rewards[i], token);
             _processPayment(referrals[i], token, reward);
         }
         
-        // Dev Allocation & // Revenue Allocation
+        // Leftover Tax allocation
         {
             address referralTaxReceiver = taxManager.referralTaxReceiver();
             _processPayment(referralTaxReceiver, token, leftTax);
