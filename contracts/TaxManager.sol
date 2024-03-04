@@ -162,6 +162,8 @@ contract TaxManager is ITaxManager {
         validTaxRate(_referralRewards) 
         validTaxRate(_platformRevenue) 
     {
+        require(platformTaxReceiver != address(0), "Zero address");
+        require(referralTaxReceiver != address(0), "Zero address");
         require(_referralRewards + _platformRevenue < taxBaseDivisor, "Tax rate too high");
         seekerFees.referralRewards = _referralRewards;
         seekerFees.platformRevenue = _platformRevenue;
