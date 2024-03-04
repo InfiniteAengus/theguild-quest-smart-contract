@@ -5,6 +5,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/ITierManager.sol";
 
+/**
+ * @title Tier Manager contract
+ * @author @cosmodude
+ * @notice Holds tier up requirements and checks these conditions
+ */
 contract TierManager is ITierManager {
     using SafeERC20 for IERC20;
 

@@ -10,8 +10,12 @@ import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/INexus.sol";  
 
-// Handler and account were merged, thus refer to the same contract
-
+/**
+ * @title Nexus contract
+ * @author @cosmodude
+ * @notice Core contract of the Referral system
+ * @dev Creates accounts, updates referral tree and gives info about TaxManager, TierManager and Rewarder 
+ */
 contract Nexus is INexus {
     address public master; 
     address public guardian; 

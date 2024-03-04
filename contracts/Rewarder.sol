@@ -9,6 +9,12 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IRewarder.sol";
 
+/**
+ * @title Rewarder contract
+ * @author @cosmodude
+ * @notice Controls the referral and quest reward proccess
+ * @dev Processes native and ERC20 tokens 
+ */
 contract Rewarder is IRewarder, Pausable {
     using SafeERC20 for IERC20;
 
