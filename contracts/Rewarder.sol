@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.0;
 
-import "./interfaces/IRewarder.sol";
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/INexus.sol";
 import "./interfaces/ITaxManager.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "./interfaces/IRewarder.sol";
 
-contract Rewarder is IRewarder {
+contract Rewarder is IRewarder, Pausable {
     using SafeERC20 for IERC20;
 
     uint256 public BASE = 1e18;
@@ -31,7 +32,16 @@ contract Rewarder is IRewarder {
         _;
     }
 
-    function getTaxManager() public view returns (ITaxManager) {
+    function pause() external onlySteward {
+        _pause();
+    }
+
+    function unpause() external onlySteward {
+        _unpause();
+    }
+
+
+    function getTaxManager() public view whenNotPaused returns (ITaxManager) {
         address taxManager = INexus(nexus).taxManager();
         return ITaxManager(taxManager);
     }
@@ -41,7 +51,7 @@ contract Rewarder is IRewarder {
      * @param solverId Nft Id of the quest solver
      */
     // TODO: Currently missing the solver tax, only has protocol tax
-    function handleRewardNative(uint32 solverId, uint256 amount) public payable {
+    function handleRewardNative(uint32 solverId, uint256 amount) public payable whenNotPaused {
         address escrow = msg.sender;
 
         require(escrow.balance == 0, "Escrow not empty");
@@ -84,7 +94,7 @@ contract Rewarder is IRewarder {
         address token,
         uint32 solverId,
         uint256 amount
-    ) public {        
+    ) public whenNotPaused {        
         uint256 currentBalance = IERC20(token).balanceOf(address(this));
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
@@ -150,7 +160,7 @@ contract Rewarder is IRewarder {
         uint32 _solverId, 
         uint256 _platformTax, 
         uint256 _referralTax
-    ) public payable {
+    ) public payable whenNotPaused {
         require(
             msg.value == _platformTax + _referralTax,
             "Insufficient tax amount"
@@ -177,7 +187,7 @@ contract Rewarder is IRewarder {
         uint256 _platformTax,
         uint256 _referralTax,
         address token
-    ) public {
+    ) public whenNotPaused {
 
         uint256 balanceBefore = IERC20(token).balanceOf(address(this));
 
@@ -206,7 +216,7 @@ contract Rewarder is IRewarder {
         rewardReferrers(solverHandler, _referralTax, taxRateDivisor, token);
     }
 
-    function handleStartDisputeNative(uint256 paymentAmount) external payable {
+    function handleStartDisputeNative(uint256 paymentAmount) external payable whenNotPaused {
         ITaxManager taxManager = getTaxManager();
         uint256 disputeDepositRate = taxManager.disputeDepositRate();
         uint256 baseDivisor = taxManager.taxBaseDivisor();
@@ -216,7 +226,7 @@ contract Rewarder is IRewarder {
         _processPayment(disputeTreasury, address(0), deposit);
     }
 
-    function handleStartDisputeToken(uint256 paymentAmount, address token, uint32 seekerId) external {
+    function handleStartDisputeToken(uint256 paymentAmount, address token, uint32 seekerId) external whenNotPaused {
         ITaxManager taxManager = getTaxManager();
         uint256 disputeDepositRate = taxManager.disputeDepositRate();
         uint256 baseDivisor = taxManager.taxBaseDivisor();
@@ -240,7 +250,7 @@ contract Rewarder is IRewarder {
         uint32 seekerId,
         uint32 solverId,
         uint8 solverShare
-    ) external payable override {
+    ) external payable override whenNotPaused {
         uint256 payment = msg.value;
 
         address seekerHandler = nexus.getHandler(seekerId);
@@ -274,7 +284,7 @@ contract Rewarder is IRewarder {
         uint8 solverShare,
         address token,
         uint256 payment
-    ) external override {
+    ) external override whenNotPaused {
         address seekerHandler = nexus.getHandler(seekerId);
         address seeker = IReferralHandler(seekerHandler).owner();
 
