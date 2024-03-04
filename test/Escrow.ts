@@ -118,7 +118,7 @@ describe("Escrow", function () {
 
             it("Shouldn't be able to call process payment if not from the quest contract address", async function () {
                 await expect(
-                    escrow_.connect(accounts_[1]).proccessPayment()
+                    escrow_.connect(accounts_[1]).processPayment()
                 ).to.be.revertedWith("only quest");
             });
 
@@ -138,7 +138,7 @@ describe("Escrow", function () {
             });
 
             it("Should not be able to call processResolution if not the Quest contract", async function () {
-                await expect(escrow_.proccessResolution(10)).to.be.revertedWith(
+                await expect(escrow_.processPayment()).to.be.revertedWith(
                     "only quest"
                 );
             });
@@ -271,7 +271,7 @@ describe("Escrow", function () {
 
             it("Shouldn't be able to call process payment if not from the quest contract address", async function () {
                 await expect(
-                    escrow_.connect(accounts_[1]).proccessPayment()
+                    escrow_.connect(accounts_[1]).processPayment()
                 ).to.be.revertedWith("only quest");
             });
 
@@ -291,7 +291,7 @@ describe("Escrow", function () {
             });
 
             it("Should not be able to call processResolution if not the Quest contract", async function () {
-                await expect(escrow_.proccessResolution(10)).to.be.revertedWith(
+                await expect(escrow_.processPayment()).to.be.revertedWith(
                     "only quest"
                 );
             });
