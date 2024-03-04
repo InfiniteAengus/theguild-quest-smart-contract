@@ -81,7 +81,7 @@ contract EscrowToken is IEscrow {
     function processResolution(uint8 solverShare) external onlyQuest {
         address rewarder = quest.getRewarder();
         token.approve(rewarder, paymentAmount);
-        IRewarder(rewarder).processResolutionToken(seekerId, solverId, solverShare, address(token));
+        IRewarder(rewarder).processResolutionToken(seekerId, solverId, solverShare, address(token), paymentAmount);
     }
 
 }
