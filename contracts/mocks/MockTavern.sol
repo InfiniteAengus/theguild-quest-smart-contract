@@ -64,8 +64,8 @@ contract MockTavern is ITavern {
 
     function createNewQuest(
         // user identificators
-        uint32 _solverId,
         uint32 _seekerId,
+        uint32 _solverId,
         uint256 _paymentAmount,
         string memory infoURI
     ) external payable onlyBarkeeper {
@@ -74,11 +74,11 @@ contract MockTavern is ITavern {
         address taxManager = INexus(nexus).taxManager();
         require(taxManager != address(0), "TaxManager not set");
 
-        emit QuestCreatedNative(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount, taxManager);
+        emit QuestCreatedNative(_seekerId, _solverId, address(quest), escrowImpl, _paymentAmount, taxManager);
 
         quest.initialize(
-            _solverId,
             _seekerId,
+            _solverId,
             _paymentAmount,
             infoURI,
             escrowImpl,
@@ -88,8 +88,8 @@ contract MockTavern is ITavern {
 
     function createNewQuest(
         // user identificators
-        uint32 _solverId,
         uint32 _seekerId,
+        uint32 _solverId,
         uint256 _paymentAmount,
         string memory infoURI,
         address _token
@@ -100,11 +100,11 @@ contract MockTavern is ITavern {
 
         require(taxManager != address(0), "TaxManager not set");
 
-        emit QuestCreatedToken(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount, _token, taxManager);
+        emit QuestCreatedToken(_seekerId, _solverId, address(quest), escrowImpl, _paymentAmount, _token, taxManager);
 
         quest.initialize(
-            _solverId,
             _seekerId,
+            _solverId,
             _paymentAmount,
             infoURI,
             escrowImpl,

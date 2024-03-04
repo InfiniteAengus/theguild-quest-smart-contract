@@ -24,8 +24,8 @@ contract MockQuest is IQuest {
     bool public started;
 
     address public escrowImplmentation; // native or with token
-    uint32 public solverId;
     uint32 public seekerId;
+    uint32 public solverId;
     address public token;
     string public infoURI;
     uint256 public paymentAmount;
