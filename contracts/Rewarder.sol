@@ -28,6 +28,28 @@ contract Rewarder is IRewarder, Pausable {
         uint256 solverReward
     );
 
+    event RewardTokenClaimed(
+        address indexed solverAccount,
+        address escrow,
+        uint256 solverReward,
+        address token
+    );
+
+    event seekerTaxPayedNative(
+        address indexed seekerAccount,
+        address quest,
+        uint256 tax
+    );
+
+    event seekerTaxPayedToken(
+        address indexed seekerAccount,
+        address quest,
+        uint256 tax,
+        address token
+    );
+
+
+
     constructor(address _steward, address _nexus) {
         steward = _steward;
         nexus = INexus(_nexus);
@@ -122,8 +144,7 @@ contract Rewarder is IRewarder, Pausable {
         uint256 solverReward = rewardValue - tax;
         address solverHandler = nexus.getHandler(solverId);
         
-        emit RewardNativeClaimed(solverHandler, msg.sender, solverReward);
-
+        emit RewardTokenClaimed(solverHandler, msg.sender, solverReward, token);
 
         {
             address solver = IReferralHandler(solverHandler).owner();
@@ -174,7 +195,7 @@ contract Rewarder is IRewarder, Pausable {
 
         ITaxManager taxManager = getTaxManager();
         uint256 taxRateDivisor = taxManager.taxBaseDivisor();
-
+        //emit seekerTaxPayedNative()
         // Seeker tax distribution
 
         // Platform tax distribution
@@ -353,7 +374,7 @@ contract Rewarder is IRewarder, Pausable {
             uint256 solverReward = rewardValue - tax;
             address solverHandler = nexus.getHandler(solverId);
             
-            emit RewardNativeClaimed(solverHandler, msg.sender, solverReward);
+            emit RewardTokenClaimed(solverHandler, msg.sender, solverReward, token);
 
             {
                 address solver = IReferralHandler(solverHandler).owner();

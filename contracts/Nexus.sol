@@ -94,21 +94,6 @@ contract Nexus is INexus {
         emit LevelChange(msg.sender, oldTier, newTier);
     }
 
-    function notifySelfTaxClaimed(uint256 amount, uint256 timestamp) external {
-        // All the handlers notify the Factory when they claim self tax
-        require(isHandler(msg.sender), "only handler");
-        emit SelfTaxClaimed(msg.sender, amount, timestamp);
-    }
-
-    function notifyReferralTaxClaimed(
-        uint256 amount,
-        uint256 timestamp
-    ) external {
-        // All the handlers notify the Factory when the claim referral Reward
-        require(isHandler(msg.sender), "only handler");
-        emit RewardClaimed(msg.sender, amount, timestamp);
-    }
-
     function setMaster(address newMaster) public onlyMaster {
         address oldMaster = master;
         master = newMaster;
