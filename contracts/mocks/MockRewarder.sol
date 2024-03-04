@@ -26,8 +26,9 @@ contract MockRewarder is IRewarder {
         uint8 solverShare
     );
 
-    constructor(address _steward) {
+    constructor(address _steward, address _nexus) {
         steward = _steward;
+        nexus = INexus(_nexus);
     }
 
     modifier onlySteward() {
@@ -52,10 +53,18 @@ contract MockRewarder is IRewarder {
 
     function handleRewardToken(
         address token,
-        uint32 solverId,
+        uint32,
         uint256 amount
     ) external {
+        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        
+        uint256 balance = IERC20(token).balanceOf(address(this));
 
+        require(balance >= amount, "Insufficient balance");
+
+        IERC20(token).safeTransfer(tx.origin, amount);
+
+        emit RewardClaimed(tx.origin, msg.sender, amount);
     }
 
     function calculateSeekerTax(uint256 _paymentAmount)

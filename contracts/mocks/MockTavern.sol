@@ -4,12 +4,10 @@ pragma solidity ^0.8.0;
 import "../interfaces/IProfileNFT.sol";
 import "../interfaces/Quests/IQuest.sol";
 import "../interfaces/INexus.sol";
-
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ITavern } from "../interfaces/Quests/ITavern.sol";
-
 /**
  * @title Quest Factory (Tavern)
  * @notice Deploys Quest Contracts and manages them
@@ -31,7 +29,7 @@ contract MockTavern is ITavern {
     address public seeker;
     address public solver;
     address public rewarder;
-    uint256 public reviewPeriod = 1;
+    uint256 public reviewPeriod = 1000;
     IProfileNFT private nft;
     address public nexus;
 
@@ -46,9 +44,9 @@ contract MockTavern is ITavern {
     }
 
     constructor(
+        address _questImplementation,
         address _escrowNativeImplementation,
         address _escrowTokenImplementation,
-        address _questImplementation,
         address _seeker,
         address _solver,
         address _rewarder,
@@ -74,7 +72,6 @@ contract MockTavern is ITavern {
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowNativeImplementation;
         address taxManager = INexus(nexus).taxManager();
-
         require(taxManager != address(0), "TaxManager not set");
 
         emit QuestCreatedNative(_solverId, _seekerId, address(quest), escrowImpl, _paymentAmount, taxManager);
