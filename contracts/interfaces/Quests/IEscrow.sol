@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 interface IEscrow {
-    function proccessPayment() external;
+    function processPayment() external;
 
-    function proccessStartDispute() external payable;
-    function proccessResolution(
+    function processStartDispute() external payable;
+    function processResolution(
         uint8 solverShare 
     ) external;
 

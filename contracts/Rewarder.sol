@@ -51,7 +51,7 @@ contract Rewarder is IRewarder {
         uint256 taxRateDivisor = taxManager.taxBaseDivisor();
 
         uint256 rewardValue;
-        // in case, want to proccess less than msg.value 
+        // in case, want to process less than msg.value 
         if(amount > 1) { // for gas optimisation (0 comparison is more expensive)
             require(amount <= msg.value, "handleRewardNative: amount bigger then msg.value");
             rewardValue = amount; 
@@ -233,7 +233,7 @@ contract Rewarder is IRewarder {
      * @param solverId Nft Id of the quest solver
      * @param solverShare % of the reward allocated to solver
      */
-    function proccessResolutionNative(
+    function processResolutionNative(
         uint32 seekerId,
         uint32 solverId,
         uint8 solverShare
@@ -266,7 +266,7 @@ contract Rewarder is IRewarder {
         }
     }
 
-    function proccessResolutionToken(
+    function processResolutionToken(
         uint32 seekerId,
         uint32 solverId,
         uint8 solverShare,
