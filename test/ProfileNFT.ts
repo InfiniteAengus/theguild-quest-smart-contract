@@ -346,31 +346,21 @@ describe("ProfileNFT", function () {
         it("Should be able to get the correct tier of the token owner's handler based from the tokenID", async function () {
             const tier = await profileNFT_.getTier(1);
 
-            expect(tier).to.equal(0);
+            expect(tier).to.equal(1);
         });
 
         it("Should not be able to change the URI unless the caller is the Handler contract", async function () {
             await expect(
-                profileNFT_.changeURI(1, "https://www.example2.com")
-            ).to.be.revertedWith("Only Handler can update Token's URI");
+                profileNFT_
+                    .connect(accounts_[1])
+                    .changeURI(1, "https://www.example2.com")
+            ).to.be.revertedWith("Only Guardian can update Token's URI");
         });
 
-        it("Should be able to change the URI if the caller is the Handler contract", async function () {
-            const handlerAddress = await nexus_.getHandler(1);
-
-            await impersonateAccount(handlerAddress);
-
-            const handlerSigner = await ethers.getSigner(handlerAddress);
-
-            // Transfer eth to the handler to perform the transaction
-            await accounts_[6].sendTransaction({
-                to: await handlerSigner.getAddress(),
-                value: ethers.parseEther("100000"),
-            });
-
+        it("Should be able to change the URI if the caller is the Guardian", async function () {
             // Updating the URI
             await profileNFT_
-                .connect(handlerSigner)
+                .connect(accounts_[0])
                 .changeURI(1, "https://www.example2.com");
 
             const tokenURI = await profileNFT_.tokenURI(1);
@@ -410,7 +400,7 @@ describe("ProfileNFT", function () {
 
             const tierCountsAfter = await profileCreated.getTierCounts();
 
-            expect(tierCountsAfter).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+            expect(tierCountsAfter).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
         });
     });
 });
