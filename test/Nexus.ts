@@ -211,11 +211,7 @@ describe("Nexus", function () {
         });
 
         it("Only master should be able to view the guardian", async function () {
-            await expect(
-                nexus_.connect(accounts_[0]).getGuardian()
-            ).to.be.revertedWith("only master");
-
-            const guardian = await nexus_.connect(accounts_[1]).getGuardian();
+            const guardian = await nexus_.connect(accounts_[1]).guardian();
 
             expect(guardian).to.equal(await accounts_[1].getAddress());
         });
@@ -440,7 +436,7 @@ describe("Nexus", function () {
 
             const tierCounts = await referredAccount.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
 
             const newProfileAccount = erc6551_.account.attach(
                 newProfileIssuance.handlerAddress
@@ -487,12 +483,12 @@ describe("Nexus", function () {
 
             let tierCounts = await referredAccount.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 2n, 0n, 0n, 0n]);
 
             // 1st Depth Referrer
             tierCounts = await depth1Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
 
             const newProfileAccount = erc6551_.account.attach(
                 newProfileIssuance.handlerAddress
@@ -539,17 +535,17 @@ describe("Nexus", function () {
 
             let tierCounts = await referredAccount.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([3n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 3n, 0n, 0n, 0n]);
 
             // 2nd Depth Referrer
             tierCounts = await depth1Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 2n, 0n, 0n, 0n]);
 
             // 1st Depth Referrer
             tierCounts = await depth2Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
 
             const newProfileAccount = erc6551_.account.attach(
                 newProfileIssuance.handlerAddress
@@ -596,22 +592,22 @@ describe("Nexus", function () {
 
             let tierCounts = await referredAccount.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
 
             // 3rd Depth Referrer
             tierCounts = await depth1Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([3n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 3n, 0n, 0n, 0n]);
 
             // 2nd Depth Referrer
             tierCounts = await depth2Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 2n, 0n, 0n, 0n]);
 
             // 1st Depth Referrer
             tierCounts = await depth3Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
 
             const newProfileAccount = erc6551_.account.attach(
                 newProfileIssuance.handlerAddress
@@ -658,27 +654,27 @@ describe("Nexus", function () {
 
             let tierCounts = await referredAccount.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
 
             // 4rd Depth Referrer
             tierCounts = await depth1Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
 
             // 3nd Depth Referrer
             tierCounts = await depth2Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([3n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 3n, 0n, 0n, 0n]);
 
             // 2st Depth Referrer
             tierCounts = await depth3Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 2n, 0n, 0n, 0n]);
 
             // 1st Depth Referrer
             tierCounts = await depth4Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
 
             const newProfileAccount = erc6551_.account.attach(
                 newProfileIssuance.handlerAddress

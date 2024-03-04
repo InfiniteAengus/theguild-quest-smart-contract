@@ -5,8 +5,8 @@ interface ITavern {
 
     // quests with payments in native token
     event QuestCreatedNative(
-        uint32 solverId,
         uint32 seekerId,
+        uint32 solverId,
         address quest,
         address escrowImplementation,
         uint256 paymentAmount,
@@ -15,8 +15,8 @@ interface ITavern {
     
     // quests with token payments
     event QuestCreatedToken(
-        uint32 solverId,
         uint32 seekerId,
+        uint32 solverId,
         address quest,
         address escrowImplementation,
         uint256 paymentAmount,

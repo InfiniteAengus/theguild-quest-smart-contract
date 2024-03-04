@@ -26,8 +26,9 @@ contract MockRewarder is IRewarder {
         uint8 solverShare
     );
 
-    constructor(address _steward) {
+    constructor(address _steward, address _nexus) {
         steward = _steward;
+        nexus = INexus(_nexus);
     }
 
     modifier onlySteward() {
@@ -40,7 +41,7 @@ contract MockRewarder is IRewarder {
         return ITaxManager(taxManager);
     }
 
-    function handleRewardNative(uint32) public payable {
+    function handleRewardNative(uint32, uint256) public payable {
         address escrow = msg.sender;
         require(escrow.balance == 0, "Escrow not empty");
 
@@ -52,10 +53,18 @@ contract MockRewarder is IRewarder {
 
     function handleRewardToken(
         address token,
-        uint32 solverId,
+        uint32,
         uint256 amount
     ) external {
+        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        
+        uint256 balance = IERC20(token).balanceOf(address(this));
 
+        require(balance >= amount, "Insufficient balance");
+
+        IERC20(token).safeTransfer(tx.origin, amount);
+
+        emit RewardClaimed(tx.origin, msg.sender, amount);
     }
 
     function calculateSeekerTax(uint256 _paymentAmount)
@@ -102,7 +111,7 @@ contract MockRewarder is IRewarder {
     ) external {
     }
 
-    function proccessResolutionNative(
+    function processResolutionNative(
         uint32 seekerId,
         uint32 solverId,
         uint8 solverShare
@@ -110,7 +119,7 @@ contract MockRewarder is IRewarder {
         emit ResolutionProccessed(seekerId, solverId, solverShare);
     }
 
-    function proccessResolutionToken(
+    function processResolutionToken(
         uint32 seekerId,
         uint32 solverId,
         uint8 solverShare,
@@ -125,6 +134,14 @@ contract MockRewarder is IRewarder {
         uint256 taxDivisor
     ) internal {
         
+    }
+
+    function handleStartDisputeNative(uint256 paymentAmount) external payable {
+
+    }
+
+    function handleStartDisputeToken(uint256 paymentAmount, address token) external payable{
+
     }
 
     function recoverTokens(

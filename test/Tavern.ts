@@ -312,62 +312,6 @@ describe("Tavern", function () {
             );
         });
 
-        it("Should not be able to setSeekerTreasury unless owner", async function () {
-            await expect(
-                tavern_
-                    .connect(accounts_[1])
-                    .setSeekerTreasury(await accounts_[0].getAddress())
-            ).to.be.revertedWith("only owner");
-
-            expect(await tavern_.seekerFeesTreasury()).to.equal(
-                ethers.ZeroAddress
-            );
-
-            await tavern_.setSeekerTreasury(await accounts_[1].getAddress());
-
-            expect(await tavern_.seekerFeesTreasury()).to.equal(
-                await accounts_[1].getAddress()
-            );
-        });
-
-        it("Should not be able to setSolverTreasury unless owner", async function () {
-            await expect(
-                tavern_
-                    .connect(accounts_[1])
-                    .setSolverTreasury(await accounts_[0].getAddress())
-            ).to.be.revertedWith("only owner");
-
-            expect(await tavern_.solverFeesTreasury()).to.equal(
-                ethers.ZeroAddress
-            );
-
-            await tavern_.setSolverTreasury(await accounts_[1].getAddress());
-
-            expect(await tavern_.solverFeesTreasury()).to.equal(
-                await accounts_[1].getAddress()
-            );
-        });
-
-        it("Should not be able to setDisputeTreasuryAddress unless owner", async function () {
-            await expect(
-                tavern_
-                    .connect(accounts_[1])
-                    .setDisputeTreasuryAddress(await accounts_[0].getAddress())
-            ).to.be.revertedWith("only owner");
-
-            expect(await tavern_.disputeFeesTreasury()).to.equal(
-                ethers.ZeroAddress
-            );
-
-            await tavern_.setDisputeTreasuryAddress(
-                await accounts_[1].getAddress()
-            );
-
-            expect(await tavern_.disputeFeesTreasury()).to.equal(
-                await accounts_[1].getAddress()
-            );
-        });
-
         it("Should not be able to setMediator unless owner", async function () {
             await expect(
                 tavern_

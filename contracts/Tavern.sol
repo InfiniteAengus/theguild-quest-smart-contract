@@ -59,15 +59,15 @@ contract Tavern is AccessControl, ITavern {
 
     /**
      * @notice Function to create quests with Native token payments
-     * @param _solverId Nft id of the solver of the quest
      * @param _seekerId Nft id of the seeker of the quest
+     * @param _solverId Nft id of the solver of the quest
      * @param _paymentAmount Amount of Native tokens to be paid
      * @param infoURI Link to the info a bout quest (flexible, decide with backend)
      */
     function createNewQuest(
         // user identificators
-        uint32 _solverId,
         uint32 _seekerId,
+        uint32 _solverId,
         uint256 _paymentAmount,
         string memory infoURI
     ) external payable onlyBarkeeper {
@@ -78,8 +78,8 @@ contract Tavern is AccessControl, ITavern {
         require(taxManager != address(0), "TaxManager not set");
    
         emit QuestCreatedNative(
-            _solverId, 
             _seekerId, 
+            _solverId, 
             address(quest), 
             escrowImpl, 
             _paymentAmount, 
@@ -87,8 +87,8 @@ contract Tavern is AccessControl, ITavern {
         );
 
         quest.initialize(
-            _solverId,
             _seekerId,
+            _solverId,
             _paymentAmount,
             infoURI,
             escrowImpl,
@@ -98,8 +98,8 @@ contract Tavern is AccessControl, ITavern {
 
     /**
      * @notice Function to create quests with ERC20 token payments
-     * @param _solverId Nft id of the solver of the quest
      * @param _seekerId Nft id of the seeker of the quest
+     * @param _solverId Nft id of the solver of the quest
      * @param _paymentAmount Amount of Native tokens to be paid
      * @param infoURI Link to the info a bout quest (flexible, decide with backend)
      * @param _token Address of the paymant token
@@ -107,8 +107,8 @@ contract Tavern is AccessControl, ITavern {
     // NOTE: should check and only use supported ERC20 tokens~
     function createNewQuest(
         // user identificators
-        uint32 _solverId,
         uint32 _seekerId,
+        uint32 _solverId,
         uint256 _paymentAmount,
         string memory infoURI,
         address _token
@@ -120,8 +120,8 @@ contract Tavern is AccessControl, ITavern {
         require(taxManager != address(0), "TaxManager not set");
 
         emit QuestCreatedToken(
-            _solverId, 
             _seekerId, 
+            _solverId, 
             address(quest), 
             escrowImpl, 
             _paymentAmount, 
@@ -130,8 +130,8 @@ contract Tavern is AccessControl, ITavern {
         );
 
         quest.initialize(
-            _solverId,
             _seekerId,
+            _solverId,
             _paymentAmount,
             infoURI,
             escrowImpl,

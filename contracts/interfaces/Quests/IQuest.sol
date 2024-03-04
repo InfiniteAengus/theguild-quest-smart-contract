@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 interface IQuest {
     function initialize(
-        uint32 solverId, 
         uint32 seekerId, 
+        uint32 solverId, 
         uint256 paymentAmount, 
         string memory infoURI, 
         address escrowImplementation, 

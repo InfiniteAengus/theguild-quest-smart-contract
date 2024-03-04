@@ -104,8 +104,15 @@ export async function mockFailReceiverSetup(silence: Boolean) {
     return mockFailReceiver;
 }
 
-export async function mockRewarderSetup(silence: Boolean, account: Signer) {
-    const mockRewarder = await ethers.deployContract("MockRewarder", [account]);
+export async function mockRewarderSetup(
+    silence: Boolean,
+    account: Signer,
+    nexus: Nexus
+) {
+    const mockRewarder = await ethers.deployContract("MockRewarder", [
+        account,
+        nexus.target,
+    ]);
     await mockRewarder.waitForDeployment();
 
     if (!silence) {
@@ -113,6 +120,23 @@ export async function mockRewarderSetup(silence: Boolean, account: Signer) {
     }
 
     return mockRewarder;
+}
+
+export async function mockQuestSetup(
+    silence: Boolean,
+    escrow: EscrowNative | EscrowToken,
+    token: string,
+    mockRewarder: MockRewarder
+) {
+    const quest = await ethers.deployContract("MockQuest");
+
+    await quest.waitForDeployment();
+
+    if (!silence) {
+        console.log(`MockQuest deployed to ${quest.target}`);
+    }
+
+    return quest;
 }
 
 export async function mockTavernSetup(
@@ -125,9 +149,9 @@ export async function mockTavernSetup(
     rewarder: MockRewarder
 ) {
     const mockTavern = await ethers.deployContract("MockTavern", [
+        quest.target,
         escrowNative.target,
         escrowToken.target,
-        quest.target,
         await accounts[0].getAddress(),
         await accounts[1].getAddress(),
         rewarder.target,

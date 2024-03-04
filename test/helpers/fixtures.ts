@@ -1,5 +1,8 @@
 import { ethers } from "hardhat";
-import { ReferralHandlerERC6551Account } from "../../typechain-types";
+import {
+    EscrowNative,
+    ReferralHandlerERC6551Account,
+} from "../../typechain-types";
 import { ERC6551Setup, Nexus6551 } from "./types";
 import {
     deployMockExecutes,
@@ -8,6 +11,7 @@ import {
     escrowTokenSetup,
     managersSetup,
     mockNFTSetup,
+    mockQuestSetup,
     mockRewarderSetup,
     mockTavernSetup,
     mockTokenSetup,
@@ -145,19 +149,81 @@ export async function fixture_profile_nft_integration_tests(
 
 // Fixture for the Escrow Contract Unit Tests
 export async function fixture_escrow_unit_tests(accounts: Signer[]) {
-    const escrow = await escrowNativeSetup(true);
-    const mockRewarder = await mockRewarderSetup(true, accounts[0]);
+    const nexus = await nexusSetup(true);
 
-    return { escrow, accounts, mockRewarder };
+    const taxManager = await taxManagerSetup(true);
+
+    // Set the tax manager for the nexus
+    await nexus.nexus.setTaxManager(taxManager.target);
+
+    const escrowNativeImpl = await escrowNativeSetup(true);
+    const escrowTokenImpl = await escrowTokenSetup(true);
+    const mockRewarder = await mockRewarderSetup(
+        true,
+        accounts[0],
+        nexus.nexus
+    );
+
+    const mockToken = await mockTokenSetup(true);
+
+    const questNative = await mockQuestSetup(
+        true,
+        escrowNativeImpl,
+        ethers.ZeroAddress,
+        mockRewarder
+    );
+
+    await questNative[
+        "initialize(uint32,uint32,uint256,string,address,address,address)"
+    ](
+        0,
+        1,
+        1000,
+        "MockQuestNative",
+        escrowNativeImpl.target,
+        ethers.ZeroAddress,
+        mockRewarder.target
+    );
+
+    const questToken = await mockQuestSetup(
+        true,
+        escrowTokenImpl,
+        mockToken.target.toString(),
+        mockRewarder
+    );
+
+    await questToken[
+        "initialize(uint32,uint32,uint256,string,address,address,address)"
+    ](
+        0,
+        1,
+        1000,
+        "MockQuestToken",
+        escrowTokenImpl.target,
+        mockToken.target,
+        mockRewarder.target
+    );
+
+    return {
+        escrowNativeImpl,
+        escrowTokenImpl,
+        accounts,
+        mockRewarder,
+        questNative,
+        questToken,
+        mockToken,
+        taxManager,
+    };
 }
 
 export async function fixture_quest_unit_tests(accounts: Signer[]) {
     const escrowNative = await escrowNativeSetup(true);
     const escrowToken = await escrowTokenSetup(true);
-    const mockRewarder = await mockRewarderSetup(true, accounts[0]);
     const taxManager = await taxManagerSetup(true);
 
     const { nexus } = await nexusSetup(true);
+
+    const mockRewarder = await mockRewarderSetup(true, accounts[0], nexus);
 
     const quest = await questSetup(true);
 
@@ -171,6 +237,8 @@ export async function fixture_quest_unit_tests(accounts: Signer[]) {
         mockRewarder
     );
 
+    const mockToken = await mockTokenSetup(true);
+
     return {
         mockTavern,
         quest,
@@ -180,6 +248,7 @@ export async function fixture_quest_unit_tests(accounts: Signer[]) {
         mockRewarder,
         taxManager,
         nexus,
+        mockToken,
     };
 }
 
@@ -188,7 +257,7 @@ export async function fixture_tavern_unit_tests(accounts: Signer[]) {
 
     const escrowNative = await escrowNativeSetup(true);
     const escrowToken = await escrowTokenSetup(true);
-    const mockRewarder = await mockRewarderSetup(true, accounts[0]);
+    const mockRewarder = await mockRewarderSetup(true, accounts[0], nexus);
     const taxManager = await taxManagerSetup(true);
 
     const mockNft = await mockNFTSetup(true);

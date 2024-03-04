@@ -48,7 +48,7 @@ describe("ProfileNFT", function () {
                 fixture_unit_tests
             );
 
-            expect(await profileNFT.name()).to.equal("The Guild profike NFT");
+            expect(await profileNFT.name()).to.equal("The Guild profile NFT");
             expect(await profileNFT.symbol()).to.equal("GuildNFT");
             expect(await profileNFT.nexus()).to.equal(
                 await accounts[0].getAddress()

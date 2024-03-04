@@ -613,10 +613,10 @@ describe("ERC6551", function () {
                 expect(state).to.equal(1);
             });
 
-            it("Current account tier level should be at 0 since there are no referrals to this account", async function () {
+            it("Current account tier level should be at 1 since there was no tier up", async function () {
                 const tierLevel = await createdAccount_.getTier();
 
-                expect(tierLevel).to.equal(0);
+                expect(tierLevel).to.equal(1);
             });
 
             it("Tier counts should be at 0 since there are no referrals to this account", async function () {
@@ -642,10 +642,10 @@ describe("ERC6551", function () {
                 );
             });
 
-            it("Tier level should still be at 0 after failed tier up attempt", async function () {
+            it("Tier level should still be at 1 after failed tier up attempt", async function () {
                 const tierLevel = await createdAccount_.getTier();
 
-                expect(tierLevel).to.equal(0);
+                expect(tierLevel).to.equal(1);
             });
 
             it("Only master should be able to change the eligibility for a level up", async function () {
@@ -707,7 +707,7 @@ describe("ERC6551", function () {
             it("Created account 1 should return 1 tier count for the first tier because it referred Account 2", async function () {
                 const tierCounts = await createdAccount_.getTierCounts();
 
-                expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
+                expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
             });
 
             it("Account 1 should still not be able to tier up since it doesn't have higher depth of refferals", async function () {
@@ -785,15 +785,15 @@ describe("ERC6551", function () {
                 const tierCounts6 = await createdAccount6.getTierCounts();
 
                 // The 1st created account will only have 4 referrals with 1 tier value, wont increase beyond this because only up to 4 depth is taken into account
-                expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+                expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
                 // The 2nd created account will only have 4 referrals with 1 tier value
-                expect(tierCounts2).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+                expect(tierCounts2).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
                 // The 3rd created account will only have 3 referrals with 1 tier value
-                expect(tierCounts3).to.deep.equal([3n, 0n, 0n, 0n, 0n]);
+                expect(tierCounts3).to.deep.equal([0n, 3n, 0n, 0n, 0n]);
                 // The 4th created account will only have 2 referrals with 1 tier value
-                expect(tierCounts4).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
+                expect(tierCounts4).to.deep.equal([0n, 2n, 0n, 0n, 0n]);
                 // The 5th created account will only have 1 referrals with 1 tier value
-                expect(tierCounts5).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
+                expect(tierCounts5).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
                 // The 6th created account will only have 0 referrals with 1 tier value
                 expect(tierCounts6).to.deep.equal([0n, 0n, 0n, 0n, 0n]);
             });
@@ -866,7 +866,7 @@ describe("ERC6551", function () {
                 let tierCounts = await createdAccount_.getTierCounts();
 
                 // Account 1's tier count should start with
-                expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+                expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
 
                 const account3Data =
                     createdAccount3_.interface.encodeFunctionData(
@@ -899,7 +899,7 @@ describe("ERC6551", function () {
                 tierCounts = await createdAccount_.getTierCounts();
 
                 // Account 1's tier count should not be updated
-                expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+                expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
             });
 
             it.skip("Should not be able to update a non-existent referral tree entry", async function () {
@@ -960,8 +960,8 @@ describe("ERC6551", function () {
 
                 let tierLevel = await createdAccount_.getTier();
 
-                // Tier level should be at 0 before tierUp
-                expect(tierLevel).to.equal(0);
+                // Tier level should be at 1 before tierUp
+                expect(tierLevel).to.equal(1);
 
                 await expect(createdAccount_.tierUp()).to.be.revertedWith(
                     "Tier upgrade condition not met"
@@ -978,7 +978,7 @@ describe("ERC6551", function () {
                 let tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's original tier counts should all be level 1
-                expect(tierCount).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
 
                 // Should not be able to set a tier out of range
                 await expect(createdAccount5_.setTier(10)).to.be.revertedWith(
@@ -990,7 +990,7 @@ describe("ERC6551", function () {
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's tier counts should be updated to reflect the change
-                expect(tierCount).to.deep.equal([3n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 3n, 0n, 1n, 0n]);
 
                 // Only account 5's tier should be updated
                 const tier = await createdAccount5_.getTier();
@@ -1003,65 +1003,65 @@ describe("ERC6551", function () {
                 let tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's original tier counts should all be tier 1 but 1, which is the tier 3 fir account 5
-                expect(tierCount).to.deep.equal([3n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 3n, 0n, 1n, 0n]);
 
                 await createdAccount_.setTier(2);
 
                 tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's tier should not have any changes
-                expect(tierCount).to.deep.equal([3n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 3n, 0n, 1n, 0n]);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's original tier counts should all be tier 1 but 1, which is the tier 3 for account 5
-                expect(tierCount).to.deep.equal([3n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 3n, 0n, 1n, 0n]);
 
                 await createdAccount2_.setTier(2);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's should not have any changes
-                expect(tierCount).to.deep.equal([3n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 3n, 0n, 1n, 0n]);
 
                 tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's should have a change at level 2
-                expect(tierCount).to.deep.equal([2n, 0n, 1n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 2n, 1n, 1n, 0n]);
 
                 tierCount = await createdAccount3_.getTierCounts();
 
                 // Account 3's original tier counts should all be tier 1 but 1, which is the tier 3 fior account 5
-                expect(tierCount).to.deep.equal([2n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 2n, 0n, 1n, 0n]);
 
                 await createdAccount3_.setTier(2);
 
                 tierCount = await createdAccount3_.getTierCounts();
 
                 // Account 3's should not have any changes
-                expect(tierCount).to.deep.equal([2n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 2n, 0n, 1n, 0n]);
 
                 tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's should have a change at level 2
-                expect(tierCount).to.deep.equal([1n, 0n, 2n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 1n, 2n, 1n, 0n]);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's should have a change at level 3
-                expect(tierCount).to.deep.equal([2n, 0n, 1n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 2n, 1n, 1n, 0n]);
 
                 tierCount = await createdAccount4_.getTierCounts();
 
                 // Account 4's original tier counts should be at level 1 but 1, which is the tier 3 for account 5
-                expect(tierCount).to.deep.equal([1n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 1n, 0n, 1n, 0n]);
 
                 await createdAccount4_.setTier(2);
 
                 tierCount = await createdAccount4_.getTierCounts();
 
                 // Account 4's should not have any changes
-                expect(tierCount).to.deep.equal([1n, 0n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 1n, 0n, 1n, 0n]);
 
                 tierCount = await createdAccount_.getTierCounts();
 
@@ -1071,12 +1071,12 @@ describe("ERC6551", function () {
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's should have a change at level 3
-                expect(tierCount).to.deep.equal([1n, 0n, 2n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 1n, 2n, 1n, 0n]);
 
                 tierCount = await createdAccount3_.getTierCounts();
 
                 // Account 3's should have a change at level 3
-                expect(tierCount).to.deep.equal([1n, 0n, 1n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 1n, 1n, 1n, 0n]);
             });
 
             it("Only the master should be able to set the nexus contract address", async function () {
