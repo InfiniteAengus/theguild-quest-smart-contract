@@ -41,7 +41,7 @@ contract Rewarder is IRewarder {
      * @param solverId Nft Id of the quest solver
      */
     // TODO: Currently missing the solver tax, only has protocol tax
-    function handleRewardNative(uint32 solverId) public payable {
+    function handleRewardNative(uint32 solverId, uint256 amount) public payable {
         address escrow = msg.sender;
 
         require(escrow.balance == 0, "Escrow not empty");
@@ -50,7 +50,13 @@ contract Rewarder is IRewarder {
         uint256 protocolTaxRate = taxManager.protocolTaxRate();
         uint256 taxRateDivisor = taxManager.taxBaseDivisor();
 
-        uint256 rewardValue = msg.value;
+        uint256 rewardValue;
+        // in case, want to proccess less than msg.value 
+        if(amount > 1) { // for gas optimisation (0 comparison is more expensive)
+            require(amount <= msg.value, "handleRewardNative: amount bigger then msg.value");
+            rewardValue = amount; 
+        } else { rewardValue = msg.value; }
+
         uint256 tax = (rewardValue * protocolTaxRate) / taxRateDivisor;
 
         require(tax <= rewardValue, "Invalid tax");
@@ -205,7 +211,7 @@ contract Rewarder is IRewarder {
         uint256 disputeDepositRate = taxManager.disputeDepositRate();
         uint256 baseDivisor = taxManager.taxBaseDivisor();
         uint256 deposit = msg.value;
-        require(deposit == ((paymentAmount * baseDivisor) / disputeDepositRate), "Wrong dispute deposit");
+        require(deposit == ((paymentAmount * disputeDepositRate) / baseDivisor), "Wrong dispute deposit");
         address disputeTreasury = taxManager.disputeFeesTreasury();
         _processPayment(disputeTreasury, address(0), deposit);
     }
@@ -214,7 +220,7 @@ contract Rewarder is IRewarder {
         ITaxManager taxManager = getTaxManager();
         uint256 disputeDepositRate = taxManager.disputeDepositRate();
         uint256 baseDivisor = taxManager.taxBaseDivisor();
-        uint256 deposit = ((paymentAmount * baseDivisor) / disputeDepositRate);
+        uint256 deposit = ((paymentAmount * disputeDepositRate) / baseDivisor);
         // use tx.origin, not to pass the seeker as argument
         IERC20(token).safeTransferFrom(tx.origin, address(this), deposit);
         address disputeTreasury = taxManager.disputeFeesTreasury();
@@ -236,9 +242,28 @@ contract Rewarder is IRewarder {
 
         // Solver at Fault
         if(solverShare == 0){
-            
+            address seekerHandler = nexus.getHandler(seekerId);
+            address seeker = IReferralHandler(seekerHandler).owner();
+            _processPayment(seeker, address(0), payment);
         }
+        // Seeker at Fault
+        else if(solverShare == 100){
+            handleRewardNative(solverId, 0);
+        } 
+        // Arbitrary distribution
+        else {
+            ITaxManager taxManager = getTaxManager();
+            uint256 disputeDepositRate = taxManager.disputeDepositRate();
+            uint256 baseDivisor = taxManager.taxBaseDivisor();
+            // both pay half of the dsioute deposit 
+            uint256 seekerPayment = (payment * ((baseDivisor + (disputeDepositRate / 2)) + ((100 - solverShare) * baseDivisor) / 100)) / baseDivisor;
+            uint256 solverPayment = (payment * ((baseDivisor - (disputeDepositRate / 2)) + (solverShare  * baseDivisor) / 100)) / baseDivisor;
+            address seekerHandler = nexus.getHandler(seekerId);
+            address seeker = IReferralHandler(seekerHandler).owner();
 
+            _processPayment(seeker, address(0), seekerPayment);
+            handleRewardNative(solverId, solverPayment);
+        }
     }
 
     function proccessResolutionToken(

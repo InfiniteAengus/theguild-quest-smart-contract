@@ -58,7 +58,7 @@ contract EscrowNative is IEscrow {
 
     function proccessPayment() external onlyQuest {
         address rewarder = quest.getRewarder();
-        IRewarder(rewarder).handleRewardNative{value: paymentAmount}(solverId);
+        IRewarder(rewarder).handleRewardNative{value: paymentAmount}(solverId, 0);
     }
 
     /**
