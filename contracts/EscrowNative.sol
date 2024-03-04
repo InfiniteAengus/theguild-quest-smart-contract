@@ -56,24 +56,24 @@ contract EscrowNative is IEscrow {
         IRewarder(rewarder).handleSeekerTaxNative{ value: referralTax + platformTax }(_solverId, referralTax, platformTax);
     }
 
-    function proccessPayment() external onlyQuest {
+    function processPayment() external onlyQuest {
         address rewarder = quest.getRewarder();
-        IRewarder(rewarder).handleRewardNative{value: paymentAmount}(solverId);
+        IRewarder(rewarder).handleRewardNative{value: paymentAmount}(solverId, 0);
     }
 
     /**
-     * @notice Proccess the dispute start
+     * @notice process the dispute start
      */
-    function proccessStartDispute() external payable onlyQuest {
+    function processStartDispute() external payable onlyQuest {
         address rewarder = quest.getRewarder();
         IRewarder(rewarder).handleStartDisputeNative{value: msg.value}(paymentAmount);
     }
 
     /**
-     * @notice Proccess the dispute resolution
+     * @notice process the dispute resolution
      */
-    function proccessResolution(uint8 solverShare) external onlyQuest {
+    function processResolution(uint8 solverShare) external onlyQuest {
         address rewarder = quest.getRewarder();
-        IRewarder(rewarder).proccessResolutionNative{value: paymentAmount}(seekerId, solverId, solverShare);
+        IRewarder(rewarder).processResolutionNative{value: paymentAmount}(seekerId, solverId, solverShare);
     }
 }

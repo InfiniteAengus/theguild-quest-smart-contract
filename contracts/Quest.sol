@@ -119,11 +119,11 @@ contract Quest is IQuest {
         beingDisputed = true;
         mediator = tavern.mediator();
         if (token == address(0)){
-            IEscrow(escrow).proccessStartDispute{value: msg.value}();
+            IEscrow(escrow).processStartDispute{value: msg.value}();
         }
         else{
             require(msg.value == 0 , "Native token sent");
-            IEscrow(escrow).proccessStartDispute{value: 0}();
+            IEscrow(escrow).processStartDispute{value: 0}();
         }
     }
 
@@ -134,7 +134,7 @@ contract Quest is IQuest {
         require(!rewarded, "Rewarded before");
         require(solverShare <= 100, "Share can't be more than 100");
         rewarded = true;
-        IEscrow(escrow).proccessResolution(solverShare);  
+        IEscrow(escrow).processResolution(solverShare);  
     }
 
     function finishQuest() external onlySolver {
@@ -159,7 +159,7 @@ contract Quest is IQuest {
         require(!beingDisputed, "Is under dispute");
         require(rewardTime <= block.timestamp, "Not reward time yet");
         rewarded = true;
-        IEscrow(escrow).proccessPayment();
+        IEscrow(escrow).processPayment();
     }
 
     function getRewarder() public view returns (address) {
