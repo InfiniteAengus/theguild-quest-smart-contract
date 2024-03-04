@@ -53,7 +53,7 @@ contract EscrowNative is IEscrow {
 
         require(msg.value == paymentAmount + referralTax + platformTax, "Invalid amount sent");
 
-        IRewarder(rewarder).handleSeekerTaxNative{ value: referralTax + platformTax }(_solverId, referralTax, platformTax);
+        IRewarder(rewarder).handleSeekerTaxNative{ value: referralTax + platformTax }(_seekerId, referralTax, platformTax);
     }
 
     function processPayment() external onlyQuest {
