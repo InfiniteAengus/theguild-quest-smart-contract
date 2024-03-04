@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 import "./interfaces/IProfileNFT.sol";
 import "./interfaces/Quests/IQuest.sol";
 import "./interfaces/INexus.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import { ITavern } from "./interfaces/Quests/ITavern.sol";
 
 /**
@@ -16,9 +16,7 @@ import { ITavern } from "./interfaces/Quests/ITavern.sol";
  * @author @cosmodude
  */
 
-// NOTE: the access control library isnt actually used, local access control is used instead
-
-contract Tavern is AccessControl, ITavern {
+contract Tavern is ITavern, Pausable {
     using SafeERC20 for IERC20;
     
     address public owner;
@@ -139,6 +137,14 @@ contract Tavern is AccessControl, ITavern {
         );
     }
 
+    function pause() external onlyBarkeeper {
+        _pause();
+    }
+
+    function unpause() external onlyBarkeeper {
+        _unpause();
+    }
+
     // in case of backend problem
     function setBarkeeper(address keeper) external onlyOwner {
         _barkeeper = keeper;
@@ -170,7 +176,7 @@ contract Tavern is AccessControl, ITavern {
         reviewPeriod = period;
     }
 
-    function getRewarder() external view returns (address) {
+    function getRewarder() external view whenNotPaused returns (address) {
         return INexus(nexus).rewarder();
     }
 
@@ -178,17 +184,17 @@ contract Tavern is AccessControl, ITavern {
         return _barkeeper;
     }
 
-    function getProfileNFT() public view returns (address) {
+    function getProfileNFT() public view whenNotPaused returns (address) {
         return address(nft);
     }
 
-    function ownerOf(uint32 nftId) external view returns (address) {
+    function ownerOf(uint32 nftId) external view whenNotPaused returns (address) {
         return nft.ownerOf(nftId);
     }
 
     function confirmNFTOwnership(
         address identity
-    ) public view returns (bool confirmed) {
+    ) public view whenNotPaused returns (bool confirmed) {
         confirmed = nft.balanceOf(identity) > 0;
         return confirmed;
     }

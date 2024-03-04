@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 import "./interfaces/IProfileNFT.sol";
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/IERC6551/IERC6551Registry.sol";
-import "./interfaces/INexus.sol";  
-import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import "./interfaces/IReferralHandler.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./interfaces/INexus.sol";  
 
 // Handler and account were merged, thus refer to the same contract
 
