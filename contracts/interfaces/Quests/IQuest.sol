@@ -11,7 +11,7 @@ interface IQuest {
         address token
     ) external;
     
-    function startDispute() external;
+    function startDispute() external payable;
     function resolveDispute(uint8 solverShare) external;
     function finishQuest() external;
     function receiveReward() external;

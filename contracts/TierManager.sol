@@ -55,12 +55,18 @@ contract TierManager is ITierManager {
         tierUpConditions[tier].xpPoints = xpPoints;
     }
 
+    /**
+     * @notice Check if user is valid for the tier upgrade
+     * @param tierCounts Number of referrals of each tier, referred by this person
+     * @param account User account(referral handler)
+     * @param tier Desired tier to be upgraded to 
+     * @dev If it returns true, means user has the requirement for the tier sent as parameter
+     */
     function validateUserTier(
         uint32[5] memory tierCounts,
         address account,
         uint8 tier
     ) internal view returns (bool) {
-        // Check if user has valid requirements for the tier, if it returns true it means they have the requirement for the tier sent as parameter
 
         // NOTE: Crucial that these values are set after deployment, or users would be able to upgrade without meeting the requirements
         require(
@@ -68,12 +74,26 @@ contract TierManager is ITierManager {
             "Tier conditions not set"
         );
 
-        if (tierCounts[0] < tierUpConditions[tier].novicesReferred)
-            return false;
-        if (tierCounts[1] < tierUpConditions[tier].adeptsReferred) return false;
-        if (tierCounts[2] < tierUpConditions[tier].mastersReferred)
-            return false;
-        if (tierCounts[3] < tierUpConditions[tier].godsReferred) return false;
+        uint64 totalTierCounts;
+        for(uint8 i = 0; i < 5; i++ ){
+            totalTierCounts += tierCounts[i];
+        }
+
+        if (totalTierCounts  < tierUpConditions[tier].novicesReferred)
+            { return false; }
+        totalTierCounts -= tierCounts[0];
+
+        if (totalTierCounts < tierUpConditions[tier].adeptsReferred) 
+            { return false; }
+        totalTierCounts -= tierCounts[1];
+        if (totalTierCounts < tierUpConditions[tier].mastersReferred)
+            { return false; }
+        totalTierCounts -= tierCounts[2];
+        if (totalTierCounts < tierUpConditions[tier].godsReferred) 
+            { return false; }
+        totalTierCounts -= tierCounts[3];
+        if (totalTierCounts < tierUpConditions[tier].godsReferred) 
+            { return false; }
 
         IERC20 xp = IERC20(xpToken);
         if (xp.balanceOf(account) < tierUpConditions[tier].xpPoints)

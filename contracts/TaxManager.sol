@@ -15,17 +15,17 @@ contract TaxManager is ITaxManager {
 
     address public custodian;
 
-    address public solverTaxPool;
-    address public revenuePool;
+    //address public solverTaxPool;
 
     // Tax Receiver Addresses
-    address private referralTaxReceiver;
-    address private platformTaxReceiver;
+    address public referralTaxReceiver;
+    address public platformTaxReceiver;
 
     SeekerFees public seekerFees;
 
     // Tax Rates variables
-    uint256 public solverTaxRate;
+    uint256 public disputeDepositRate;  // with base divisor
+    uint256 public solverTaxRate; // shoulod be 
     uint256 public protocolTaxRate;
 
     // Treasury addresses
@@ -36,15 +36,14 @@ contract TaxManager is ITaxManager {
     // attention here
     uint256 public constant taxBaseDivisor = 10000;
 
-    struct TaxRates {
+    struct ReferralTaxRates {
         uint256 first;
         uint256 second;
         uint256 third;
         uint256 fourth;
     }
 
-    mapping(uint8 => TaxRates) referralRatesByTier; // tier to refferal rates
-    uint256 public tierPoolRate;
+    mapping(uint8 => ReferralTaxRates) referralRatesByTier; // tier to refferal rates by refDepth
 
     modifier onlyCustodian() {
         // Change this to a list with ROLE library
@@ -89,20 +88,6 @@ contract TaxManager is ITaxManager {
 
     //
     //
-    // Getters for Addresses
-    //
-    //
-
-    function getReferralTaxReceiver() external view returns (address) {
-        return referralTaxReceiver;
-    }
-
-    function getPlatformTaxReceiver() external view returns (address) {
-        return platformTaxReceiver;
-    }
-
-    //
-    //
     // Setters for Addresses
     //
     //
@@ -117,9 +102,9 @@ contract TaxManager is ITaxManager {
         platformTaxReceiver = _platformTaxReceiver;
     }
 
-    function setSolverTaxPool(address _solverTaxPool) external onlyCustodian {
-        solverTaxPool = _solverTaxPool;
-    }
+    // function setSolverTaxPool(address _solverTaxPool) external onlyCustodian {
+    //     solverTaxPool = _solverTaxPool;
+    // }
 
     function setSeekerTreasury(address treasury) external onlyCustodian {
         seekerFeesTreasury = treasury;

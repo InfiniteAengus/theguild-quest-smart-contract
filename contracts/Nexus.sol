@@ -30,14 +30,12 @@ contract Nexus is INexus {
     // Set events
     event NewMaster(address oldMaster, address newMaster);
     event NewGuardian(address oldGuardian, address newGuardian);
-    event NewURI(string oldTokenURI, string newTokenURI);
     event NewRewarder(address oldRewarder, address newRewarder);
     event NewNFT(address oldNFT, address newNFT);
     event NewAccountImpl(address oldAcc, address newAcc);
-    event NewRebaser(address oldRebaser, address newRebaser);
-    event NewToken(address oldToken, address newToken);
     event NewTaxManager(address oldTaxManager, address newTaxManager);
     event NewTierManager(address oldTierManager, address newTierManager);
+    event NewRegistry(address oldRegistry, address newRegistry);
 
     event NewProfileIssuance(uint32 id, address account);
     event LevelChange(address handler, uint8 oldTier, uint8 newTier);
@@ -88,13 +86,13 @@ contract Nexus is INexus {
 
     function notifyTierUpdate(uint8 oldTier, uint8 newTier) external {
         // All the handlers notify the Factory incase there is a change in levels
-        require(isHandler(msg.sender) == true, "only handler");
+        require(isHandler(msg.sender), "only handler");
         emit LevelChange(msg.sender, oldTier, newTier);
     }
 
     function notifySelfTaxClaimed(uint256 amount, uint256 timestamp) external {
         // All the handlers notify the Factory when they claim self tax
-        require(isHandler(msg.sender) == true, "only handler");
+        require(isHandler(msg.sender), "only handler");
         emit SelfTaxClaimed(msg.sender, amount, timestamp);
     }
 
@@ -103,7 +101,7 @@ contract Nexus is INexus {
         uint256 timestamp
     ) external {
         // All the handlers notify the Factory when the claim referral Reward
-        require(isHandler(msg.sender) == true, "only handler");
+        require(isHandler(msg.sender), "only handler");
         emit RewardClaimed(msg.sender, amount, timestamp);
     }
 
@@ -147,6 +145,12 @@ contract Nexus is INexus {
         address oldManager = tierManager;
         tierManager = _tierManager;
         emit NewTierManager(oldManager, _tierManager);
+    }
+
+    function setRegistry(address _registry) external onlyMaster {
+        address oldRegistry = address(Registry);
+        Registry = IERC6551Registry(_registry);
+        emit NewRegistry(oldRegistry, address(Registry));
     }
 
     function createProfile(uint32 referrerId, address recipient, string memory profileLink) external onlyGuardian returns (address) {

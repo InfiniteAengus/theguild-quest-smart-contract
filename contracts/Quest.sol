@@ -68,7 +68,7 @@ contract Quest is IQuest {
         address _token
     ) external {
         tavern = ITavern(msg.sender);
-        require(!initialized);
+        require(!initialized, "Already Initialized");
         initialized = true;
 
         token = _token;
@@ -112,11 +112,21 @@ contract Quest is IQuest {
         mediator = tavern.mediator();
     }
 
-    // todo
-    function startDispute() external onlySeeker {
+    /**
+     * @dev ERC20 Tokens should be approved on rewarder
+     */
+    function startDispute() external payable onlySeeker {
         require(started, "quest not started");
         require(!beingDisputed, "Dispute started before");
         beingDisputed = true;
+        mediator = tavern.mediator();
+        if (token == address(0)){
+            IEscrow(escrow).proccessStartDispute{value: msg.value}();
+        }
+        else{
+            require(msg.value == 0 , "Native token sent");
+            IEscrow(escrow).proccessStartDispute{value: 0}();
+        }
     }
 
     function resolveDispute(

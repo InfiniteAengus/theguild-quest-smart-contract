@@ -10,16 +10,16 @@ interface ITaxManager {
     function getSeekerFees() external view returns (SeekerFees memory);
 
     // Referral tax receiver should be rewarder contract
-    function getReferralTaxReceiver() external view returns (address);
-    function getPlatformTaxReceiver() external view returns (address);
+    function referralTaxReceiver() external view returns (address);
+    function platformTaxReceiver() external view returns (address);
 
-    function solverTaxPool() external view returns (address);
-    function revenuePool() external view returns (address);
+    //function solverTaxPool() external view returns (address);
     
     function seekerFeesTreasury() external view returns (address);
     function solverFeesTreasury() external view returns (address);
     function disputeFeesTreasury() external view returns (address);
     
+    function disputeDepositRate() external view returns (uint256);
     function solverTaxRate() external view returns (uint256);
     function taxBaseDivisor() external view returns (uint256);
     function protocolTaxRate() external view returns (uint256);

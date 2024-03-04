@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "./interfaces/INexus.sol";
 import "./interfaces/IReferralHandler.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract ProfileNFT is ERC721URIStorage {
@@ -15,6 +16,8 @@ contract ProfileNFT is ERC721URIStorage {
 
     address public councelor;
     address public nexus;
+
+    event NewURI(string oldTokenURI, string newTokenURI);
 
     modifier onlyNexus() { // nexus / hub
         require(msg.sender == nexus, "only nexus");
@@ -61,10 +64,17 @@ contract ProfileNFT is ERC721URIStorage {
         super.safeTransferFrom(msg.sender, _to, _tokenId);
     }
 
+    function transferFrom(address from, address to, uint256 tokenId) public pure override(ERC721, IERC721) {
+        revert("Use safeTransferFrom");
+    }
+
+    // needs fixes
     function changeURI(uint32 tokenID, string memory _tokenURI) external {
-        address handler = INexus(nexus).getHandler(tokenID);
-        require(msg.sender == handler, "Only Handler can update Token's URI");
+        address guardian = INexus(nexus).guardian();
+        require(msg.sender == guardian, "Only Guardian can update Token's URI");
+        string memory oldURI = tokenURI(tokenID);
         _setTokenURI(tokenID, _tokenURI);
+        emit NewURI(oldURI, _tokenURI);
     }
 
     // NOTE: Add two stp ownership to contracts

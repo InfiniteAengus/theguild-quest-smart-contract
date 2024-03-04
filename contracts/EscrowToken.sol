@@ -37,7 +37,7 @@ contract EscrowToken is IEscrow {
         uint32 _solverId, 
         uint256 _paymentAmount
     ) external payable {   
-        require(!initialized);
+        require(!initialized, "Already Initialized");
         require(_token != address(0), "Invalid token address");
 
         initialized = true;
@@ -63,8 +63,16 @@ contract EscrowToken is IEscrow {
 
     function proccessPayment() external onlyQuest{
         address rewarder = quest.getRewarder();
-        IERC20(token).approve(address(rewarder), paymentAmount);
+        token.approve(address(rewarder), paymentAmount);
         IRewarder(rewarder).handleRewardToken(address(token), solverId, paymentAmount);
+    }
+
+    /**
+     * @notice Proccess the dispute start
+     */
+    function proccessStartDispute() external payable onlyQuest {
+        address rewarder = quest.getRewarder();
+        IRewarder(rewarder).handleStartDisputeToken{value: 0}(paymentAmount, address(token));
     }
   
     /**
@@ -72,6 +80,7 @@ contract EscrowToken is IEscrow {
      */
     function proccessResolution(uint8 solverShare) external onlyQuest {
         address rewarder = quest.getRewarder();
+        token.approve(rewarder, paymentAmount);
         IRewarder(rewarder).proccessResolutionToken(seekerId, solverId, solverShare, address(token));
     }
 

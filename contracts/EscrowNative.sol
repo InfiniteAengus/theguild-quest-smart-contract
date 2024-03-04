@@ -36,8 +36,8 @@ contract EscrowNative is IEscrow {
         uint32 _solverId, 
         uint256 _paymentAmount
     ) external payable {   
-        require(!initialized);
-        require(_token == address(0));
+        require(!initialized, "Already Initialized");
+        require(_token == address(0), "EscrowNative: Token address shouod be 0");
         
         initialized = true;
         quest = IQuest(msg.sender);
@@ -59,6 +59,14 @@ contract EscrowNative is IEscrow {
     function proccessPayment() external onlyQuest {
         address rewarder = quest.getRewarder();
         IRewarder(rewarder).handleRewardNative{value: paymentAmount}(solverId);
+    }
+
+    /**
+     * @notice Proccess the dispute start
+     */
+    function proccessStartDispute() external payable onlyQuest {
+        address rewarder = quest.getRewarder();
+        IRewarder(rewarder).handleStartDisputeNative{value: msg.value}(paymentAmount);
     }
 
     /**
