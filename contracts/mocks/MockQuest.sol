@@ -97,7 +97,7 @@ contract MockQuest is IQuest {
     }
 
     // todo
-    function startDispute() external {
+    function startDispute() external payable {
     }
 
     function resolveDispute(

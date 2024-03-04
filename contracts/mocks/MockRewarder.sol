@@ -136,6 +136,14 @@ contract MockRewarder is IRewarder {
         
     }
 
+    function handleStartDisputeNative(uint256 paymentAmount) external payable {
+
+    }
+
+    function handleStartDisputeToken(uint256 paymentAmount, address token) external payable{
+
+    }
+
     function recoverTokens(
         address _token,
         address benefactor
