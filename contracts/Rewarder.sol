@@ -87,7 +87,7 @@ contract Rewarder is IRewarder {
     ) external {        
         uint256 currentBalance = IERC20(token).balanceOf(address(this));
 
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         require(
             IERC20(token).balanceOf(address(this)) == currentBalance + amount,
@@ -181,7 +181,7 @@ contract Rewarder is IRewarder {
 
         uint256 balanceBefore = IERC20(token).balanceOf(address(this));
 
-        IERC20(token).transferFrom(msg.sender, address(this), _platformTax + _referralTax);
+        IERC20(token).safeTransferFrom(msg.sender, address(this), _platformTax + _referralTax);
 
         uint256 balanceAfter = IERC20(token).balanceOf(address(this));
 
@@ -255,7 +255,7 @@ contract Rewarder is IRewarder {
             ITaxManager taxManager = getTaxManager();
             uint256 disputeDepositRate = taxManager.disputeDepositRate();
             uint256 baseDivisor = taxManager.taxBaseDivisor();
-            // both pay half of the dsioute deposit 
+            // both pay half of the dispute deposit 
             uint256 seekerPayment = (payment * ((baseDivisor + (disputeDepositRate / 2)) + ((100 - solverShare) * baseDivisor) / 100)) / baseDivisor;
             uint256 solverPayment = (payment * ((baseDivisor - (disputeDepositRate / 2)) + (solverShare  * baseDivisor) / 100)) / baseDivisor;
             address seekerHandler = nexus.getHandler(seekerId);
@@ -270,9 +270,34 @@ contract Rewarder is IRewarder {
         uint32 seekerId,
         uint32 solverId,
         uint8 solverShare,
-        address token
+        address token,
+        uint256 payment
     ) external override {
 
+        // Solver at Fault
+        if(solverShare == 0){
+            address seekerHandler = nexus.getHandler(seekerId);
+            address seeker = IReferralHandler(seekerHandler).owner();
+            _processPayment(seeker, token, payment);
+        }
+        // Seeker at Fault
+        else if(solverShare == 100){
+            handleRewardNative(solverId, 0);
+        } 
+        // Arbitrary distribution
+        else {
+            ITaxManager taxManager = getTaxManager();
+            uint256 disputeDepositRate = taxManager.disputeDepositRate();
+            uint256 baseDivisor = taxManager.taxBaseDivisor();
+            // both pay half of the dispute deposit 
+            uint256 seekerPayment = (payment * ((baseDivisor + (disputeDepositRate / 2)) + ((100 - solverShare) * baseDivisor) / 100)) / baseDivisor;
+            uint256 solverPayment = (payment * ((baseDivisor - (disputeDepositRate / 2)) + (solverShare  * baseDivisor) / 100)) / baseDivisor;
+            address seekerHandler = nexus.getHandler(seekerId);
+            address seeker = IReferralHandler(seekerHandler).owner();
+
+            _processPayment(seeker, address(0), seekerPayment);
+            handleRewardNative(solverId, solverPayment);
+        }
     }
 
     // Emit events for rewards distribution
