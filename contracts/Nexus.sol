@@ -10,7 +10,7 @@ import "./interfaces/IReferralHandler.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-// Handler and account were mrged, thus refer to the same contract
+// Handler and account were merged, thus refer to the same contract
 
 contract Nexus is INexus {
     address public master; 
