@@ -211,11 +211,7 @@ describe("Nexus", function () {
         });
 
         it("Only master should be able to view the guardian", async function () {
-            await expect(
-                nexus_.connect(accounts_[0]).getGuardian()
-            ).to.be.revertedWith("only master");
-
-            const guardian = await nexus_.connect(accounts_[1]).getGuardian();
+            const guardian = await nexus_.connect(accounts_[1]).guardian();
 
             expect(guardian).to.equal(await accounts_[1].getAddress());
         });

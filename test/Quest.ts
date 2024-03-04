@@ -1,6 +1,7 @@
 import {
     loadFixture,
     takeSnapshot,
+    mine,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
@@ -12,12 +13,13 @@ import {
     Nexus,
     Quest,
     TaxManager,
+    EscrowToken,
+    MockToken,
 } from "../typechain-types";
 import {
     fixture_profile_nft_integration_tests,
     fixture_quest_unit_tests,
 } from "./helpers/fixtures";
-import { EscrowToken } from "../typechain-types/contracts/EscrowToken.sol";
 import { parseEventLogs } from "./helpers/utils";
 
 describe("Quest", function () {
@@ -46,7 +48,8 @@ describe("Quest", function () {
             mockTavern_: MockTavern,
             mockRewarder_: MockRewarder,
             taxManager_: TaxManager,
-            nexus_: Nexus;
+            nexus_: Nexus,
+            mockToken_: MockToken;
 
         it("Quest should be deployed, but not yet initialized", async function () {
             const {
@@ -58,6 +61,7 @@ describe("Quest", function () {
                 mockRewarder,
                 taxManager,
                 nexus,
+                mockToken,
             } = await loadFixture(fixture_unit_tests);
 
             expect(await quest.initialized()).to.be.false;
@@ -71,6 +75,16 @@ describe("Quest", function () {
                 await accounts[0].getAddress()
             );
 
+            await taxManager.setPlatformTaxReceiver(
+                await accounts[4].getAddress()
+            );
+            await taxManager.setreferralTaxReceiver(
+                await accounts[4].getAddress()
+            );
+
+            // Setting 10% fees to be paid out to the platform
+            await taxManager.setSeekerFees(0, 1000);
+
             accounts_ = accounts;
             quest_ = quest;
             escrowNative_ = escrowNative;
@@ -79,44 +93,57 @@ describe("Quest", function () {
             mockRewarder_ = mockRewarder;
             taxManager_ = taxManager;
             nexus_ = nexus;
+            mockToken_ = mockToken;
         });
 
         it("Should be able to initialize the contract and update values", async function () {
             await quest_.initialize(
+                0,
                 1,
-                2,
                 1000,
                 "Quest URI",
                 escrowNative_.target,
-                ethers.ZeroAddress,
-                taxManager_.target
+                ethers.ZeroAddress
             );
 
             expect(await quest_.initialized()).to.be.true;
 
+            expect(await quest_.seekerId()).to.equal(0);
             expect(await quest_.solverId()).to.equal(1);
-            expect(await quest_.seekerId()).to.equal(2);
 
             expect(await quest_.paymentAmount()).to.equal(1000);
 
             expect(await quest_.infoURI()).to.equal("Quest URI");
 
-            expect(await quest_.escrowImplemntation()).to.equal(
+            expect(await quest_.escrowImplementation()).to.equal(
                 escrowNative_.target
             );
 
             expect(await quest_.token()).to.equal(ethers.ZeroAddress);
         });
 
-        let questInstance: Quest;
+        it("Should not be able to initialize the contract again", async function () {
+            await expect(
+                quest_.initialize(
+                    0,
+                    1,
+                    1000,
+                    "Quest URI",
+                    escrowNative_.target,
+                    ethers.ZeroAddress
+                )
+            ).to.be.reverted;
+        });
 
-        it("Should be able to create quest through the tavern and be initialized in the same transaction", async function () {
+        let nativeQuestInstance: Quest, tokenQuestInstance: Quest;
+
+        it("Should be able to create a native quest through the tavern and be initialized in the same transaction", async function () {
             await mockTavern_.setBarkeeper(await accounts_[0].getAddress());
             await mockTavern_.setMediator(await accounts_[2].getAddress());
 
             const trx = await mockTavern_[
                 "createNewQuest(uint32,uint32,uint256,string)"
-            ](1, 2, 1000, "QuestURI");
+            ](0, 1, 1000, "Quest URI");
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -139,143 +166,303 @@ describe("Quest", function () {
 
             expect(createdQuest).to.be.ok;
 
-            expect(createdQuest.solverId).to.equal(1);
-            expect(createdQuest.seekerId).to.equal(2);
+            expect(createdQuest.solverId).to.equal(0);
+            expect(createdQuest.seekerId).to.equal(1);
             expect(createdQuest.quest).to.not.equal(ethers.ZeroAddress);
             expect(createdQuest.escrowImplementation).to.equal(
                 escrowNative_.target
             );
             expect(createdQuest.paymentAmount).to.equal(1000);
 
-            questInstance = await ethers.getContractAt(
+            nativeQuestInstance = await ethers.getContractAt(
                 "Quest",
                 createdQuest.quest
             );
 
-            expect(await questInstance.initialized()).to.be.true;
+            expect(await nativeQuestInstance.initialized()).to.be.true;
+        });
+
+        it("Should be able to create a token quest through the tavern and be initialized in the same transaction", async function () {
+            const trx = await mockTavern_[
+                "createNewQuest(uint32,uint32,uint256,string,address)"
+            ](0, 1, 1000, "Quest URI", mockToken_.target);
+
+            const receipt = (await trx.wait()) as ContractTransactionReceipt;
+
+            expect(receipt).to.be.ok;
+
+            const keys = [
+                "solverId",
+                "seekerId",
+                "quest",
+                "escrowImplementation",
+                "paymentAmount",
+                "token",
+            ];
+
+            const createdQuest = parseEventLogs(
+                receipt.logs,
+                mockTavern_.interface,
+                "QuestCreatedToken",
+                keys
+            );
+
+            expect(createdQuest).to.be.ok;
+
+            expect(createdQuest.solverId).to.equal(0);
+            expect(createdQuest.seekerId).to.equal(1);
+            expect(createdQuest.quest).to.not.equal(ethers.ZeroAddress);
+            expect(createdQuest.escrowImplementation).to.equal(
+                escrowToken_.target
+            );
+            expect(createdQuest.paymentAmount).to.equal(1000);
+            expect(createdQuest.token).to.equal(mockToken_.target);
+
+            tokenQuestInstance = await ethers.getContractAt(
+                "Quest",
+                createdQuest.quest
+            );
+
+            expect(await tokenQuestInstance.initialized()).to.be.true;
         });
 
         it("Should be able to get the rewarder from tavern contract", async function () {
-            expect(await questInstance.getRewarder()).to.equal(
+            expect(await nativeQuestInstance.getRewarder()).to.equal(
                 mockRewarder_.target
             );
         });
 
-        it("Only seeker should be able to start quest", async function () {
+        it("Only seeker should be able to start native quest", async function () {
             await expect(
-                questInstance.connect(accounts_[1]).startQuest(1000)
+                nativeQuestInstance.connect(accounts_[1]).startQuest()
             ).to.be.revertedWith("only Seeker");
         });
 
-        it("Should not be able to start dispute unless quest has been started", async function () {
-            await expect(questInstance.startDispute()).to.be.revertedWith(
+        it("Only seeker should be able to start token quest", async function () {
+            await expect(
+                tokenQuestInstance.connect(accounts_[1]).startQuest()
+            ).to.be.revertedWith("only Seeker");
+        });
+
+        it("Should not be able to start dispute unless native quest has been started", async function () {
+            await expect(nativeQuestInstance.startDispute()).to.be.revertedWith(
                 "quest not started"
             );
         });
 
-        it("Should not be able to finish quest unless the quest has been started", async function () {
+        it("Should not be able to start dispute unless token quest has been started", async function () {
+            await expect(tokenQuestInstance.startDispute()).to.be.revertedWith(
+                "quest not started"
+            );
+        });
+
+        it("Should not be able to finish native quest unless the quest has been started", async function () {
             await expect(
-                questInstance.connect(accounts_[1]).finishQuest()
+                nativeQuestInstance.connect(accounts_[1]).finishQuest()
             ).to.be.revertedWith("quest not started");
         });
 
-        let snapshot;
+        it("Should not be able to finish token quest unless the quest has been started", async function () {
+            await expect(
+                tokenQuestInstance.connect(accounts_[1]).finishQuest()
+            ).to.be.revertedWith("quest not started");
+        });
 
-        it("Should be able to start quest, and create an escrow contract", async function () {
-            await questInstance.startQuest(1000, { value: 1000 });
+        let snapshot: any;
 
-            expect(await questInstance.started()).to.be.true;
+        it("Should be able to start native quest, and create an escrow contract with fees sent alongside", async function () {
+            await nativeQuestInstance.startQuest({ value: 1100 });
+
+            expect(await nativeQuestInstance.started()).to.be.true;
 
             snapshot = await takeSnapshot();
         });
 
         it("Should not be able to start a quest again if it has already starter", async function () {
-            await expect(
-                questInstance.startQuest(1000, { value: 1000 })
-            ).to.be.revertedWith("already started");
+            await expect(nativeQuestInstance.startQuest()).to.be.revertedWith(
+                "already started"
+            );
         });
 
         it("Only seeker should be able to start dispute", async function () {
             await expect(
-                questInstance.connect(accounts_[1]).startDispute()
+                nativeQuestInstance.connect(accounts_[1]).startDispute()
             ).to.be.revertedWith("only Seeker");
         });
 
-        it("Seeker should be able to start dispute", async function () {
-            await questInstance.startDispute();
+        it("Should not be able to solve dispute unless dispute has been started", async function () {
+            await expect(
+                nativeQuestInstance.connect(accounts_[2]).resolveDispute(50)
+            ).to.be.revertedWith("Dispute not started");
+        });
 
-            expect(await questInstance.beingDisputed()).to.be.true;
+        it("Seeker should be able to start dispute", async function () {
+            await nativeQuestInstance.startDispute();
+
+            expect(await nativeQuestInstance.beingDisputed()).to.be.true;
         });
 
         it("Should not be able to start dispute again if it has already started", async function () {
-            await expect(questInstance.startDispute()).to.be.revertedWith(
+            await expect(nativeQuestInstance.startDispute()).to.be.revertedWith(
                 "Dispute started before"
             );
         });
 
         it("Only solver should be able to finish quest", async function () {
-            await expect(questInstance.finishQuest()).to.be.revertedWith(
+            await expect(nativeQuestInstance.finishQuest()).to.be.revertedWith(
                 "only Solver"
             );
         });
 
         it("Solver should be able to finish quest", async function () {
-            await questInstance.connect(accounts_[1]).finishQuest();
+            await nativeQuestInstance.connect(accounts_[1]).finishQuest();
 
-            expect(await questInstance.finished()).to.be.true;
+            expect(await nativeQuestInstance.finished()).to.be.true;
         });
 
         it("Only the seeker should be able to extend quest period", async function () {
             await expect(
-                questInstance.connect(accounts_[1]).extend()
+                nativeQuestInstance.connect(accounts_[1]).extend()
             ).to.be.revertedWith("only Seeker");
         });
 
         it("Seeker should be able to extend quest period", async function () {
-            await questInstance.extend();
+            await nativeQuestInstance.extend();
 
-            expect(await questInstance.extended()).to.be.true;
+            expect(await nativeQuestInstance.extended()).to.be.true;
         });
 
         it("Should not be able to extend quest again after extending it", async function () {
-            await expect(questInstance.extend()).to.be.revertedWith(
+            await expect(nativeQuestInstance.extend()).to.be.revertedWith(
                 "Was extended before"
             );
         });
 
         it("Should not be able to extend again once extended", async function () {
-            await expect(questInstance.extend()).to.be.revertedWith(
+            await expect(nativeQuestInstance.extend()).to.be.revertedWith(
                 "Was extended before"
             );
         });
 
         it("Only solver should be able to receive reward", async function () {
-            await expect(questInstance.receiveReward()).to.be.revertedWith(
-                "only Solver"
-            );
+            await expect(
+                nativeQuestInstance.receiveReward()
+            ).to.be.revertedWith("only Solver");
         });
 
         it("Should not be able to receive reward while the quest is under dispute", async function () {
             await expect(
-                questInstance.connect(accounts_[1]).receiveReward()
+                nativeQuestInstance.connect(accounts_[1]).receiveReward()
             ).to.be.revertedWith("Is under dispute");
         });
 
         it("Only mediator should be able to resolve dispute", async function () {
             await expect(
-                questInstance.connect(accounts_[1]).resolveDispute(50)
+                nativeQuestInstance.connect(accounts_[1]).resolveDispute(50)
             ).to.be.revertedWith("only mediator");
         });
 
-        it("Mediator should be able to resolve dispute", async function () {
-            await questInstance.connect(accounts_[2]).resolveDispute(50);
+        it("Solver share for resolving dispute cant be more than 100", async function () {
+            await expect(
+                nativeQuestInstance.connect(accounts_[2]).resolveDispute(101)
+            ).to.be.revertedWith("Share can't be more than 100");
+        });
 
-            expect(await questInstance.rewarded()).to.be.true;
+        it("Mediator should be able to resolve dispute", async function () {
+            await nativeQuestInstance.connect(accounts_[2]).resolveDispute(50);
+
+            expect(await nativeQuestInstance.rewarded()).to.be.true;
 
             // balance of the contract should be 0
             expect(
-                await ethers.provider.getBalance(questInstance.target)
+                await ethers.provider.getBalance(nativeQuestInstance.target)
             ).to.equal(0);
+        });
+
+        it("Should not be able to resolve dispute again if it has already been resolved, and rewards distributed", async function () {
+            await expect(
+                nativeQuestInstance.connect(accounts_[2]).resolveDispute(50)
+            ).to.be.revertedWith("Rewarded before");
+        });
+
+        it("Solver should still be able to finish quest once dispute is over", async function () {
+            await nativeQuestInstance.connect(accounts_[1]).finishQuest();
+
+            expect(await nativeQuestInstance.finished()).to.be.true;
+        });
+
+        it("Seeker should not be able to extend quest period if quest is not finished", async function () {
+            snapshot.restore();
+
+            await expect(nativeQuestInstance.extend()).to.be.revertedWith(
+                "Quest not finished"
+            );
+        });
+
+        it("Should not be able to receive reward if quest is not finished", async function () {
+            await expect(
+                nativeQuestInstance.connect(accounts_[1]).receiveReward()
+            ).to.be.revertedWith("Quest not finished");
+
+            expect(await nativeQuestInstance.rewarded()).to.be.false;
+        });
+
+        it("Seeker is able to extend quest period once quest is finished", async function () {
+            await nativeQuestInstance.connect(accounts_[1]).finishQuest();
+
+            expect(await nativeQuestInstance.finished()).to.be.true;
+
+            await nativeQuestInstance.extend();
+
+            expect(await nativeQuestInstance.extended()).to.be.true;
+        });
+
+        it("Should not be able to receive reward if its not reward time yet", async function () {
+            await expect(
+                nativeQuestInstance.connect(accounts_[1]).receiveReward()
+            ).to.be.revertedWith("Not reward time yet");
+
+            expect(await nativeQuestInstance.rewarded()).to.be.false;
+        });
+
+        it("Should be able to receive reward if conditions are met", async function () {
+            // Mines block to reach time for reward
+            await mine(2000);
+
+            await nativeQuestInstance.connect(accounts_[1]).receiveReward();
+
+            expect(await nativeQuestInstance.rewarded()).to.be.true;
+        });
+
+        it("Should not be able to receive reward again if already rewarded", async function () {
+            snapshot.restore();
+
+            await nativeQuestInstance.connect(accounts_[1]).finishQuest();
+
+            await mine(1001);
+
+            await nativeQuestInstance.connect(accounts_[1]).receiveReward();
+
+            expect(await nativeQuestInstance.rewarded()).to.be.true;
+
+            await expect(
+                nativeQuestInstance.connect(accounts_[1]).receiveReward()
+            ).to.be.revertedWith("Rewarded before");
+        });
+
+        it("Should not be able to extend if already rewarded", async function () {
+            await expect(nativeQuestInstance.extend()).to.be.revertedWith(
+                "Was rewarded before"
+            );
+        });
+
+        it("Should be able to start token quest, and create an escrow contract with fees sent alongside", async function () {
+            await mockToken_.mint(await accounts_[0].getAddress(), 1100);
+            await mockToken_.approve(tokenQuestInstance.target, 1100);
+
+            await tokenQuestInstance.startQuest();
+
+            expect(await tokenQuestInstance.started()).to.be.true;
         });
     });
 
