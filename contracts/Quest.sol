@@ -108,8 +108,6 @@ contract Quest is IQuest {
                 paymentAmount
             );
         }
-
-        mediator = tavern.mediator();
     }
 
     /**
