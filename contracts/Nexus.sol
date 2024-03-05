@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 import "./interfaces/IProfileNFT.sol";
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/IERC6551/IERC6551Registry.sol";
-import "./interfaces/INexus.sol";  
-import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import "./interfaces/IReferralHandler.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./interfaces/INexus.sol";  
 
-// Handler and account were mrged, thus refer to the same contract
-
+/**
+ * @title Nexus contract
+ * @author @cosmodude
+ * @notice Core contract of the Referral system
+ * @dev Creates accounts, updates referral tree and gives info about TaxManager, TierManager and Rewarder 
+ */
 contract Nexus is INexus {
     address public master; 
     address public guardian; 
@@ -88,21 +92,6 @@ contract Nexus is INexus {
         // All the handlers notify the Factory incase there is a change in levels
         require(isHandler(msg.sender), "only handler");
         emit LevelChange(msg.sender, oldTier, newTier);
-    }
-
-    function notifySelfTaxClaimed(uint256 amount, uint256 timestamp) external {
-        // All the handlers notify the Factory when they claim self tax
-        require(isHandler(msg.sender), "only handler");
-        emit SelfTaxClaimed(msg.sender, amount, timestamp);
-    }
-
-    function notifyReferralTaxClaimed(
-        uint256 amount,
-        uint256 timestamp
-    ) external {
-        // All the handlers notify the Factory when the claim referral Reward
-        require(isHandler(msg.sender), "only handler");
-        emit RewardClaimed(msg.sender, amount, timestamp);
     }
 
     function setMaster(address newMaster) public onlyMaster {

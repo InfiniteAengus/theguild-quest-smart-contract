@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
@@ -9,6 +9,13 @@ import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+
+/**
+ * @title Guild Profile NFT 
+ * @author @cosmodude
+ * @notice NFTs tied up to the user account(profile)
+ * @dev Nexus controls the mint, use safeTransfer for safety 
+ */
 contract ProfileNFT is ERC721URIStorage {
     using SafeERC20 for IERC20;
     

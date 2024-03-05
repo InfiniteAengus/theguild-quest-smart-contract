@@ -1,9 +1,20 @@
-# Sample Hardhat Project
+# The Guild contracts Repository
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+### Connect. Collaborate. Conquer.
 
-Try running some of the following tasks:
+## Contains contracts for:
+- The Guild Referral System (Nexus, Rewarder, TaxManager, TierManager)
+- User accounts(profiles) and referral handlers (one contract: ERC6551Account)
+- NFT for profiles (ProfileNFT)
+- Quest Factory (Tavern)
+- Quest Implementation (Quest)
+- Escrows for Quests (EscrowNative, EscrowToken)
+- XpTokens for onchain reputation (XpToken)
+- Canonical ERC6551Registry (ERC6551Registry)
+- Interfaces for the above contracts
 
+On-chain architecture can be found here:
+https://www.figma.com/file/QWbX9rVXy4BEzbQDxC5sNa/The-Guild-Public?type=whiteboard&node-id=0-1&t=VPlS18CdOa9109NC-0
 
 ## Notation:
 
@@ -13,12 +24,6 @@ Referrer - the identity that referred.
 Referrer referred the referral.
 Referral was referred by referrer. 
 
-# Admins for contracts
+### Admins for contracts
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+

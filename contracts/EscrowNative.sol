@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -53,7 +53,7 @@ contract EscrowNative is IEscrow {
 
         require(msg.value == paymentAmount + referralTax + platformTax, "Invalid amount sent");
 
-        IRewarder(rewarder).handleSeekerTaxNative{ value: referralTax + platformTax }(_solverId, referralTax, platformTax);
+        IRewarder(rewarder).handleSeekerTaxNative{ value: referralTax + platformTax }(_seekerId, referralTax, platformTax);
     }
 
     function processPayment() external onlyQuest {

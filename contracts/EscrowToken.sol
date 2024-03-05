@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -58,7 +58,7 @@ contract EscrowToken is IEscrow {
     
         IERC20(token).approve(address(rewarder), referralTax + platformTax);
 
-        IRewarder(rewarder).handleSeekerTaxToken(_solverId, referralTax, platformTax, address(token));
+        IRewarder(rewarder).handleSeekerTaxToken(_seekerId, referralTax, platformTax, address(token));
     }
 
     function processPayment() external onlyQuest{
@@ -72,7 +72,8 @@ contract EscrowToken is IEscrow {
      */
     function processStartDispute() external payable onlyQuest {
         address rewarder = quest.getRewarder();
-        IRewarder(rewarder).handleStartDisputeToken{value: 0}(paymentAmount, address(token));
+
+        IRewarder(rewarder).handleStartDisputeToken(paymentAmount, address(token), seekerId);
     }
   
     /**
@@ -81,7 +82,7 @@ contract EscrowToken is IEscrow {
     function processResolution(uint8 solverShare) external onlyQuest {
         address rewarder = quest.getRewarder();
         token.approve(rewarder, paymentAmount);
-        IRewarder(rewarder).processResolutionToken(seekerId, solverId, solverShare, address(token));
+        IRewarder(rewarder).processResolutionToken(seekerId, solverId, solverShare, address(token), paymentAmount);
     }
 
 }

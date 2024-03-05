@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/// @title Contract of the Guild Xp Token
+/**
+ * @title Contract of the Guild Xp Token
+ * @author @cosmodude
+ * @notice ERC20 non-transferrable token 
+ * @dev Transfers enabled only from owner address
+ */
 contract GuildXp is ERC20, Ownable, ERC20Permit{
     constructor(address owner) ERC20("GuildXp", "XP") Ownable(owner) ERC20Permit("GuildXp"){}
     
