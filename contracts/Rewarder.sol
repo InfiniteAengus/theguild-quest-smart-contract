@@ -129,6 +129,8 @@ contract Rewarder is IRewarder, Pausable {
 
         address solver = IReferralHandler(solverHandler).owner();
 
+        emit RewardNativeClaimed(solverHandler, escrow, solverReward);
+
         {
             // Transfers reward to solver after deducting tax amount
             _processPayment(solver, address(0), solverReward);
@@ -146,8 +148,6 @@ contract Rewarder is IRewarder, Pausable {
             // Platform treasury tax distribution
             address platformTreasuryReceiver = taxManager.platformTreasuryReceiver();
             _processPayment(platformTreasuryReceiver, address(0), platformTreasuryTax);
-        
-            emit RewardNativeClaimed(solverHandler, escrow, solverReward);
         }
     }
 
@@ -166,7 +166,6 @@ contract Rewarder is IRewarder, Pausable {
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
-        // NOTE: will not be able to support fee on transfer tokens
         require(
             IERC20(token).balanceOf(address(this)) == currentBalance + amount,
             "Invalid token transfer"
@@ -175,14 +174,17 @@ contract Rewarder is IRewarder, Pausable {
         ITaxManager taxManager = getTaxManager();
         uint256 taxRateDivisor = taxManager.taxBaseDivisor();
         
-        (uint256 referralTax, uint256 platformTax, uint256 platformTreasuryTax) = calculateSolverTax(amount);
+        (uint256 platformTax, uint256 referralTax, uint256 platformTreasuryTax) = calculateSolverTax(amount);
 
         uint256 totalTax = referralTax + platformTax + platformTreasuryTax;
 
         require(totalTax <= amount, "Invalid tax");
         
+        address solverHandler = nexus.getHandler(solverId);
+
+        emit RewardTokenClaimed(solverHandler, msg.sender, amount - totalTax, token);
+
         {
-            address solverHandler = nexus.getHandler(solverId);
 
             // Transfers reward to solver after deducting tax amount
             _processPayment(
@@ -202,8 +204,6 @@ contract Rewarder is IRewarder, Pausable {
 
             // Platform treasury tax distribution
             _processPayment(taxManager.platformTreasuryReceiver(), address(0), platformTreasuryTax);
-
-            emit RewardTokenClaimed(solverHandler, msg.sender, amount - totalTax, token);
         }
     }
 
@@ -391,16 +391,16 @@ contract Rewarder is IRewarder, Pausable {
             require(tax <= rewardValue, "Invalid tax");
             
             address solverHandler = nexus.getHandler(solverId);
-            
+
+            emit RewardNativeClaimed(solverHandler, msg.sender, rewardValue - tax);
+                        
             {
                 rewardReferrers(solverHandler, tax, baseDivisor, token);
-                // NOTE: event emits sending reward token to solverhandler, but process payment is sending to the owner of the handler, should probably use the same value here
                 _processPayment(
                     IReferralHandler(solverHandler).owner(), 
                     token, 
                     rewardValue - tax
                 );
-                emit RewardNativeClaimed(solverHandler, msg.sender, rewardValue - tax);
             }
         } 
         // Arbitrary distribution
@@ -423,7 +423,6 @@ contract Rewarder is IRewarder, Pausable {
             
             {
                 rewardReferrers(solverHandler, tax, baseDivisor, token);
-                // NOTE: event emits sending reward token to solverhandler, but process payment is sending to the owner of the handler, should probably use the same value here
                 _processPayment(
                     IReferralHandler(solverHandler).owner(), 
                     token, 
