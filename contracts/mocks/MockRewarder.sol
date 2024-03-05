@@ -123,7 +123,8 @@ contract MockRewarder is IRewarder {
         uint32 seekerId,
         uint32 solverId,
         uint8 solverShare,
-        address
+        address,
+        uint256
     ) external override {
         emit ResolutionProccessed(seekerId, solverId, solverShare);
     }
@@ -140,7 +141,7 @@ contract MockRewarder is IRewarder {
 
     }
 
-    function handleStartDisputeToken(uint256 paymentAmount, address token) external payable{
+    function handleStartDisputeToken(uint256 paymentAmount, address token, uint32 seekerId) external {
 
     }
 

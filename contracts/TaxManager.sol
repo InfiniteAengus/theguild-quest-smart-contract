@@ -15,22 +15,21 @@ contract TaxManager is ITaxManager {
 
     address public custodian;
 
-    //address public solverTaxPool;
-
     // Tax Receiver Addresses
     address public referralTaxReceiver;
     address public platformTaxReceiver;
+    address public platformTreasuryReceiver;
 
+    // Seeker and Solver fees broken down
     SeekerFees public seekerFees;
+    SolverFees public solverFees;
 
     // Tax Rates variables
     uint256 public disputeDepositRate;  // with base divisor
-    uint256 public solverTaxRate; // shoulod be 
     uint256 public protocolTaxRate;
 
     // Treasury addresses
-    address public seekerFeesTreasury;
-    address public solverFeesTreasury;
+    address public platformTreasury;
     address public disputeFeesTreasury;
 
     // attention here
@@ -102,20 +101,12 @@ contract TaxManager is ITaxManager {
         platformTaxReceiver = _platformTaxReceiver;
     }
 
-    // function setSolverTaxPool(address _solverTaxPool) external onlyCustodian {
-    //     solverTaxPool = _solverTaxPool;
-    // }
-
-    function setSeekerTreasury(address treasury) external onlyCustodian {
-        seekerFeesTreasury = treasury;
-    }
-
-    function setSolverTreasury(address treasury) external onlyCustodian {
-        solverFeesTreasury = treasury;
-    }
-
     function setDisputeTreasuryAddress(address treasury) external onlyCustodian {
         disputeFeesTreasury = treasury;
+    }
+
+    function setPlatformTreasury(address treasury) external onlyCustodian {
+        platformTreasury = treasury;
     }
 
     //
@@ -128,8 +119,16 @@ contract TaxManager is ITaxManager {
         return seekerFees.referralRewards + seekerFees.platformRevenue;
     }
 
+    function getSolverTaxRate() external view returns (uint256) {
+        return solverFees.referralRewards + solverFees.platformRevenue + solverFees.platformTreasury;
+    }
+
     function getSeekerFees() external view returns (SeekerFees memory) {
         return seekerFees;
+    }
+
+    function getSolverFees() external view returns (SolverFees memory) {
+        return solverFees;
     }
 
     //
@@ -149,16 +148,33 @@ contract TaxManager is ITaxManager {
     {
         require(platformTaxReceiver != address(0), "Zero address");
         require(referralTaxReceiver != address(0), "Zero address");
-        require(_referralRewards + _platformRevenue < taxBaseDivisor, "Tax rate too high");
+        require(_referralRewards + _platformRevenue <= taxBaseDivisor, "Tax rate too high");
         seekerFees.referralRewards = _referralRewards;
         seekerFees.platformRevenue = _platformRevenue;
     }
 
-    function setSolverTaxRate(
-        uint256 _solverTaxRate
-    ) external onlyCustodian validTaxRate(_solverTaxRate) {
-        solverTaxRate = _solverTaxRate;
+    function setSolverFees(
+        uint256 _referralRewards,
+        uint256 _platformRevenue,
+        uint256 _platformTreasury
+    ) 
+        external 
+        onlyCustodian 
+        validTaxRate(_referralRewards) 
+        validTaxRate(_platformRevenue) 
+        validTaxRate(_platformTreasury) 
+    {
+        require(platformTaxReceiver != address(0), "Zero address");
+        require(referralTaxReceiver != address(0), "Zero address");
+        require(platformTreasury != address(0), "Zero address");
+
+        require(_referralRewards + _platformRevenue + _platformTreasury <= taxBaseDivisor, "Tax rate too high");
+
+        solverFees.referralRewards = _referralRewards;
+        solverFees.platformRevenue = _platformRevenue;
+        solverFees.platformTreasury = _platformTreasury;
     }
+
 
     function setBulkReferralRate(
         uint8 tier,
