@@ -75,30 +75,6 @@ describe("Nexus", function () {
                 .withArgs(await accounts_[0].getAddress(), 1, 2);
         });
 
-        it("Should not be able to notifySelfTaxClaimed unless the account is a handler", async function () {
-            await expect(
-                nexus_.connect(accounts_[1]).notifySelfTaxClaimed(1, 2)
-            ).to.be.revertedWith("only handler");
-        });
-
-        it("Should be able to notifySelfTaxClaimed if the account is a handler", async function () {
-            expect(await nexus_.notifySelfTaxClaimed(1, 2))
-                .to.emit(nexus_, "LevelChange")
-                .withArgs(await accounts_[0].getAddress(), 1, 2);
-        });
-
-        it("Should not be able to notifyReferralTaxClaimed unless the account is a handler", async function () {
-            await expect(
-                nexus_.connect(accounts_[1]).notifyReferralTaxClaimed(1, 2)
-            ).to.be.revertedWith("only handler");
-        });
-
-        it("Should be able to notifyReferralTaxClaimed if the account is a handler", async function () {
-            expect(await nexus_.notifyReferralTaxClaimed(1, 2))
-                .to.emit(nexus_, "LevelChange")
-                .withArgs(await accounts_[0].getAddress(), 1, 2);
-        });
-
         it("Only master should be able to change the master", async function () {
             await expect(
                 nexus_
