@@ -12,7 +12,7 @@ interface IQuest {
     ) external;
     
     function startDispute() external payable;
-    function resolveDispute(uint8 solverShare) external;
+    function resolveDispute(uint32 solverShare) external;
     function finishQuest() external;
     function receiveReward() external;
     function getRewarder() external view returns (address);

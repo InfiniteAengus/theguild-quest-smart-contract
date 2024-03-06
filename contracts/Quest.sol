@@ -128,11 +128,11 @@ contract Quest is IQuest {
     }
 
     function resolveDispute(
-        uint8 solverShare
+        uint32 solverShare
     ) external onlyMediator {
         require(beingDisputed, "Dispute not started");
         require(!rewarded, "Rewarded before");
-        require(solverShare <= 100, "Share can't be more than 100");
+        require(solverShare <= 10000, "Share can't be more than 10000");
         rewarded = true;
         IEscrow(escrow).processResolution(solverShare);  
     }
