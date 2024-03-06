@@ -101,7 +101,7 @@ contract MockQuest is IQuest {
     }
 
     function resolveDispute(
-        uint8 _solverShare
+        uint32 _solverShare
     ) external {
         IEscrow(escrow).processResolution(_solverShare);  
     }
