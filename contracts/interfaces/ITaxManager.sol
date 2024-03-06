@@ -13,20 +13,23 @@ interface ITaxManager {
         uint256 platformTreasury;
     }
 
+    struct ReferralTaxRates {
+        uint256 first;
+        uint256 second;
+        uint256 third;
+        uint256 fourth;
+    }
+
+    function taxBaseDivisor() external view returns (uint256);
+
     function getSeekerFees() external view returns (SeekerFees memory);
     function getSolverFees() external view returns (SolverFees memory);
 
+    function platformTreasuryPool() external view returns (address);
+    function platformRevenuePool() external view returns (address);
     function referralTaxReceiver() external view returns (address);
-    function platformTaxReceiver() external view returns (address);
-    function platformTreasuryReceiver() external view returns (address);
-
-    // function seekerFeesTreasury() external view returns (address);
-    // function solverFeesTreasury() external view returns (address);
-    function disputeFeesTreasury() external view returns (address);
+    function disputeFeesTreasuryPool() external view returns (address);
     
     function disputeDepositRate() external view returns (uint256);
-    // function solverTaxRate() external view returns (uint256);
-    function taxBaseDivisor() external view returns (uint256);
-    function protocolTaxRate() external view returns (uint256);
     function getReferralRate(uint8 depth, uint8 tier) external view returns (uint256);
 }
