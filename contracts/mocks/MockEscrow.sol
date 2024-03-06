@@ -4,17 +4,18 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IEscrow } from "./interfaces/Quests/IEscrow.sol";
-import { IQuest } from "./interfaces/Quests/IQuest.sol";
-import { IRewarder } from "./interfaces/IRewarder.sol";
+import { IEscrow } from "../interfaces/Quests/IEscrow.sol";
+import { IQuest } from "../interfaces/Quests/IQuest.sol";
+import { IRewarder } from "../interfaces/IRewarder.sol";
 
+import "hardhat/console.sol";
 /**
  * @title Quest Escrow for Native Tokens
  * @notice Stores reward for quest
  * @author @cosmodude
  * @dev Implementation contract, instances are created as clones 
  */
-contract EscrowNative is IEscrow {
+contract MockEscrow is IEscrow {
     using SafeERC20 for IERC20;
 
     bool public initialized;
@@ -25,19 +26,34 @@ contract EscrowNative is IEscrow {
 
     uint256 public paymentAmount;
 
+    address public rewarder;
+    address public token;
+
     modifier onlyQuest() {
         require(msg.sender == address(quest), "only quest");
         _;
     }
 
+    function setRewarder(address _rewarder) external {
+        rewarder = _rewarder;
+    }
+
+    function setToken(address _token) external {
+        token = _token;
+    }
+
+    function setPaymentAmount(uint256 _paymentAmount) external {
+        paymentAmount = _paymentAmount;
+    }
+
     function initialize(
-        address _token, 
+        address, 
         uint32 _seekerId,
         uint32 _solverId, 
         uint256 _paymentAmount
     ) external payable {   
         require(!initialized, "Already Initialized");
-        require(_token == address(0), "EscrowNative: Token address shouod be 0");
+        require(rewarder != address(0), "Rewarder not set");
         
         initialized = true;
         quest = IQuest(msg.sender);
@@ -46,34 +62,25 @@ contract EscrowNative is IEscrow {
         solverId = _solverId;
 
         paymentAmount = _paymentAmount;
-
-        address rewarder = quest.getRewarder();
-
-        (uint256 referralTax, uint256 platformTax) = IRewarder(rewarder).calculateSeekerTax(paymentAmount);
-
-        require(msg.value == paymentAmount + referralTax + platformTax, "Invalid amount sent");
-
-        IRewarder(rewarder).handleSeekerTaxNative{ value: referralTax + platformTax }(_seekerId, _solverId, referralTax, platformTax);
     }
 
-    function processPayment() external onlyQuest {
-        address rewarder = quest.getRewarder();
+    function processPayment() external {
         IRewarder(rewarder).handleRewardNative{value: paymentAmount}(solverId, 0);
     }
 
     /**
      * @notice process the dispute start
      */
-    function processStartDispute() external payable onlyQuest {
-        address rewarder = quest.getRewarder();
+    function processStartDispute() external payable {
         IRewarder(rewarder).handleStartDisputeNative{value: msg.value}(paymentAmount);
     }
 
     /**
-     * @notice process the dispute resolution
+     * @notice process the dispute resolutionForNativeTokens
      */
-    function processResolution(uint32 solverShare) external onlyQuest {
-        address rewarder = quest.getRewarder();
+    function processResolution(uint32 solverShare) external {
         IRewarder(rewarder).processResolutionNative{value: paymentAmount}(seekerId, solverId, solverShare);
     }
+
+    receive() external payable {}
 }

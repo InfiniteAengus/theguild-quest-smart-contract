@@ -58,7 +58,7 @@ contract EscrowToken is IEscrow {
     
         IERC20(token).approve(address(rewarder), referralTax + platformTax);
 
-        IRewarder(rewarder).handleSeekerTaxToken(_seekerId, referralTax, platformTax, address(token));
+        IRewarder(rewarder).handleSeekerTaxToken(_seekerId, _solverId, referralTax, platformTax, address(token));
     }
 
     function processPayment() external onlyQuest{
@@ -72,14 +72,13 @@ contract EscrowToken is IEscrow {
      */
     function processStartDispute() external payable onlyQuest {
         address rewarder = quest.getRewarder();
-
         IRewarder(rewarder).handleStartDisputeToken(paymentAmount, address(token), seekerId);
     }
   
     /**
      * @notice process the dispute resolution
      */
-    function processResolution(uint8 solverShare) external onlyQuest {
+    function processResolution(uint32 solverShare) external onlyQuest {
         address rewarder = quest.getRewarder();
         token.approve(rewarder, paymentAmount);
         IRewarder(rewarder).processResolutionToken(seekerId, solverId, solverShare, address(token), paymentAmount);
