@@ -10,6 +10,7 @@ import {
     escrowNativeSetup,
     escrowTokenSetup,
     managersSetup,
+    mockEscrowSetup,
     mockNFTSetup,
     mockQuestSetup,
     mockRewarderSetup,
@@ -18,6 +19,7 @@ import {
     nexusSetup,
     profileNFTSetup,
     questSetup,
+    rewarderSetup,
     tavernSetup,
     taxManagerSetup,
     xpSetup,
@@ -286,4 +288,46 @@ export async function fixture_tavern_unit_tests(accounts: Signer[]) {
         taxManager,
         nexus,
     };
+}
+
+// Fixture for Rewarder Contract Unit tests
+export async function fixture_rewarder_unit_tests(accounts: Signer[]) {
+    const { nexus } = await nexusSetup(true);
+    const taxManager = await taxManagerSetup(true);
+    const nft = await profileNFTSetup(nexus, true);
+
+    const mockToken = await mockTokenSetup(true);
+
+    await nexus.setGuardian(await accounts[0].getAddress());
+
+    await nexus.setTaxManager(taxManager.target);
+
+    await taxManager.setPlatformTreasuryPool(await accounts[6].getAddress());
+    await taxManager.setPlatformRevenuePool(await accounts[7].getAddress());
+    await taxManager.setreferralTaxReceiver(await accounts[8].getAddress());
+    await taxManager.setDisputeFeesTreasuryPool(await accounts[9].getAddress());
+
+    await nexus.setNFT(nft.target);
+
+    const rewarder = await rewarderSetup(true, nexus, accounts[0]);
+    const mockEscrow = await mockEscrowSetup(true);
+
+    await mockEscrow.setRewarder(rewarder.target);
+
+    return { rewarder, nexus, accounts, taxManager, mockEscrow, mockToken };
+}
+
+export async function fixture_rewarder_integration_tests(accounts: Signer[]) {
+    const { nexus } = await nexusSetup(true);
+    const taxManager = await taxManagerSetup(true);
+    const nft = await profileNFTSetup(nexus, true);
+
+    await nexus.setGuardian(await accounts[0].getAddress());
+
+    await nexus.setTaxManager(taxManager.target);
+    await nexus.setNFT(nft.target);
+
+    const rewarder = await rewarderSetup(true, nexus, accounts[0]);
+
+    return { rewarder, nexus, accounts, taxManager };
 }

@@ -11,6 +11,7 @@ import {
     Nexus,
     ProfileNFT,
     Quest,
+    Rewarder,
     SelfDestruct,
     Tavern,
     TierManager,
@@ -166,6 +167,17 @@ export async function mockTavernSetup(
     return mockTavern;
 }
 
+export async function mockEscrowSetup(silence: Boolean) {
+    const mockEscrow = await ethers.deployContract("MockEscrow");
+    await mockEscrow.waitForDeployment();
+
+    if (!silence) {
+        console.log(`MockEscrow deployed to ${mockEscrow.target}`);
+    }
+
+    return mockEscrow;
+}
+
 // Contract Setups
 
 export async function erc6551Setup(silence: Boolean): Promise<ERC6551Setup> {
@@ -319,6 +331,25 @@ export async function xpSetup(
     }
 
     return guildXp;
+}
+
+export async function rewarderSetup(
+    silence: Boolean,
+    nexus: Nexus,
+    account: Signer
+): Promise<Rewarder> {
+    const rewarder = await ethers.deployContract("Rewarder", [
+        account,
+        nexus.target,
+    ]);
+
+    await rewarder.waitForDeployment();
+
+    if (!silence) {
+        console.log(`Rewarder deployed to ${rewarder.target}`);
+    }
+
+    return rewarder;
 }
 
 export async function tavernSetup(
