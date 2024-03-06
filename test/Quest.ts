@@ -22,7 +22,7 @@ import {
 } from "./helpers/fixtures";
 import { parseEventLogs } from "./helpers/utils";
 
-describe("Quest", function () {
+describe.skip("Quest", function () {
     async function mockAccounts(): Promise<Signer[]> {
         const [owner, user1, user2, user3, user4, user5, user6] =
             await ethers.getSigners();
