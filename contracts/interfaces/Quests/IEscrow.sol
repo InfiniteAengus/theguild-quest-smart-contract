@@ -6,7 +6,7 @@ interface IEscrow {
 
     function processStartDispute() external payable;
     function processResolution(
-        uint8 solverShare 
+        uint32 solverShare 
     ) external;
 
     function initialize(

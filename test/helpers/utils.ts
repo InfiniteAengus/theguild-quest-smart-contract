@@ -1,5 +1,5 @@
 import { ERC6551Registry } from "../../typechain-types";
-import { AccountDetails } from "./types";
+import { AccountDetails, LayerKeys } from "./types";
 import { Signer } from "ethers";
 import { Log, Interface } from "ethers";
 
@@ -52,4 +52,10 @@ export function parseEventLogs(
     }
 
     return parsedObject;
+}
+
+export function calculateTaxAmount(amount: bigint, taxRate: bigint): bigint {
+    const bigAmount = BigInt(amount);
+    const bigTaxRate = BigInt(taxRate);
+    return (bigAmount * bigTaxRate) / BigInt(10000);
 }

@@ -23,7 +23,7 @@ contract MockRewarder is IRewarder {
     event ResolutionProccessed(
         uint32 indexed seekerId,
         uint32 indexed solverId,
-        uint8 solverShare
+        uint32 solverShare
     );
 
     constructor(address _steward, address _nexus) {
@@ -97,14 +97,14 @@ contract MockRewarder is IRewarder {
     }
 
     function handleSeekerTaxNative(
-        uint32 solverId,
+        uint32 seekerId,
         uint256 referralTax,
         uint256 platformTax
     ) external payable {
     }
 
     function handleSeekerTaxToken(
-        uint32 solverId,
+        uint32 seekerId,
         uint256 referralTax,
         uint256 platformTax,
         address token
@@ -114,7 +114,7 @@ contract MockRewarder is IRewarder {
     function processResolutionNative(
         uint32 seekerId,
         uint32 solverId,
-        uint8 solverShare
+        uint32 solverShare
     ) external payable override {
         emit ResolutionProccessed(seekerId, solverId, solverShare);
     }
@@ -122,7 +122,7 @@ contract MockRewarder is IRewarder {
     function processResolutionToken(
         uint32 seekerId,
         uint32 solverId,
-        uint8 solverShare,
+        uint32 solverShare,
         address,
         uint256
     ) external override {

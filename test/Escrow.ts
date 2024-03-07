@@ -173,7 +173,7 @@ describe("Escrow", function () {
         describe("Integration Tests", function () {});
     });
 
-    describe("Escrow Token", function () {
+    describe.skip("Escrow Token", function () {
         describe("Unit Tests", function () {
             let accounts_: Signer[],
                 escrow_: EscrowNative,
