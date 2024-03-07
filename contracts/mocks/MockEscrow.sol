@@ -65,7 +65,7 @@ contract MockEscrow is IEscrow {
     }
 
     function processPayment() external {
-        IRewarder(rewarder).handleRewardNative{value: paymentAmount}(solverId, 0);
+        IRewarder(rewarder).handleRewardNative{value: address(this).balance }(solverId, 0);
     }
 
     /**
@@ -79,7 +79,7 @@ contract MockEscrow is IEscrow {
      * @notice process the dispute resolutionForNativeTokens
      */
     function processResolution(uint32 solverShare) external {
-        IRewarder(rewarder).processResolutionNative{value: paymentAmount}(seekerId, solverId, solverShare);
+        IRewarder(rewarder).processResolutionNative{value: address(this).balance }(seekerId, solverId, solverShare);
     }
 
     receive() external payable {}

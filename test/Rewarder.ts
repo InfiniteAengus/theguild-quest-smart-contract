@@ -1644,6 +1644,405 @@ describe("Rewarder", function () {
                     disputeFeeTaxAmount
                 );
             });
+
+            const solverShare = 5000n;
+            const basisUnit = 10000n;
+
+            describe("processResolutionNative", function () {
+                it("Should be able to processResolutionNative with projected tax when solver is at fault", async function () {
+                    await taxSnapshot.restore();
+
+                    expect(
+                        await ethers.provider.getBalance(rewarder_.target)
+                    ).to.equal(0);
+
+                    const solverBalanceBefore =
+                        await ethers.provider.getBalance(solver_.owner);
+
+                    // If solver is at fault, seeker owner will be rewarded with payment
+                    // Checks if seeker owner balance before
+                    const seekerBalanceBefore =
+                        await ethers.provider.getBalance(seeker_.owner);
+
+                    // Transfer ether to mockEscrow
+                    await accounts_[0].sendTransaction({
+                        to: mockEscrow_.target,
+                        value: PAYMENT_AMOUNT,
+                    });
+
+                    expect(
+                        await ethers.provider.getBalance(mockEscrow_.target)
+                    ).to.equal(PAYMENT_AMOUNT);
+
+                    // 0% in basis points
+                    await mockEscrow_.processResolution(0);
+
+                    // Solver should have no change in value after call
+                    expect(
+                        await ethers.provider.getBalance(solver_.owner)
+                    ).to.equal(solverBalanceBefore);
+
+                    // Seeker should have 1000 wei more after processResolutionNative is called
+                    expect(
+                        await ethers.provider.getBalance(seeker_.owner)
+                    ).to.equal(seekerBalanceBefore + PAYMENT_AMOUNT);
+                });
+
+                it("Should be able to processResolutionNative with projected tax when seeker is at fault", async function () {
+                    await taxSnapshot.restore();
+
+                    expect(
+                        await ethers.provider.getBalance(rewarder_.target)
+                    ).to.equal(0);
+
+                    const seekerBalanceBefore =
+                        await ethers.provider.getBalance(seeker_.owner);
+
+                    // If seeker is at fault, solver owner will be rewarded with payment
+                    // Checks if solver owner balance before
+                    const solverBalanceBefore =
+                        await ethers.provider.getBalance(solver_.owner);
+
+                    // Transfer ether to mockEscrow
+                    await accounts_[0].sendTransaction({
+                        to: mockEscrow_.target,
+                        value: PAYMENT_AMOUNT,
+                    });
+
+                    expect(
+                        await ethers.provider.getBalance(mockEscrow_.target)
+                    ).to.equal(PAYMENT_AMOUNT);
+
+                    // 100% in basis points
+                    await mockEscrow_.processResolution(basisUnit);
+
+                    expect(
+                        await ethers.provider.getBalance(mockEscrow_.target)
+                    ).to.equal(0);
+
+                    // Seeker should have no change in value after call
+                    expect(
+                        await ethers.provider.getBalance(seeker_.owner)
+                    ).to.equal(seekerBalanceBefore);
+
+                    // Solver should be taxed with referral amount and platform revenue
+                    const taxValue = calculateTaxAmount(
+                        PAYMENT_AMOUNT,
+                        solverTax.platformRevenue +
+                            solverTax.referralRewards +
+                            solverTax.platformTreasury
+                    );
+
+                    // Solver should have 1000 wei more after processResolutionNative is called
+                    expect(
+                        await ethers.provider.getBalance(solver_.owner)
+                    ).to.equal(solverBalanceBefore + PAYMENT_AMOUNT - taxValue);
+                });
+
+                it("Should be able to processResolutionNative with projected tax when both are at fault and results in arbitrary distribution", async function () {
+                    await taxSnapshot.restore();
+
+                    expect(
+                        await ethers.provider.getBalance(rewarder_.target)
+                    ).to.equal(0);
+
+                    const seekerBalanceBefore =
+                        await ethers.provider.getBalance(seeker_.owner);
+
+                    const solverBalanceBefore =
+                        await ethers.provider.getBalance(solver_.owner);
+
+                    // Transfer ether to mockEscrow
+                    await accounts_[0].sendTransaction({
+                        to: mockEscrow_.target,
+                        value: PAYMENT_AMOUNT,
+                    });
+
+                    expect(
+                        await ethers.provider.getBalance(mockEscrow_.target)
+                    ).to.equal(PAYMENT_AMOUNT);
+
+                    // 50% in basis points
+                    await mockEscrow_.processResolution(solverShare);
+
+                    expect(
+                        await ethers.provider.getBalance(mockEscrow_.target)
+                    ).to.equal(0);
+
+                    const disputeDepositRate =
+                        await taxManager_.disputeDepositRate();
+
+                    const depositAmount = calculateTaxAmount(
+                        PAYMENT_AMOUNT,
+                        disputeDepositRate
+                    );
+
+                    const seekerDepositAmount = calculateTaxAmount(
+                        PAYMENT_AMOUNT,
+                        basisUnit - solverShare
+                    );
+
+                    const seekerAmount =
+                        seekerDepositAmount + depositAmount / 2n;
+
+                    // With a 50-50 split, and tax, seeker and solver should both have more native after processResolutionNative is called
+
+                    // Seeker should have half of the payment amount sent to them along with half of the deposit amount
+                    expect(
+                        await ethers.provider.getBalance(seeker_.owner)
+                    ).to.equal(seekerBalanceBefore + seekerAmount);
+
+                    const solverDepositAmount = calculateTaxAmount(
+                        PAYMENT_AMOUNT,
+                        solverShare
+                    );
+
+                    const solverAmount =
+                        solverDepositAmount - depositAmount / 2n;
+
+                    const taxValue = calculateTaxAmount(
+                        solverAmount,
+                        solverTax.platformRevenue +
+                            solverTax.referralRewards +
+                            solverTax.platformTreasury
+                    );
+
+                    // Solver should have about half of the payment amount sent to them along with half of the deposit amount deducted, and after taxed value
+                    expect(
+                        await ethers.provider.getBalance(solver_.owner)
+                    ).to.equal(solverBalanceBefore + solverAmount - taxValue);
+
+                    // Rewarder contract should also not have any balance
+                    expect(
+                        await ethers.provider.getBalance(rewarder_.target)
+                    ).to.equal(0);
+                });
+            });
+
+            describe("processResolutionToken", function () {
+                it("Should be able to processResolutionToken with projected tax when solver is at fault", async function () {
+                    await taxSnapshot.restore();
+
+                    // Mint mock token to account 0
+                    // Account 0 is used to simulate escrow
+                    await mockToken_.mint(
+                        await accounts_[0].getAddress(),
+                        PAYMENT_AMOUNT
+                    );
+                    await mockToken_.approve(rewarder_.target, PAYMENT_AMOUNT);
+
+                    expect(
+                        await mockToken_.balanceOf(
+                            await accounts_[0].getAddress()
+                        )
+                    ).to.equal(PAYMENT_AMOUNT);
+
+                    expect(
+                        await mockToken_.balanceOf(rewarder_.target)
+                    ).to.equal(0);
+
+                    // Seeker should have no balance before
+                    expect(await mockToken_.balanceOf(seeker_.owner)).to.equal(
+                        0
+                    );
+
+                    // Solver should have no balance before
+                    expect(await mockToken_.balanceOf(solver_.owner)).to.equal(
+                        0
+                    );
+
+                    // 0% in basis points
+                    await rewarder_.processResolutionToken(
+                        1,
+                        6,
+                        0,
+                        mockToken_.target,
+                        PAYMENT_AMOUNT
+                    );
+
+                    // Solver should have no change in value after call
+                    expect(await mockToken_.balanceOf(solver_.owner)).to.equal(
+                        0
+                    );
+
+                    // Seeker should have the payment amount after processResolutionToken is called
+                    expect(await mockToken_.balanceOf(seeker_.owner)).to.equal(
+                        PAYMENT_AMOUNT
+                    );
+
+                    // Account 0 should no longer have any balance
+                    expect(
+                        await mockToken_.balanceOf(mockEscrow_.target)
+                    ).to.equal(0);
+
+                    // There should not be any leftovers in the rewarder
+                    expect(
+                        await mockToken_.balanceOf(rewarder_.target)
+                    ).to.equal(0);
+                });
+
+                it("Should be able to processResolutionToken with projected tax when seeker is at fault", async function () {
+                    await taxSnapshot.restore();
+
+                    // Mint mock token to account 0
+                    // Account 0 is used to simulate escrow
+                    await mockToken_.mint(
+                        await accounts_[0].getAddress(),
+                        PAYMENT_AMOUNT
+                    );
+                    await mockToken_.approve(rewarder_.target, PAYMENT_AMOUNT);
+
+                    expect(
+                        await mockToken_.balanceOf(
+                            await accounts_[0].getAddress()
+                        )
+                    ).to.equal(PAYMENT_AMOUNT);
+
+                    expect(
+                        await mockToken_.balanceOf(rewarder_.target)
+                    ).to.equal(0);
+
+                    // Seeker should have no balance before
+                    expect(await mockToken_.balanceOf(seeker_.owner)).to.equal(
+                        0
+                    );
+
+                    // Solver should have no balance before
+                    expect(await mockToken_.balanceOf(solver_.owner)).to.equal(
+                        0
+                    );
+
+                    // 100% in basis points
+                    await rewarder_.processResolutionToken(
+                        1,
+                        6,
+                        basisUnit,
+                        mockToken_.target,
+                        PAYMENT_AMOUNT
+                    );
+
+                    // Seeker should have no change in value after call
+                    expect(await mockToken_.balanceOf(seeker_.owner)).to.equal(
+                        0
+                    );
+
+                    const tax = calculateTaxAmount(
+                        PAYMENT_AMOUNT,
+                        solverTax.platformRevenue +
+                            solverTax.referralRewards +
+                            solverTax.platformTreasury
+                    );
+
+                    // Solver should have payment amount more - tax after processResolutionToken is called
+                    expect(await mockToken_.balanceOf(solver_.owner)).to.equal(
+                        PAYMENT_AMOUNT - tax
+                    );
+
+                    // Account 0 should no longer have any balance
+                    expect(
+                        await mockToken_.balanceOf(mockEscrow_.target)
+                    ).to.equal(0);
+
+                    // There should not be any leftovers in the rewarder
+                    expect(
+                        await mockToken_.balanceOf(rewarder_.target)
+                    ).to.equal(0);
+                });
+
+                it("Should be able to processResolutionToken with projected tax when both are at fault and results in arbitrary distribution", async function () {
+                    await taxSnapshot.restore();
+
+                    // Mint mock token to account 0
+                    // Account 0 is used to simulate escrow
+                    await mockToken_.mint(
+                        await accounts_[0].getAddress(),
+                        PAYMENT_AMOUNT
+                    );
+                    await mockToken_.approve(rewarder_.target, PAYMENT_AMOUNT);
+
+                    expect(
+                        await mockToken_.balanceOf(
+                            await accounts_[0].getAddress()
+                        )
+                    ).to.equal(PAYMENT_AMOUNT);
+
+                    expect(
+                        await mockToken_.balanceOf(rewarder_.target)
+                    ).to.equal(0);
+
+                    // Seeker should have no balance before
+                    expect(await mockToken_.balanceOf(seeker_.owner)).to.equal(
+                        0
+                    );
+
+                    // Solver should have no balance before
+                    expect(await mockToken_.balanceOf(solver_.owner)).to.equal(
+                        0
+                    );
+
+                    // 50% in basis points
+                    await rewarder_.processResolutionToken(
+                        1,
+                        6,
+                        solverShare,
+                        mockToken_.target,
+                        PAYMENT_AMOUNT
+                    );
+
+                    // With a 50-50 split, and no tax, seeker and solver should both have 500 wei more after processResolutionToken is called
+
+                    const disputeDepositRate =
+                        await taxManager_.disputeDepositRate();
+
+                    const depositAmount = calculateTaxAmount(
+                        PAYMENT_AMOUNT,
+                        disputeDepositRate
+                    );
+
+                    const seekerDepositAmount = calculateTaxAmount(
+                        PAYMENT_AMOUNT,
+                        basisUnit - solverShare
+                    );
+
+                    const seekerAmount =
+                        seekerDepositAmount + depositAmount / 2n;
+
+                    // Seeker should have 500 wei more after processResolutionToken is called
+                    expect(await mockToken_.balanceOf(seeker_.owner)).to.equal(
+                        seekerAmount
+                    );
+
+                    const solverDepositAmount = calculateTaxAmount(
+                        PAYMENT_AMOUNT,
+                        solverShare
+                    );
+
+                    const solverAmount =
+                        solverDepositAmount - depositAmount / 2n;
+
+                    const taxValue = calculateTaxAmount(
+                        solverAmount,
+                        solverTax.platformRevenue +
+                            solverTax.referralRewards +
+                            solverTax.platformTreasury
+                    );
+
+                    // Solver should have 500 wei more after processResolutionToken is called
+                    expect(await mockToken_.balanceOf(solver_.owner)).to.equal(
+                        solverAmount - taxValue
+                    );
+
+                    // Account 0 should no longer have any balance
+                    expect(
+                        await mockToken_.balanceOf(mockEscrow_.target)
+                    ).to.equal(0);
+
+                    // There should not be any leftovers in the rewarder
+                    expect(
+                        await mockToken_.balanceOf(rewarder_.target)
+                    ).to.equal(0);
+                });
+            });
         });
     });
 
