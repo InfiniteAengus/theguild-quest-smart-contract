@@ -25,10 +25,10 @@ interface ITaxManager {
     function getSeekerFees() external view returns (SeekerFees memory);
     function getSolverFees() external view returns (SolverFees memory);
 
-    function platformTreasuryPool() external view returns (address);
+    function platformTreasury() external view returns (address);
     function platformRevenuePool() external view returns (address);
-    function referralTaxReceiver() external view returns (address);
-    function disputeFeesTreasuryPool() external view returns (address);
+    function referralTaxTreasury() external view returns (address);
+    function disputeFeesTreasury() external view returns (address);
     
     function disputeDepositRate() external view returns (uint256);
     function getReferralRate(uint8 depth, uint8 tier) external view returns (uint256);

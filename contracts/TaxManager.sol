@@ -23,10 +23,10 @@ contract TaxManager is ITaxManager {
     uint256 public disputeDepositRate;  // with base divisor
 
     // Pools
-    address public platformTreasuryPool;
+    address public platformTreasury;
     address public platformRevenuePool;
-    address public referralTaxReceiver;
-    address public disputeFeesTreasuryPool;
+    address public referralTaxTreasury;
+    address public disputeFeesTreasury;
 
     // attention here
     uint256 public constant taxBaseDivisor = 10000;
@@ -82,7 +82,7 @@ contract TaxManager is ITaxManager {
 
     function setPlatformTreasuryPool(address _platformTreasuryPool) external onlyCustodian {
         require(_platformTreasuryPool != address(0), "Zero address");
-        platformTreasuryPool = _platformTreasuryPool;
+        platformTreasury = _platformTreasuryPool;
     }
 
     function setPlatformRevenuePool(address _platformRevenuePool) external onlyCustodian {
@@ -90,14 +90,14 @@ contract TaxManager is ITaxManager {
         platformRevenuePool = _platformRevenuePool;
     }
 
-    function setreferralTaxReceiver(address _referralTaxReceiver) external onlyCustodian {
-        require(_referralTaxReceiver != address(0), "Zero address");
-        referralTaxReceiver = _referralTaxReceiver;
+    function setreferralTaxTreasury(address _referralTaxTreasury) external onlyCustodian {
+        require(_referralTaxTreasury != address(0), "Zero address");
+        referralTaxTreasury = _referralTaxTreasury;
     }
 
-    function setDisputeFeesTreasuryPool(address _disputeFeesTreasuryPool) external onlyCustodian {
-        require(_disputeFeesTreasuryPool != address(0), "Zero address");
-        disputeFeesTreasuryPool = _disputeFeesTreasuryPool;
+    function setDisputeFeesTreasury(address _disputeFeesTreasury) external onlyCustodian {
+        require(_disputeFeesTreasury != address(0), "Zero address");
+        disputeFeesTreasury = _disputeFeesTreasury;
     }
 
     //
@@ -138,7 +138,7 @@ contract TaxManager is ITaxManager {
         validTaxRate(_platformRevenuePool) 
     {
         require(platformRevenuePool != address(0), "Zero address");
-        require(referralTaxReceiver != address(0), "Zero address");
+        require(referralTaxTreasury != address(0), "Zero address");
         require(_referralRewards + _platformRevenuePool <= taxBaseDivisor, "Tax rate too high");
         seekerFees.referralRewards = _referralRewards;
         seekerFees.platformRevenue = _platformRevenuePool;
@@ -155,9 +155,9 @@ contract TaxManager is ITaxManager {
         validTaxRate(_platformRevenuePool) 
         validTaxRate(_platformTreasuryPool) 
     {
-        require(referralTaxReceiver != address(0), "Zero address");
+        require(referralTaxTreasury != address(0), "Zero address");
         require(platformRevenuePool != address(0), "Zero address");
-        require(platformTreasuryPool != address(0), "Zero address");
+        require(platformTreasury != address(0), "Zero address");
 
         require(_referralTaxReceiver + _platformTreasuryPool + _platformRevenuePool <= taxBaseDivisor, "Tax rate too high");
 
