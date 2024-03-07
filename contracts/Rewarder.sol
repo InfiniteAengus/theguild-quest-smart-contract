@@ -8,6 +8,7 @@ import "./TaxCalculator.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./interfaces/IRewarder.sol";
 
 /**
@@ -16,7 +17,7 @@ import "./interfaces/IRewarder.sol";
  * @notice Controls the referral and quest reward proccess
  * @dev Processes native and ERC20 tokens 
  */
-contract Rewarder is IRewarder, Pausable {
+contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint256 public BASE = 1e18;
@@ -94,10 +95,13 @@ contract Rewarder is IRewarder, Pausable {
      * @dev Can be called by anyone
      * @param solverId Nft Id of the quest solver
      */
-    function handleRewardNative(uint32 solverId, uint256 amount) public payable whenNotPaused {
+    function handleRewardNative(uint32 solverId, uint256 amount) external payable whenNotPaused nonReentrant {
+        _handleRewardNative(solverId, amount);
+    }
+
+    function _handleRewardNative(uint32 _solverId, uint256 _amount) private {
         address escrow = msg.sender;
 
-        // NOTE: check can be griefed and DOSed
         // griefer can send dust values of paymentAmount and make solver unable to claim
         require(escrow.balance == 0, "Escrow not empty");
 
@@ -106,14 +110,14 @@ contract Rewarder is IRewarder, Pausable {
 
         uint256 rewardValue;
         // in case, want to process less than msg.value 
-        if(amount > 1) { // for gas optimisation (0 comparison is more expensive)
+        if(_amount > 1) { // for gas optimisation (0 comparison is more expensive)
             
             require(
-                amount <= msg.value, 
+                _amount <= msg.value, 
                 "handleRewardNative: amount bigger then msg.value"
             );
 
-            rewardValue = amount;
+            rewardValue = _amount;
         } else { 
             rewardValue = msg.value;
         }
@@ -125,7 +129,7 @@ contract Rewarder is IRewarder, Pausable {
         require(totalTax <= rewardValue, "Invalid tax");
 
         uint256 solverReward = rewardValue - totalTax;
-        address solverHandler = nexus.getHandler(solverId);
+        address solverHandler = nexus.getHandler(_solverId);
 
         address solver = IReferralHandler(solverHandler).owner();
 
@@ -246,7 +250,7 @@ contract Rewarder is IRewarder, Pausable {
         uint32 _seekerId,
         uint256 _platformTax, 
         uint256 _referralTax
-    ) public payable whenNotPaused {
+    ) public payable whenNotPaused nonReentrant {
         require(
             msg.value == _platformTax + _referralTax,
             "Insufficient tax amount"
@@ -305,7 +309,7 @@ contract Rewarder is IRewarder, Pausable {
         rewardReferrers(seekerHandler, _referralTax, taxRateDivisor, token);
     }
 
-    function handleStartDisputeNative(uint256 paymentAmount) external payable whenNotPaused {
+    function handleStartDisputeNative(uint256 paymentAmount) external payable whenNotPaused nonReentrant {
         ITaxManager taxManager = getTaxManager();
         uint256 disputeDepositRate = taxManager.disputeDepositRate();
         uint256 baseDivisor = taxManager.taxBaseDivisor();
@@ -352,7 +356,7 @@ contract Rewarder is IRewarder, Pausable {
         uint32 seekerId,
         uint32 solverId,
         uint32 solverShare
-    ) external payable override whenNotPaused {
+    ) external payable override whenNotPaused nonReentrant {
         uint256 payment = msg.value;
 
         address seekerHandler = nexus.getHandler(seekerId);
@@ -365,7 +369,7 @@ contract Rewarder is IRewarder, Pausable {
         // Seeker at Fault
         else if(solverShare == 10000){
             // Tax handled through the handleRewardNative function
-            handleRewardNative(solverId, 0);
+            _handleRewardNative(solverId, 0);
         } 
         // Arbitrary distribution
         else {
@@ -386,7 +390,7 @@ contract Rewarder is IRewarder, Pausable {
 
             // Sends to solver
             // Tax handled through the handleRewardNative function
-            handleRewardNative(solverId, solverPayment);
+            _handleRewardNative(solverId, solverPayment);
         }
     }
 
