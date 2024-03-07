@@ -58,7 +58,7 @@ contract EscrowToken is IEscrow {
     
         IERC20(token).approve(address(rewarder), referralTax + platformTax);
 
-        IRewarder(rewarder).handleSeekerTaxToken(_seekerId, _solverId, referralTax, platformTax, address(token));
+        IRewarder(rewarder).handleSeekerTaxToken(_seekerId, referralTax, platformTax, address(token));
     }
 
     function processPayment() external onlyQuest{
