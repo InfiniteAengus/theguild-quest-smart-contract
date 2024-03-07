@@ -361,7 +361,7 @@ describe("Rewarder", function () {
                     await ethers.provider.getBalance(rewarder_.target)
                 ).to.equal(0);
 
-                const tx = await rewarder_.handleSeekerTaxNative(1, 6, 0, 0);
+                const tx = await rewarder_.handleSeekerTaxNative(1, 0, 0);
 
                 const receipt = (await tx.wait()) as ContractTransactionReceipt;
 
@@ -424,7 +424,6 @@ describe("Rewarder", function () {
 
                 const tx = await rewarder_.handleSeekerTaxToken(
                     1,
-                    6,
                     0,
                     0,
                     mockToken_.target
@@ -478,7 +477,7 @@ describe("Rewarder", function () {
                 );
 
                 const disputeTreasuryBefore = await ethers.provider.getBalance(
-                    await taxManager_.disputeFeesTreasuryPool()
+                    await taxManager_.disputeFeesTreasury()
                 );
 
                 // Don't need to us mockRewarder to call this function
@@ -515,8 +514,7 @@ describe("Rewarder", function () {
                     await ethers.provider.getBalance(seeker_.owner)
                 ).to.equal(seekerBalanceBefore);
 
-                const disputeTreasury =
-                    await taxManager_.disputeFeesTreasuryPool();
+                const disputeTreasury = await taxManager_.disputeFeesTreasury();
 
                 // Dispute treasury should not have any changes if there is no disputeTax
                 expect(
@@ -577,8 +575,7 @@ describe("Rewarder", function () {
                     await mockToken_.balanceOf(await accounts_[0].getAddress())
                 ).to.equal(balanceBefore);
 
-                const disputeTreasury =
-                    await taxManager_.disputeFeesTreasuryPool();
+                const disputeTreasury = await taxManager_.disputeFeesTreasury();
 
                 // Dispute treasury should not have any change if there is no disputeTax
                 expect(await mockToken_.balanceOf(disputeTreasury)).to.equal(0);
@@ -953,7 +950,7 @@ describe("Rewarder", function () {
 
             let platformTreasuryPool: string,
                 platformRevenuePool: string,
-                referralTaxReceiver: string,
+                referralTaxTreasury: string,
                 disputeFeesTreasuryPool: string;
 
             const DEFAULT_ACCOUNT_BALANCE = ethers.parseEther("10000000");
@@ -1028,11 +1025,11 @@ describe("Rewarder", function () {
 
                 await mockEscrow_.setPaymentAmount(PAYMENT_AMOUNT);
 
-                platformTreasuryPool = await taxManager_.platformTreasuryPool();
+                platformTreasuryPool = await taxManager_.platformTreasury();
                 platformRevenuePool = await taxManager_.platformRevenuePool();
-                referralTaxReceiver = await taxManager_.referralTaxReceiver();
+                referralTaxTreasury = await taxManager_.referralTaxTreasury();
                 disputeFeesTreasuryPool =
-                    await taxManager_.disputeFeesTreasuryPool();
+                    await taxManager_.disputeFeesTreasury();
 
                 taxSnapshot = await takeSnapshot();
             });
@@ -1155,7 +1152,7 @@ describe("Rewarder", function () {
                 }
 
                 const leftovers = await ethers.provider.getBalance(
-                    referralTaxReceiver
+                    referralTaxTreasury
                 );
 
                 expect(referralTaxAmount).to.equal(
@@ -1290,7 +1287,7 @@ describe("Rewarder", function () {
                 }
 
                 const leftovers = await mockToken_.balanceOf(
-                    referralTaxReceiver
+                    referralTaxTreasury
                 );
 
                 expect(referralTaxAmount).to.equal(
@@ -1322,7 +1319,6 @@ describe("Rewarder", function () {
 
                 const tx = await rewarder_.handleSeekerTaxNative(
                     1,
-                    6,
                     platformRevenueTax,
                     referralRewardsTax,
                     { value: platformRevenueTax + referralRewardsTax }
@@ -1390,33 +1386,19 @@ describe("Rewarder", function () {
                     seekerTax.referralRewards
                 );
 
-                let totalReferralTax = 0n;
-                // Referrers have new balances that adds up to the referralTaxAmount + leftovers
+                // Referrers balance check
                 for (let i = 0; i < referrers.length; i++) {
-                    let layerNumber = i + 1;
-                    let layerKey = `layer${layerNumber}` as LayerKeys;
-
-                    const tax = calculateTaxAmount(
-                        referralTaxAmount,
-                        BigInt(getLayerValue(layerKey))
-                    );
-
+                    // Should be 0 since the seeker has no referrers
                     expect(
                         await ethers.provider.getBalance(
                             referrers[i].handlerAddress
                         )
-                    ).to.equal(tax);
-
-                    totalReferralTax += tax;
+                    ).to.equal(0);
                 }
 
-                const leftovers = await ethers.provider.getBalance(
-                    referralTaxReceiver
-                );
-
-                expect(referralTaxAmount).to.equal(
-                    leftovers - DEFAULT_ACCOUNT_BALANCE + totalReferralTax
-                );
+                expect(
+                    await ethers.provider.getBalance(referralTaxTreasury)
+                ).to.equal(referralTaxAmount + DEFAULT_ACCOUNT_BALANCE);
             });
 
             it("Should be able to handleSeekerTaxToken with projected tax", async function () {
@@ -1454,7 +1436,6 @@ describe("Rewarder", function () {
 
                 const tx = await rewarder_.handleSeekerTaxToken(
                     1,
-                    6,
                     platformRevenueTax,
                     referralRewardsTax,
                     mockToken_.target
@@ -1510,31 +1491,17 @@ describe("Rewarder", function () {
                     seekerTax.referralRewards
                 );
 
-                let totalReferralTax = 0n;
                 // Referrers have new balances that adds up to the referralTaxAmount + leftovers
                 for (let i = 0; i < referrers.length; i++) {
-                    let layerNumber = i + 1;
-                    let layerKey = `layer${layerNumber}` as LayerKeys;
-
-                    const tax = calculateTaxAmount(
-                        referralTaxAmount,
-                        BigInt(getLayerValue(layerKey))
-                    );
-
+                    // Should be 0 since the seeker has no referrers
                     expect(
                         await mockToken_.balanceOf(referrers[i].handlerAddress)
-                    ).to.equal(tax);
-
-                    totalReferralTax += tax;
+                    ).to.equal(0);
                 }
 
-                const leftovers = await mockToken_.balanceOf(
-                    referralTaxReceiver
-                );
-
-                expect(referralTaxAmount).to.equal(
-                    leftovers + totalReferralTax
-                );
+                expect(
+                    await mockToken_.balanceOf(referralTaxTreasury)
+                ).to.equal(referralTaxAmount);
             });
 
             it("Should be able to handleStartDisputeNative with projected tax", async function () {
@@ -1600,8 +1567,7 @@ describe("Rewarder", function () {
                     account0BalanceBefore - disputeFeeTaxAmount - gasCost
                 );
 
-                const disputeTreasury =
-                    await taxManager_.disputeFeesTreasuryPool();
+                const disputeTreasury = await taxManager_.disputeFeesTreasury();
 
                 // Dispute treasury should increase by the tax amount
                 expect(
@@ -1671,8 +1637,7 @@ describe("Rewarder", function () {
                     await mockToken_.balanceOf(await accounts_[1].getAddress())
                 ).to.equal(balanceBefore - disputeFeeTaxAmount);
 
-                const disputeTreasury =
-                    await taxManager_.disputeFeesTreasuryPool();
+                const disputeTreasury = await taxManager_.disputeFeesTreasury();
 
                 // Dispute treasury should increase by the tax amount
                 expect(await mockToken_.balanceOf(disputeTreasury)).to.equal(
