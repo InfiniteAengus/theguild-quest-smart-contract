@@ -98,7 +98,6 @@ contract MockRewarder is IRewarder {
 
     function handleSeekerTaxNative(
         uint32 seekerId,
-        uint32 solverId,
         uint256 referralTax,
         uint256 platformTax
     ) external payable {
@@ -106,7 +105,6 @@ contract MockRewarder is IRewarder {
 
     function handleSeekerTaxToken(
         uint32 seekerId,
-        uint32 solverId,
         uint256 referralTax,
         uint256 platformTax,
         address token
