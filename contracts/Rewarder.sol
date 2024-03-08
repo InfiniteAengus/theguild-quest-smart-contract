@@ -316,7 +316,6 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
         uint256 deposit = msg.value;
 
-        // NOTE: will not be able to start dispute if depositRate is 0, and will revert
         require(deposit == ((paymentAmount * disputeDepositRate) / baseDivisor), "Wrong dispute deposit");
         
         address disputeTreasury = taxManager.disputeFeesTreasury();
@@ -331,7 +330,6 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         uint256 disputeDepositRate = taxManager.disputeDepositRate();
         uint256 baseDivisor = taxManager.taxBaseDivisor();
 
-        // NOTE: will transfer 0 if depositRate is 0, will not revert
         uint256 deposit = ((paymentAmount * disputeDepositRate) / baseDivisor);
 
         address seekerHandler = nexus.getHandler(seekerId);
@@ -380,9 +378,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
             uint256 deposit = ((payment * disputeDepositRate) / baseDivisor);
 
             // both pay half of the dispute deposit 
-            // uint256 seekerPayment = (payment * ((baseDivisor + (disputeDepositRate / 2)) + ((100 - solverShare) * baseDivisor) / 100)) / baseDivisor;
             uint256 seekerPayment = ((payment * (baseDivisor - solverShare)) / baseDivisor) + ((deposit * 5000) / baseDivisor);
-            // uint256 solverPayment = (payment * ((baseDivisor - (disputeDepositRate / 2)) + (solverShare  * baseDivisor) / 100)) / baseDivisor;
             uint256 solverPayment = ((payment * solverShare) / baseDivisor) - ((deposit * 5000) / baseDivisor);
 
             // Sends to seeker
@@ -433,9 +429,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
             uint256 deposit = ((payment * disputeDepositRate) / baseDivisor);
 
-            // uint256 seekerPayment = (payment * ((baseDivisor + (disputeDepositRate / 2)) + ((100 - solverShare) * baseDivisor) / 100)) / baseDivisor;
             uint256 seekerPayment = ((payment * (baseDivisor - solverShare)) / baseDivisor) + ((deposit * 5000) / baseDivisor);
-            // uint256 rewardValue = (payment * ((baseDivisor - (disputeDepositRate / 2)) + (solverShare  * baseDivisor) / 100)) / baseDivisor;
             uint256 solverPayment = ((payment * solverShare) / baseDivisor) - ((deposit * 5000) / baseDivisor);
             
             // Sends to seeker
