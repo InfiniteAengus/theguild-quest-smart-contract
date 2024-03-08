@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity 0.8.20;
 
 import "../interfaces/IRewarder.sol";
 import "../interfaces/IReferralHandler.sol";
@@ -20,7 +20,7 @@ contract MockRewarder is IRewarder {
         address escrow,
         uint256 solverReward
     );
-    event ResolutionProccessed(
+    event ResolutionProcessed(
         uint32 indexed seekerId,
         uint32 indexed solverId,
         uint32 solverShare
@@ -116,7 +116,7 @@ contract MockRewarder is IRewarder {
         uint32 solverId,
         uint32 solverShare
     ) external payable override {
-        emit ResolutionProccessed(seekerId, solverId, solverShare);
+        emit ResolutionProcessed(seekerId, solverId, solverShare);
     }
 
     function processResolutionToken(
@@ -126,7 +126,7 @@ contract MockRewarder is IRewarder {
         address,
         uint256
     ) external override {
-        emit ResolutionProccessed(seekerId, solverId, solverShare);
+        emit ResolutionProcessed(seekerId, solverId, solverShare);
     }
 
     function rewardReferrers(

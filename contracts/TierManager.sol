@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.17;
+pragma solidity 0.8.20;
+
 import "./interfaces/IReferralHandler.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -13,7 +14,7 @@ import "./interfaces/ITierManager.sol";
 contract TierManager is ITierManager {
     using SafeERC20 for IERC20;
 
-    struct TierParamaters {
+    struct TierParameters {
         uint256 xpPoints;
         uint256 novicesReferred;
         uint256 adeptsReferred;
@@ -23,7 +24,7 @@ contract TierManager is ITierManager {
 
     address public magistrate;
     address public xpToken;
-    mapping(uint256 => TierParamaters) public tierUpConditions;
+    mapping(uint256 => TierParameters) public tierUpConditions;
     mapping(uint256 => uint256) public transferLimits;
 
     modifier onlyMagistrate() {
@@ -44,7 +45,6 @@ contract TierManager is ITierManager {
         xpToken = token;
     }
 
-    // @audit - Should probably be set during the constructor as well
     function setConditions(
         uint8 tier,
         uint256 xpPoints,
@@ -73,7 +73,6 @@ contract TierManager is ITierManager {
         uint8 tier
     ) internal view returns (bool) {
 
-        // NOTE: Crucial that these values are set after deployment, or users would be able to upgrade without meeting the requirements
         require(
             tierUpConditions[tier].xpPoints != 0,
             "Tier conditions not set"

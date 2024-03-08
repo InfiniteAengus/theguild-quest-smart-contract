@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.20;
+pragma solidity 0.8.20;
 
 interface IProfileNFT {
     function ownerOf(uint256) external view returns (address);

@@ -28,6 +28,7 @@ import {
     fixture_rewarder_unit_tests,
 } from "./helpers/fixtures";
 import { calculateTaxAmount, parseEventLogs } from "./helpers/utils";
+import { selfDestructSetup } from "./helpers/setup";
 
 describe("Rewarder", function () {
     async function mockAccounts(): Promise<Signer[]> {
@@ -2041,6 +2042,228 @@ describe("Rewarder", function () {
                     expect(
                         await mockToken_.balanceOf(rewarder_.target)
                     ).to.equal(0);
+                });
+            });
+
+            it("Should be able to calculate seeker tax with any value", async function () {
+                await taxSnapshot.restore();
+
+                const seekerTaxAmount = await rewarder_.calculateSeekerTax(
+                    PAYMENT_AMOUNT
+                );
+
+                const platformRevenue = calculateTaxAmount(
+                    PAYMENT_AMOUNT,
+                    seekerTax.platformRevenue
+                );
+
+                const referralRewards = calculateTaxAmount(
+                    PAYMENT_AMOUNT,
+                    seekerTax.referralRewards
+                );
+
+                expect(seekerTaxAmount[0]).to.equal(referralRewards);
+                expect(seekerTaxAmount[1]).to.equal(platformRevenue);
+            });
+
+            it("Should not be able to call recoverTokens unless steward", async function () {
+                await taxSnapshot.restore();
+
+                await expect(
+                    rewarder_
+                        .connect(accounts_[1])
+                        .recoverTokens(
+                            mockToken_.target,
+                            await accounts_[1].getAddress()
+                        )
+                ).to.be.revertedWith("only Steward");
+            });
+
+            it("Should be able to call recoverTokens and get native tokens if steward", async function () {
+                await taxSnapshot.restore();
+
+                const balanceBefore = await ethers.provider.getBalance(
+                    await accounts_[1].getAddress()
+                );
+
+                const selfDestruct = await selfDestructSetup(true);
+
+                await accounts_[0].sendTransaction({
+                    to: selfDestruct.target,
+                    value: PAYMENT_AMOUNT,
+                });
+
+                await selfDestruct.sendEther(rewarder_.target);
+
+                expect(
+                    await ethers.provider.getBalance(rewarder_.target)
+                ).to.equal(PAYMENT_AMOUNT);
+
+                await rewarder_.recoverTokens(
+                    ethers.ZeroAddress,
+                    await accounts_[1].getAddress()
+                );
+
+                expect(
+                    await ethers.provider.getBalance(
+                        await accounts_[1].getAddress()
+                    )
+                ).to.equal(balanceBefore + PAYMENT_AMOUNT);
+            });
+
+            it("Should be able to call recoverTokens and get erc20 tokens if steward", async function () {
+                await taxSnapshot.restore();
+
+                const balanceBefore = await mockToken_.balanceOf(
+                    await accounts_[0].getAddress()
+                );
+
+                await mockToken_.mint(rewarder_.target, PAYMENT_AMOUNT);
+
+                await rewarder_.recoverTokens(
+                    mockToken_.target,
+                    await accounts_[0].getAddress()
+                );
+
+                expect(
+                    await mockToken_.balanceOf(await accounts_[0].getAddress())
+                ).to.equal(balanceBefore + PAYMENT_AMOUNT);
+            });
+
+            describe("pause and unpause", function () {
+                it("Pause and unpause can only be done by the steward", async function () {
+                    await taxSnapshot.restore();
+
+                    await expect(
+                        rewarder_.connect(accounts_[1]).pause()
+                    ).to.be.revertedWith("only Steward");
+
+                    await expect(
+                        rewarder_.connect(accounts_[1]).unpause()
+                    ).to.be.revertedWith("only Steward");
+                });
+
+                it("Should be able to pause and unpause the contract", async function () {
+                    await taxSnapshot.restore();
+
+                    await rewarder_.pause();
+
+                    expect(await rewarder_.paused()).to.be.true;
+
+                    await rewarder_.unpause();
+
+                    expect(await rewarder_.paused()).to.be.false;
+                });
+
+                it("handleRewardNative should fail when paused", async function () {
+                    await taxSnapshot.restore();
+
+                    await rewarder_.pause();
+
+                    await expect(
+                        rewarder_.handleRewardNative(6, PAYMENT_AMOUNT)
+                    ).to.be.revertedWithCustomError(rewarder_, "EnforcedPause");
+                });
+
+                it("handleRewardToken should fail when paused", async function () {
+                    await taxSnapshot.restore();
+
+                    await rewarder_.pause();
+
+                    await expect(
+                        rewarder_.handleRewardToken(
+                            mockToken_.target,
+                            6,
+                            PAYMENT_AMOUNT
+                        )
+                    ).to.be.revertedWithCustomError(rewarder_, "EnforcedPause");
+                });
+
+                it("handleSeekerTaxNative should fail when paused", async function () {
+                    await taxSnapshot.restore();
+
+                    await rewarder_.pause();
+
+                    await expect(
+                        rewarder_.handleSeekerTaxNative(1, 6, 6)
+                    ).to.be.revertedWithCustomError(rewarder_, "EnforcedPause");
+                });
+
+                it("handleSeekerTaxToken should fail when paused", async function () {
+                    await taxSnapshot.restore();
+
+                    await rewarder_.pause();
+
+                    await expect(
+                        rewarder_.handleSeekerTaxToken(
+                            1,
+                            6,
+                            6,
+                            mockToken_.target
+                        )
+                    ).to.be.revertedWithCustomError(rewarder_, "EnforcedPause");
+                });
+
+                it("handleStartDisputeNative should fail when paused", async function () {
+                    await taxSnapshot.restore();
+
+                    await rewarder_.pause();
+
+                    await expect(
+                        rewarder_.handleStartDisputeNative(PAYMENT_AMOUNT, {
+                            value: PAYMENT_AMOUNT,
+                        })
+                    ).to.be.revertedWithCustomError(rewarder_, "EnforcedPause");
+                });
+
+                it("handleStartDisputeToken should fail when paused", async function () {
+                    await taxSnapshot.restore();
+
+                    await rewarder_.pause();
+
+                    await expect(
+                        rewarder_.handleStartDisputeToken(
+                            PAYMENT_AMOUNT,
+                            mockToken_.target,
+                            6
+                        )
+                    ).to.be.revertedWithCustomError(rewarder_, "EnforcedPause");
+                });
+
+                it("processResolutionNative should fail when paused", async function () {
+                    await taxSnapshot.restore();
+
+                    await rewarder_.pause();
+
+                    await expect(
+                        rewarder_.processResolutionNative(1, 6, 0)
+                    ).to.be.revertedWithCustomError(rewarder_, "EnforcedPause");
+                });
+
+                it("processResolutionToken should fail when paused", async function () {
+                    await taxSnapshot.restore();
+
+                    await rewarder_.pause();
+
+                    await expect(
+                        rewarder_.processResolutionToken(
+                            1,
+                            6,
+                            0,
+                            mockToken_.target,
+                            PAYMENT_AMOUNT
+                        )
+                    ).to.be.revertedWithCustomError(rewarder_, "EnforcedPause");
+                });
+
+                it("getTaxManager should fail when paused", async function () {
+                    await taxSnapshot.restore();
+
+                    await rewarder_.pause();
+
+                    await expect(
+                        rewarder_.getTaxManager()
+                    ).to.be.revertedWithCustomError(rewarder_, "EnforcedPause");
                 });
             });
         });

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.17;
+pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-
 import "./interfaces/INexus.sol";
 import "./interfaces/IReferralHandler.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
@@ -21,7 +20,7 @@ contract ProfileNFT is ERC721URIStorage {
     
     uint32 private _tokenCounter;
 
-    address public councelor;
+    address public counselor;
     address public nexus;
 
     event NewURI(string oldTokenURI, string newTokenURI);
@@ -31,15 +30,15 @@ contract ProfileNFT is ERC721URIStorage {
         _;
     }
 
-    modifier onlyCouncelor() {
-        require(msg.sender == councelor, "only Councelor");
+    modifier onlyCounselor() {
+        require(msg.sender == counselor, "only Counselor");
         _;
     }
 
     constructor(address _factory) ERC721("The Guild profile NFT", "GuildNFT") {
-        councelor = msg.sender;
+        counselor = msg.sender;
         nexus = _factory;
-        _tokenCounter++; // Start Token IDs from 1 instead of 0, we use 0 to indicate absense of NFT on a wallet
+        _tokenCounter++; // Start Token IDs from 1 instead of 0, we use 0 to indicate absence of NFT on a wallet
     }
 
     function issueProfile(
@@ -80,12 +79,11 @@ contract ProfileNFT is ERC721URIStorage {
         emit NewURI(oldURI, _tokenURI);
     }
 
-    // NOTE: Add two stp ownership to contracts
-    function setCouncelor(address account) public onlyCouncelor {
-        councelor = account;
+    function setCounselor(address account) public onlyCounselor {
+        counselor = account;
     }
 
-    function setNexus(address account) public onlyCouncelor {
+    function setNexus(address account) public onlyCounselor {
         nexus = account;
     }
 
@@ -97,7 +95,7 @@ contract ProfileNFT is ERC721URIStorage {
     function recoverTokens(
         address _token,
         address benefactor
-    ) external onlyCouncelor {
+    ) external onlyCounselor {
         if (_token == address(0)) {
             (bool sent, ) = payable(benefactor).call{
                 value: address(this).balance

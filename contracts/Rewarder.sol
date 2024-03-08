@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.17;
+pragma solidity 0.8.20;
 
 import "./interfaces/IReferralHandler.sol";
 import "./interfaces/INexus.sol";
@@ -14,7 +14,7 @@ import "./interfaces/IRewarder.sol";
 /**
  * @title Rewarder contract
  * @author @cosmodude
- * @notice Controls the referral and quest reward proccess
+ * @notice Controls the referral and quest reward process
  * @dev Processes native and ERC20 tokens 
  */
 contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
@@ -102,7 +102,6 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
     function _handleRewardNative(uint32 _solverId, uint256 _amount) private {
         address escrow = msg.sender;
 
-        // griefer can send dust values of paymentAmount and make solver unable to claim
         require(escrow.balance == 0, "Escrow not empty");
 
         ITaxManager taxManager = getTaxManager();
@@ -110,7 +109,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
         uint256 rewardValue;
         // in case, want to process less than msg.value 
-        if(_amount > 1) { // for gas optimisation (0 comparison is more expensive)
+        if(_amount > 1) { // for gas optimization (0 comparison is more expensive)
             
             require(
                 _amount <= msg.value, 
@@ -316,7 +315,6 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
         uint256 deposit = msg.value;
 
-        // NOTE: will not be able to start dispute if depositRate is 0, and will revert
         require(deposit == ((paymentAmount * disputeDepositRate) / baseDivisor), "Wrong dispute deposit");
         
         address disputeTreasury = taxManager.disputeFeesTreasury();
@@ -331,7 +329,6 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         uint256 disputeDepositRate = taxManager.disputeDepositRate();
         uint256 baseDivisor = taxManager.taxBaseDivisor();
 
-        // NOTE: will transfer 0 if depositRate is 0, will not revert
         uint256 deposit = ((paymentAmount * disputeDepositRate) / baseDivisor);
 
         address seekerHandler = nexus.getHandler(seekerId);
@@ -380,9 +377,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
             uint256 deposit = ((payment * disputeDepositRate) / baseDivisor);
 
             // both pay half of the dispute deposit 
-            // uint256 seekerPayment = (payment * ((baseDivisor + (disputeDepositRate / 2)) + ((100 - solverShare) * baseDivisor) / 100)) / baseDivisor;
             uint256 seekerPayment = ((payment * (baseDivisor - solverShare)) / baseDivisor) + ((deposit * 5000) / baseDivisor);
-            // uint256 solverPayment = (payment * ((baseDivisor - (disputeDepositRate / 2)) + (solverShare  * baseDivisor) / 100)) / baseDivisor;
             uint256 solverPayment = ((payment * solverShare) / baseDivisor) - ((deposit * 5000) / baseDivisor);
 
             // Sends to seeker
@@ -433,9 +428,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
             uint256 deposit = ((payment * disputeDepositRate) / baseDivisor);
 
-            // uint256 seekerPayment = (payment * ((baseDivisor + (disputeDepositRate / 2)) + ((100 - solverShare) * baseDivisor) / 100)) / baseDivisor;
             uint256 seekerPayment = ((payment * (baseDivisor - solverShare)) / baseDivisor) + ((deposit * 5000) / baseDivisor);
-            // uint256 rewardValue = (payment * ((baseDivisor - (disputeDepositRate / 2)) + (solverShare  * baseDivisor) / 100)) / baseDivisor;
             uint256 solverPayment = ((payment * solverShare) / baseDivisor) - ((deposit * 5000) / baseDivisor);
             
             // Sends to seeker
@@ -522,7 +515,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
             }
         }
 
-        // Pay out the Refferal rewards
+        // Pay out the Referral rewards
         for (uint8 i = 0; i < 4; ++i) {
             uint256 reward = rewards[i];
             rewards[i] = 0;

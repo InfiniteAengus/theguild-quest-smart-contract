@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.17;
+pragma solidity 0.8.20;
 
 import "./interfaces/IProfileNFT.sol";
 import "./interfaces/Quests/IQuest.sol";
@@ -63,7 +63,7 @@ contract Tavern is ITavern, Pausable {
      * @param infoURI Link to the info a bout quest (flexible, decide with backend)
      */
     function createNewQuest(
-        // user identificators
+        // user identifiers
         uint32 _seekerId,
         uint32 _solverId,
         uint256 _paymentAmount,
@@ -100,11 +100,10 @@ contract Tavern is ITavern, Pausable {
      * @param _solverId Nft id of the solver of the quest
      * @param _paymentAmount Amount of Native tokens to be paid
      * @param infoURI Link to the info a bout quest (flexible, decide with backend)
-     * @param _token Address of the paymant token
+     * @param _token Address of the payment token
      */
-    // NOTE: should check and only use supported ERC20 tokens~
     function createNewQuest(
-        // user identificators
+        // user identifiers
         uint32 _seekerId,
         uint32 _solverId,
         uint256 _paymentAmount,

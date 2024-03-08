@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.17;
+pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -27,7 +27,7 @@ contract ReferralHandlerERC6551Account is
     IERC6551Executable,
     IReferralHandler
 {
-    uint256 private _state; // NOTE: Not really used for anything, should be used to track the account's state
+    uint256 private _state;
 
     receive() external payable {}
     
@@ -43,7 +43,7 @@ contract ReferralHandlerERC6551Account is
 
     bool public initialized;
     bool private canLevel;
-    // Default tier is 1 instead of 0, since solidity 0 can also mean non-existant, all tiers in contract are real tiers 
+    // Default tier is 1 instead of 0, since solidity 0 can also mean non-existent, all tiers in contract are real tiers 
     uint8 private tier; // 0 to 5 ( 6 in total ); 0 tier - banned 
     address public referredBy; // maybe changed to referredBy address
     uint256 public mintTime;
@@ -57,7 +57,6 @@ contract ReferralHandlerERC6551Account is
 
     INexus public nexus;
 
-    // todo: bad practice of repeated tiers storing, expensive tier updates
     // Mapping of the above Handler list and their corresponding NFT tiers
     mapping(address => uint8) public firstLevelTiers;
     mapping(address => uint8) public secondLevelTiers;
@@ -88,7 +87,7 @@ contract ReferralHandlerERC6551Account is
         initialized = true;
         referredBy = _referredBy;
         mintTime = block.timestamp;
-        tier = 1; // Default tier is 1 instead of 0, since solidity 0 can also mean non-existant
+        tier = 1; // Default tier is 1 instead of 0, since solidity 0 can also mean non-existent
         canLevel = true;
     }
 
@@ -185,7 +184,7 @@ contract ReferralHandlerERC6551Account is
     }
 
     function updateReferralTree(uint8 refDepth) external {
-        // msg.sender should be the handler reffered by this address
+        // msg.sender should be the handler referred by this address
         require(refDepth <= 4 && refDepth >= 1, "Invalid depth");
         require(msg.sender != address(0), "Invalid referred address");
 
@@ -194,25 +193,25 @@ contract ReferralHandlerERC6551Account is
         if (refDepth == 1) {
             require(
                 firstLevelTiers[msg.sender] != 0,
-                "Cannot update non-existant entry"
+                "Cannot update non-existent entry"
             );
             firstLevelTiers[msg.sender] = _tier;
         } else if (refDepth == 2) {
             require(
                 secondLevelTiers[msg.sender] != 0,
-                "Cannot update non-existant entry"
+                "Cannot update non-existent entry"
             );
             secondLevelTiers[msg.sender] = _tier;
         } else if (refDepth == 3) {
             require(
                 thirdLevelTiers[msg.sender] != 0,
-                "Cannot update non-existant entry"
+                "Cannot update non-existent entry"
             );
             thirdLevelTiers[msg.sender] = _tier;
         } else if (refDepth == 4) {
             require(
                 fourthLevelTiers[msg.sender] != 0,
-                "Cannot update non-existant entry"
+                "Cannot update non-existent entry"
             );
             fourthLevelTiers[msg.sender] = _tier;
         }
@@ -272,7 +271,6 @@ contract ReferralHandlerERC6551Account is
      * @notice Returns number of referrals for each tier
      * @return Returns array of counts for Tiers 1 to 5 under the user
      */
-    // @audit - can be DOS'ed by having a large number of referrals
     function getTierCounts() public view returns (uint32[5] memory) {
         uint32[5] memory tierCounts; // Tiers can be 0 to 5, here we account only tiers 1 to 5 
         for (uint32 i = 0; i < firstLevelRefs.length; ++i) {

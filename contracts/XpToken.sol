@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.17;
-
+pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
@@ -13,7 +12,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev Transfers enabled only from owner address
  */
 contract GuildXp is ERC20, Ownable, ERC20Permit{
-    constructor(address owner) ERC20("GuildXp", "XP") Ownable(owner) ERC20Permit("GuildXp"){}
+    constructor(address _owner) ERC20("GuildXp", "XP") Ownable(_owner) ERC20Permit("GuildXp"){}
     
     // set decimals to 2
     function decimals() public view virtual override returns (uint8) {

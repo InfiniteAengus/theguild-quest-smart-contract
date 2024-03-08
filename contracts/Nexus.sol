@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.17;
+pragma solidity 0.8.20;
 
 import "./interfaces/IProfileNFT.sol";
 import "./interfaces/IReferralHandler.sol";
@@ -73,7 +73,7 @@ contract Nexus is INexus {
     ) {
         master = msg.sender;
         accountImplementation = _accountImplementation;
-        Registry = IERC6551Registry(_registry);  // NOTE functions to updatye registry required
+        Registry = IERC6551Registry(_registry);
     }
 
     function getHandler(uint32 tokenID) external view returns (address) {
