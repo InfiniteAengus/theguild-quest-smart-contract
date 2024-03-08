@@ -14,7 +14,7 @@ import "./interfaces/IRewarder.sol";
 /**
  * @title Rewarder contract
  * @author @cosmodude
- * @notice Controls the referral and quest reward proccess
+ * @notice Controls the referral and quest reward process
  * @dev Processes native and ERC20 tokens 
  */
 contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
@@ -102,7 +102,6 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
     function _handleRewardNative(uint32 _solverId, uint256 _amount) private {
         address escrow = msg.sender;
 
-        // griefer can send dust values of paymentAmount and make solver unable to claim
         require(escrow.balance == 0, "Escrow not empty");
 
         ITaxManager taxManager = getTaxManager();
@@ -110,7 +109,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
         uint256 rewardValue;
         // in case, want to process less than msg.value 
-        if(_amount > 1) { // for gas optimisation (0 comparison is more expensive)
+        if(_amount > 1) { // for gas optimization (0 comparison is more expensive)
             
             require(
                 _amount <= msg.value, 
@@ -516,7 +515,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
             }
         }
 
-        // Pay out the Refferal rewards
+        // Pay out the Referral rewards
         for (uint8 i = 0; i < 4; ++i) {
             uint256 reward = rewards[i];
             rewards[i] = 0;

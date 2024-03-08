@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev Transfers enabled only from owner address
  */
 contract GuildXp is ERC20, Ownable, ERC20Permit{
-    constructor(address owner) ERC20("GuildXp", "XP") Ownable(owner) ERC20Permit("GuildXp"){}
+    constructor(address _owner) ERC20("GuildXp", "XP") Ownable(_owner) ERC20Permit("GuildXp"){}
     
     // set decimals to 2
     function decimals() public view virtual override returns (uint8) {

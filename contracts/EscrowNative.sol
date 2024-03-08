@@ -37,7 +37,7 @@ contract EscrowNative is IEscrow {
         uint256 _paymentAmount
     ) external payable {   
         require(!initialized, "Already Initialized");
-        require(_token == address(0), "EscrowNative: Token address shouod be 0");
+        require(_token == address(0), "EscrowNative: Token address should be 0");
         
         initialized = true;
         quest = IQuest(msg.sender);

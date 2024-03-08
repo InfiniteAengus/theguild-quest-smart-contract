@@ -8,8 +8,8 @@ import "./interfaces/ITaxManager.sol";
 /**
  * @title Tax Manager contract
  * @author @cosmodude
- * @notice Holds tax rates and pool addreses 
- * @dev Readonly contract; functions devided by pool and rate relation
+ * @notice Holds tax rates and pool addresses 
+ * @dev Readonly contract; functions divided by pool and rate relation
  */
 contract TaxManager is ITaxManager {
     using SafeERC20 for IERC20;
@@ -32,7 +32,7 @@ contract TaxManager is ITaxManager {
     // attention here
     uint256 public constant taxBaseDivisor = 10000;
 
-    mapping(uint8 => ReferralTaxRates) referralRatesByTier; // tier to refferal rates by refDepth
+    mapping(uint8 => ReferralTaxRates) referralRatesByTier; // tier to referral rates by refDepth
 
     modifier onlyCustodian() {
         // Change this to a list with ROLE library
@@ -91,7 +91,7 @@ contract TaxManager is ITaxManager {
         platformRevenuePool = _platformRevenuePool;
     }
 
-    function setreferralTaxTreasury(address _referralTaxTreasury) external onlyCustodian {
+    function setReferralTaxTreasury(address _referralTaxTreasury) external onlyCustodian {
         require(_referralTaxTreasury != address(0), "Zero address");
         referralTaxTreasury = _referralTaxTreasury;
     }

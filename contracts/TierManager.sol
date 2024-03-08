@@ -45,7 +45,6 @@ contract TierManager is ITierManager {
         xpToken = token;
     }
 
-    // @audit - Should probably be set during the constructor as well
     function setConditions(
         uint8 tier,
         uint256 xpPoints,
