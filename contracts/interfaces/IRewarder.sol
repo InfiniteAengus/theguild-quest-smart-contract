@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity 0.8.19;
 
 interface IRewarder {
     function handleRewardNative(uint32 solverId, uint256 amount) external payable;

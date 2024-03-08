@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
 import "./interfaces/IProfileNFT.sol";
 import "./interfaces/IReferralHandler.sol";
