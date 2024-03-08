@@ -26,12 +26,19 @@ Referral was referred by referrer.
 
 ### Admins for contracts
 Contract/AdminName
+
 Nexus/Master+Guardian
+
 ProfileNFT/Counselor
+
 Rewarder/Steward
+
 TaxManager/Custodian
+
 TierManager/Magistrate
+
 XpToken/Owner
+
 Tavern/Owner+Barkeeper
 
 
