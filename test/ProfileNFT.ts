@@ -53,7 +53,7 @@ describe("ProfileNFT", function () {
             expect(await profileNFT.nexus()).to.equal(
                 await accounts[0].getAddress()
             );
-            expect(await profileNFT.councelor()).to.equal(
+            expect(await profileNFT.counselor()).to.equal(
                 await accounts[0].getAddress()
             );
 
@@ -154,16 +154,16 @@ describe("ProfileNFT", function () {
             await expect(
                 profileNFT_
                     .connect(accounts_[1])
-                    .setCouncelor(await accounts_[1].getAddress())
-            ).to.be.revertedWith("only Councelor");
+                    .setCounselor(await accounts_[1].getAddress())
+            ).to.be.revertedWith("only Counselor");
         });
 
         it("Councelor should be able to change the counselor address", async function () {
             await profileNFT_
                 .connect(accounts_[0])
-                .setCouncelor(await accounts_[1].getAddress());
+                .setCounselor(await accounts_[1].getAddress());
 
-            expect(await profileNFT_.councelor()).to.equal(
+            expect(await profileNFT_.counselor()).to.equal(
                 await accounts_[1].getAddress()
             );
         });
@@ -173,7 +173,7 @@ describe("ProfileNFT", function () {
                 profileNFT_
                     .connect(accounts_[2])
                     .setNexus(await accounts_[2].getAddress())
-            ).to.be.revertedWith("only Councelor");
+            ).to.be.revertedWith("only Counselor");
         });
 
         it("Councelor should be able to change the nexus address", async function () {
@@ -198,7 +198,7 @@ describe("ProfileNFT", function () {
                         mockToken_.target,
                         await accounts_[0].getAddress()
                     )
-            ).to.be.revertedWith("only Councelor");
+            ).to.be.revertedWith("only Counselor");
         });
 
         it("Councelor should be able to recover Native tokens from the contract", async function () {
@@ -276,7 +276,7 @@ describe("ProfileNFT", function () {
 
             await profileNFT_
                 .connect(accounts_[1])
-                .setCouncelor(mockFailReceiver.target);
+                .setCounselor(mockFailReceiver.target);
 
             await expect(
                 mockFailReceiver.targetRecoverTokens(profileNFT_.target)
@@ -293,7 +293,7 @@ describe("ProfileNFT", function () {
             );
 
             expect(await profileNFT.nexus()).to.equal(nexus.target);
-            expect(await profileNFT.councelor()).to.equal(
+            expect(await profileNFT.counselor()).to.equal(
                 await accounts[0].getAddress()
             );
 

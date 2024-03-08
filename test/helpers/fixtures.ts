@@ -304,7 +304,7 @@ export async function fixture_rewarder_unit_tests(accounts: Signer[]) {
 
     await taxManager.setPlatformTreasuryPool(await accounts[6].getAddress());
     await taxManager.setPlatformRevenuePool(await accounts[7].getAddress());
-    await taxManager.setreferralTaxTreasury(await accounts[8].getAddress());
+    await taxManager.setReferralTaxTreasury(await accounts[8].getAddress());
     await taxManager.setDisputeFeesTreasury(await accounts[9].getAddress());
 
     await nexus.setNFT(nft.target);
@@ -331,3 +331,5 @@ export async function fixture_rewarder_integration_tests(accounts: Signer[]) {
 
     return { rewarder, nexus, accounts, taxManager };
 }
+
+async function full_integration_fixture(accounts: Signer[]) {}
