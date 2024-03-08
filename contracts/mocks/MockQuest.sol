@@ -23,7 +23,7 @@ contract MockQuest is IQuest {
     bool public initialized;
     bool public started;
 
-    address public escrowImplmentation; // native or with token
+    address public escrowImplementation; // native or with token
     uint32 public seekerId;
     uint32 public solverId;
     address public token;
@@ -57,7 +57,7 @@ contract MockQuest is IQuest {
         initialized = true;
 
         token = _token;
-        escrowImplmentation = _escrowImplementation;
+        escrowImplementation = _escrowImplementation;
 
         seekerId = _seekerNftId;
         solverId = _solverNftId;
@@ -74,7 +74,7 @@ contract MockQuest is IQuest {
         require(!started, "already started");
 
         started = true;
-        escrow = Clones.clone(escrowImplmentation);
+        escrow = Clones.clone(escrowImplementation);
 
         if(token == address(0)){
             IEscrow(escrow).initialize{value: msg.value}(

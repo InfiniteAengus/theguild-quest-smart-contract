@@ -14,7 +14,7 @@ import "./interfaces/ITierManager.sol";
 contract TierManager is ITierManager {
     using SafeERC20 for IERC20;
 
-    struct TierParamaters {
+    struct TierParameters {
         uint256 xpPoints;
         uint256 novicesReferred;
         uint256 adeptsReferred;
@@ -24,7 +24,7 @@ contract TierManager is ITierManager {
 
     address public magistrate;
     address public xpToken;
-    mapping(uint256 => TierParamaters) public tierUpConditions;
+    mapping(uint256 => TierParameters) public tierUpConditions;
     mapping(uint256 => uint256) public transferLimits;
 
     modifier onlyMagistrate() {
@@ -73,7 +73,6 @@ contract TierManager is ITierManager {
         uint8 tier
     ) internal view returns (bool) {
 
-        // NOTE: Crucial that these values are set after deployment, or users would be able to upgrade without meeting the requirements
         require(
             tierUpConditions[tier].xpPoints != 0,
             "Tier conditions not set"

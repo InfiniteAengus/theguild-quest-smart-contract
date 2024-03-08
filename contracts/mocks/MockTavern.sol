@@ -13,7 +13,6 @@ import { ITavern } from "../interfaces/Quests/ITavern.sol";
  * @notice Deploys Quest Contracts and manages them
  * @author @cosmodude
  */
-// NOTE: the access control library isnt actually used, local access control is used instead
 contract MockTavern is ITavern {
     using SafeERC20 for IERC20;
     
@@ -63,7 +62,7 @@ contract MockTavern is ITavern {
     }
 
     function createNewQuest(
-        // user identificators
+        // user identifiers
         uint32 _seekerId,
         uint32 _solverId,
         uint256 _paymentAmount,
@@ -87,7 +86,7 @@ contract MockTavern is ITavern {
     }
 
     function createNewQuest(
-        // user identificators
+        // user identifiers
         uint32 _seekerId,
         uint32 _solverId,
         uint256 _paymentAmount,

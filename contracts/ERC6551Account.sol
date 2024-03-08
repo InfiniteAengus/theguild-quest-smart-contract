@@ -27,7 +27,7 @@ contract ReferralHandlerERC6551Account is
     IERC6551Executable,
     IReferralHandler
 {
-    uint256 private _state; // NOTE: Not really used for anything, should be used to track the account's state
+    uint256 private _state;
 
     receive() external payable {}
     
@@ -57,7 +57,6 @@ contract ReferralHandlerERC6551Account is
 
     INexus public nexus;
 
-    // todo: bad practice of repeated tiers storing, expensive tier updates
     // Mapping of the above Handler list and their corresponding NFT tiers
     mapping(address => uint8) public firstLevelTiers;
     mapping(address => uint8) public secondLevelTiers;
