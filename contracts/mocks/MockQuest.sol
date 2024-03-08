@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GNU AGPLv3
-pragma solidity ^0.8.0;
+pragma solidity 0.8.20;
 
 import { IEscrow } from "../interfaces/Quests/IEscrow.sol";
 import { IRewarder } from "../interfaces/IRewarder.sol";
@@ -96,7 +96,6 @@ contract MockQuest is IQuest {
         }
     }
 
-    // todo
     function startDispute() external payable {
     }
 

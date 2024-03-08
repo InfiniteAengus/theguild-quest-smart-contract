@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GNU AGPLv3
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 import "./interfaces/IReferralHandler.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
