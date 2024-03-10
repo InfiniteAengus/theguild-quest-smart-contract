@@ -100,8 +100,7 @@ contract Quest is IQuest {
         } else {
             (uint256 platformTax, uint256 referralTax) = IRewarder(getRewarder()).calculateSeekerTax(paymentAmount);
 
-            IERC20(token).transferFrom(msg.sender, address(this), paymentAmount + platformTax + referralTax);
-            IERC20(token).transferFrom(address(this), escrow, paymentAmount + platformTax + referralTax);
+            IERC20(token).transferFrom(msg.sender, escrow, paymentAmount + platformTax + referralTax);
             IEscrow(escrow).initialize(
                 token, 
                 seekerId,
