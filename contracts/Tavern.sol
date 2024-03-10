@@ -80,8 +80,7 @@ contract Tavern is ITavern, Pausable {
             _solverId, 
             address(quest), 
             escrowImpl, 
-            _paymentAmount, 
-            taxManager
+            _paymentAmount
         );
 
         quest.initialize(
@@ -109,7 +108,7 @@ contract Tavern is ITavern, Pausable {
         uint256 _paymentAmount,
         string memory infoURI,
         address _token
-    ) external payable onlyBarkeeper {
+    ) external onlyBarkeeper {
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowTokenImplementation;
         address taxManager = INexus(nexus).taxManager();
@@ -122,8 +121,7 @@ contract Tavern is ITavern, Pausable {
             address(quest), 
             escrowImpl, 
             _paymentAmount, 
-            _token, 
-            taxManager
+            _token
         );
 
         quest.initialize(

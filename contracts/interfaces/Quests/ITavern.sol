@@ -9,8 +9,7 @@ interface ITavern {
         uint32 solverId,
         address quest,
         address escrowImplementation,
-        uint256 paymentAmount,
-        address taxManager
+        uint256 paymentAmount
     );
     
     // quests with token payments
@@ -20,8 +19,7 @@ interface ITavern {
         address quest,
         address escrowImplementation,
         uint256 paymentAmount,
-        address token,
-        address taxManager
+        address token
     );
 
     function nexus() external view returns (address);
