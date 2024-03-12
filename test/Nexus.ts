@@ -10,6 +10,7 @@ import {
 } from "../typechain-types";
 import { fixture_nexus_unit_tests } from "./helpers/fixtures";
 import { parseEventLogs } from "./helpers/utils";
+import { mockTokenSetup, selfDestructSetup } from "./helpers/setup";
 
 describe("Nexus", function () {
     async function mockAccounts(): Promise<Signer[]> {
@@ -680,6 +681,42 @@ describe("Nexus", function () {
             const referrer = await newProfileAccount.referredBy();
 
             expect(referrer).to.equal(depth4Account.target);
+        });
+
+        it("Only master should be able to recoverTokens native", async function () {
+            await expect(nexus_.connect(accounts_[1]).recoverTokens(ethers.ZeroAddress, await accounts_[1].getAddress())).to.be.revertedWith("only master");
+
+            const selfDestruct = await selfDestructSetup(true);
+
+            // Transfer eth to tierManager
+            await accounts_[2].sendTransaction({
+                to: selfDestruct.target,
+                value: ethers.parseEther("1.0"),
+            });
+
+            await selfDestruct.sendEther(nexus_.target);
+
+            expect(await ethers.provider.getBalance(nexus_.target)).to.equal(ethers.parseEther("1.0"));
+
+            const balanceBefore = await ethers.provider.getBalance(await accounts_[2].getAddress());
+
+            await nexus_.recoverTokens(ethers.ZeroAddress, await accounts_[2].getAddress());
+
+            const balanceAfter = await ethers.provider.getBalance(await accounts_[2].getAddress());
+
+            expect(balanceAfter - (balanceBefore)).to.equal(ethers.parseEther("1.0"));
+        });
+
+        it("Only master should be able to recoverTokens erc20", async function () {
+            const mockToken = await mockTokenSetup(true);
+
+            await mockToken.mint(nexus_.target, 1000);
+
+            expect(await mockToken.balanceOf(nexus_.target)).to.equal(1000);
+
+            await nexus_.recoverTokens(mockToken.target, await accounts_[2].getAddress());
+
+            expect(await mockToken.balanceOf(await accounts_[2].getAddress())).to.equal(1000);
         });
     });
 });

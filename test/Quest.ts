@@ -284,10 +284,10 @@ describe("Quest", function () {
             ).to.be.revertedWith("only Seeker");
         });
 
-        it.skip("Should not be able to solve dispute unless dispute has been started", async function () {
+        it("Should not be able to solve dispute unless dispute has been started also since mediator has not been set", async function () {
             await expect(
                 nativeQuestInstance.connect(accounts_[2]).resolveDispute(50)
-            ).to.be.revertedWith("Dispute not started");
+            ).to.be.revertedWith("only mediator");
         });
 
         it("Seeker should be able to start dispute", async function () {
@@ -460,6 +460,6 @@ describe("Quest", function () {
         });
     });
 
-    // Dependencies contracts aren't quite done yet
-    describe("Integration Tests", function () {});
+
+    describe("Integration Tests", function () { });
 });
