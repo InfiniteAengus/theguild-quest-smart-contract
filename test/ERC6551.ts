@@ -20,8 +20,10 @@ import {
     fixture_6551,
     fixture_6551_integration_tests,
     fixture_6551_unit_tests,
+    full_integration_fixture,
 } from "./helpers/fixtures";
 import { parseEventLogs } from "./helpers/utils";
+import { deployMockExecute, deployMockExecuteEth } from "./helpers/setup";
 
 // TODO: Replace current impl to parseEventLogs() helper function
 describe("ERC6551", function () {
@@ -39,7 +41,7 @@ describe("ERC6551", function () {
 
     async function fixture_integration_tests() {
         const accounts = await mockAccounts();
-        return await fixture_6551_integration_tests(accounts);
+        return await full_integration_fixture(accounts);
     }
 
     // Unit tests to test the ERC6551 Specific Core Requirements
@@ -317,19 +319,22 @@ describe("ERC6551", function () {
                 nftId_: string;
 
             it("Should be able to create an account through the Nexus", async function () {
-                const { nexus, accounts, profileNFT, erc6551 } =
-                    await loadFixture(fixture_integration_tests);
+                const { contracts, accounts } = await loadFixture(
+                    fixture_integration_tests
+                );
 
                 // Should not have an nft before hand
                 expect(
-                    await profileNFT.balanceOf(await accounts[1].getAddress())
+                    await contracts.profileNFT.balanceOf(
+                        await accounts.seeker.getAddress()
+                    )
                 ).to.equal(0);
 
                 // Create a new profile and account
-                const handlerAddress = await nexus.createProfile(
+                const handlerAddress = await contracts.nexus.createProfile(
                     0,
-                    await accounts[1].getAddress(),
-                    "ProfileLinkAsTokenURI"
+                    await accounts.seeker.getAddress(),
+                    "SeekerNFT"
                 );
 
                 const receipt =
@@ -340,7 +345,7 @@ describe("ERC6551", function () {
                 // Get profile NewProfileIssuance event
                 const profileLogs = receipt.logs.find(
                     (log) =>
-                        nexus.interface.parseLog(log as any)?.name ===
+                        contracts.nexus.interface.parseLog(log as any)?.name ===
                         "NewProfileIssuance"
                 ) as EventLog;
 
@@ -349,8 +354,8 @@ describe("ERC6551", function () {
                 // Get nft Transfer event
                 const nftLogs = receipt.logs.find(
                     (log) =>
-                        profileNFT.interface.parseLog(log as any)?.name ===
-                        "Transfer"
+                        contracts.profileNFT.interface.parseLog(log as any)
+                            ?.name === "Transfer"
                 ) as EventLog;
 
                 expect(nftLogs).to.be.ok;
@@ -362,11 +367,13 @@ describe("ERC6551", function () {
 
                 // User should now have a nft
                 expect(
-                    await profileNFT.balanceOf(await accounts[1].getAddress())
+                    await contracts.profileNFT.balanceOf(
+                        await accounts.seeker.getAddress()
+                    )
                 ).to.equal(1);
 
                 // Creates new account instance with the address emitted from the event
-                const addressInstance = erc6551.account.attach(
+                const addressInstance = contracts.erc6551.account.attach(
                     profileLogArgs[1]
                 ) as ReferralHandlerERC6551Account;
 
@@ -375,7 +382,7 @@ describe("ERC6551", function () {
                     .be.true;
 
                 // Parse nft event log as a LogDescription type
-                const nftParsedLogs = profileNFT.interface.parseLog(
+                const nftParsedLogs = contracts.profileNFT.interface.parseLog(
                     nftLogs as any
                 );
 
@@ -383,13 +390,15 @@ describe("ERC6551", function () {
                 const nftLogArgs = (nftParsedLogs as any).args;
 
                 // Nft should be transferred to the user
-                expect(nftLogArgs[1]).to.equal(await accounts[1].getAddress());
+                expect(nftLogArgs[1]).to.equal(
+                    await accounts.seeker.getAddress()
+                );
 
                 // Token id should be 1
                 expect(nftLogArgs[2]).to.equal("1");
 
-                erc6551_ = erc6551;
-                profileNFT_ = profileNFT;
+                erc6551_ = contracts.erc6551;
+                profileNFT_ = contracts.profileNFT;
 
                 nftId_ = nftLogArgs[2];
                 created6551Account_ = addressInstance;
@@ -410,7 +419,11 @@ describe("ERC6551", function () {
 
         describe("Account", function () {
             let nexus_: Nexus,
-                accounts_: Signer[],
+                accounts_: {
+                    owner: Signer;
+                    seeker: Signer;
+                    solver: Signer;
+                },
                 erc6551_: ERC6551Setup,
                 createdAccount_: ReferralHandlerERC6551Account,
                 createdAccount2_: ReferralHandlerERC6551Account,
@@ -419,20 +432,17 @@ describe("ERC6551", function () {
                 xpToken_: GuildXp;
 
             it("Should be able to get the correct token details for Profile NFT", async function () {
-                const {
-                    nexus,
-                    accounts,
-                    profileNFT,
-                    erc6551,
-                    managers,
-                    mockExecutes,
-                    xpToken,
-                } = await loadFixture(fixture_integration_tests);
+                const { contracts, accounts } = await loadFixture(
+                    fixture_integration_tests
+                );
+
+                const mockExecute = await deployMockExecute(true);
+                const mockExecuteEth = await deployMockExecuteEth(true);
 
                 // Create a new profile and account
-                const handlerAddress = await nexus.createProfile(
+                const handlerAddress = await contracts.nexus.createProfile(
                     0,
-                    await accounts[1].getAddress(),
+                    await accounts.seeker.getAddress(),
                     "ProfileLinkAsTokenURI1"
                 );
 
@@ -444,7 +454,7 @@ describe("ERC6551", function () {
                 // Get profile NewProfileIssuance event
                 const profileLogs = receipt.logs.find(
                     (log) =>
-                        nexus.interface.parseLog(log as any)?.name ===
+                        contracts.nexus.interface.parseLog(log as any)?.name ===
                         "NewProfileIssuance"
                 ) as EventLog;
 
@@ -456,7 +466,7 @@ describe("ERC6551", function () {
                 ).args;
 
                 // Create new account instance with the address emitted from the event
-                const accountInstance = erc6551.account.attach(
+                const accountInstance = contracts.erc6551.account.attach(
                     profileLogArgs[1]
                 ) as ReferralHandlerERC6551Account;
 
@@ -475,28 +485,32 @@ describe("ERC6551", function () {
 
                 expect(tokenDetails).to.deep.equal({
                     chainId: 43112,
-                    tokenContract: profileNFT.target,
+                    tokenContract: contracts.profileNFT.target,
                     tokenId: 1,
                 });
 
                 // NFT address and token ID can also be retrieved with view functions
                 const nftAddress = await accountInstance.getNft();
 
-                expect(nftAddress).to.equal(profileNFT.target);
+                expect(nftAddress).to.equal(contracts.profileNFT.target);
 
                 const tokenId = await accountInstance.getNftId();
 
                 expect(tokenId).to.equal(1);
 
-                nexus_ = nexus;
+                nexus_ = contracts.nexus;
                 accounts_ = accounts;
-                erc6551_ = erc6551;
-                managers_ = managers;
-                xpToken_ = xpToken;
-
+                erc6551_ = contracts.erc6551;
+                managers_ = {
+                    tierManager: contracts.tierManager,
+                    taxManager: contracts.taxManager,
+                };
+                xpToken_ = contracts.xpToken;
+                mockExecutes_ = {
+                    mockExecute: mockExecute,
+                    mockExecuteEth: mockExecuteEth,
+                };
                 createdAccount_ = accountInstance;
-
-                mockExecutes_ = mockExecutes;
             });
 
             it("Should not be able to call initialize once the account is created", async function () {
@@ -508,12 +522,12 @@ describe("ERC6551", function () {
             it("Owner of the account should be the valid signer", async function () {
                 const owner = await createdAccount_.owner();
 
-                expect(owner).to.equal(await accounts_[1].getAddress());
+                expect(owner).to.equal(await accounts_.seeker.getAddress());
             });
 
             it("Owner of the NFT should be the valid signer", async function () {
                 const validSigner = await createdAccount_.isValidSigner(
-                    await accounts_[1].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "0x"
                 );
 
@@ -523,7 +537,7 @@ describe("ERC6551", function () {
 
             it("Other users should not be valid signers", async function () {
                 const invalidSigner = await createdAccount_.isValidSigner(
-                    await accounts_[0].getAddress(),
+                    await accounts_.solver.getAddress(),
                     "0x"
                 );
 
@@ -533,7 +547,7 @@ describe("ERC6551", function () {
 
             it("Should be able to provide a valid signature as the owner", async function () {
                 const messageHash = ethers.hashMessage("Hello world!");
-                const signature = await accounts_[1].signMessage(
+                const signature = await accounts_.seeker.signMessage(
                     "Hello world!"
                 );
 
@@ -548,7 +562,7 @@ describe("ERC6551", function () {
 
             it("Should not be able to provide a valid signature as a non-owner", async function () {
                 const messageHash = ethers.hashMessage("Hello world!");
-                const signature = await accounts_[0].signMessage(
+                const signature = await accounts_.solver.signMessage(
                     "Hello world!"
                 );
 
@@ -568,13 +582,13 @@ describe("ERC6551", function () {
             });
 
             it("Should be able to execute a simple transfer to a contract as an account", async function () {
-                await accounts_[1].sendTransaction({
+                await accounts_.seeker.sendTransaction({
                     to: createdAccount_.target,
                     value: 10000,
                 });
 
                 await createdAccount_
-                    .connect(accounts_[1])
+                    .connect(accounts_.seeker)
                     .execute(
                         mockExecutes_.mockExecuteEth.target,
                         10000,
@@ -590,14 +604,14 @@ describe("ERC6551", function () {
             });
 
             it("Invalid signer should not be able to use the execute function", async function () {
-                await accounts_[0].sendTransaction({
+                await accounts_.solver.sendTransaction({
                     to: createdAccount_.target,
                     value: 10000,
                 });
 
                 await expect(
                     createdAccount_
-                        .connect(accounts_[0])
+                        .connect(accounts_.solver)
                         .execute(
                             mockExecutes_.mockExecuteEth.target,
                             10000,
@@ -622,7 +636,7 @@ describe("ERC6551", function () {
             it("Tier counts should be at 0 since there are no referrals to this account", async function () {
                 const tierCounts = await createdAccount_.getTierCounts();
 
-                // Should have no refferals at any tier levels
+                // Should have no referrals at any tier levels
                 expect(tierCounts).to.deep.equal([0n, 0n, 0n, 0n, 0n]);
             });
 
@@ -651,7 +665,7 @@ describe("ERC6551", function () {
             it("Only master should be able to change the eligibility for a level up", async function () {
                 await expect(
                     createdAccount_
-                        .connect(accounts_[1])
+                        .connect(accounts_.seeker)
                         .changeEligibility(true)
                 ).to.be.revertedWith("only master");
             });
@@ -667,7 +681,7 @@ describe("ERC6551", function () {
             it("Create another account with the first account as the referrer", async function () {
                 const handlerAddress = await nexus_.createProfile(
                     1,
-                    await accounts_[2].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkAsTokenURI2"
                 );
 
@@ -698,7 +712,7 @@ describe("ERC6551", function () {
                 createdAccount2_ = accountInstance;
             });
 
-            it("RefferedBy should return the address of the first account", async function () {
+            it("ReferredBy should return the address of the first account", async function () {
                 const referrer = await createdAccount2_.referredBy();
 
                 expect(referrer).to.equal(createdAccount_.target);
@@ -707,10 +721,10 @@ describe("ERC6551", function () {
             it("Created account 1 should return 1 tier count for the first tier because it referred Account 2", async function () {
                 const tierCounts = await createdAccount_.getTierCounts();
 
-                expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
+                expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
             });
 
-            it("Account 1 should still not be able to tier up since it doesn't have higher depth of refferals", async function () {
+            it("Account 1 should still not be able to tier up since it doesn't have higher depth of referrals", async function () {
                 await createdAccount_.changeEligibility(true);
 
                 await expect(createdAccount_.tierUp()).to.be.revertedWith(
@@ -723,25 +737,25 @@ describe("ERC6551", function () {
                 createdAccount5_: ReferralHandlerERC6551Account,
                 createdAccount6_: ReferralHandlerERC6551Account;
 
-            it("Create more accounts to increase Account 1's refferals", async function () {
+            it("Create more accounts to increase Account 1's referrals", async function () {
                 await nexus_.createProfile(
                     2,
-                    await accounts_[3].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkAsTokenURI3"
                 );
                 await nexus_.createProfile(
                     3,
-                    await accounts_[4].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkAsTokenURI4"
                 );
                 await nexus_.createProfile(
                     4,
-                    await accounts_[5].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkAsTokenURI5"
                 );
                 await nexus_.createProfile(
                     5,
-                    await accounts_[6].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkAsTokenURI6"
                 );
 
@@ -785,15 +799,15 @@ describe("ERC6551", function () {
                 const tierCounts6 = await createdAccount6.getTierCounts();
 
                 // The 1st created account will only have 4 referrals with 1 tier value, wont increase beyond this because only up to 4 depth is taken into account
-                expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
+                expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
                 // The 2nd created account will only have 4 referrals with 1 tier value
-                expect(tierCounts2).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
+                expect(tierCounts2).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
                 // The 3rd created account will only have 3 referrals with 1 tier value
-                expect(tierCounts3).to.deep.equal([0n, 3n, 0n, 0n, 0n]);
+                expect(tierCounts3).to.deep.equal([3n, 0n, 0n, 0n, 0n]);
                 // The 4th created account will only have 2 referrals with 1 tier value
-                expect(tierCounts4).to.deep.equal([0n, 2n, 0n, 0n, 0n]);
+                expect(tierCounts4).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
                 // The 5th created account will only have 1 referrals with 1 tier value
-                expect(tierCounts5).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
+                expect(tierCounts5).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
                 // The 6th created account will only have 0 referrals with 1 tier value
                 expect(tierCounts6).to.deep.equal([0n, 0n, 0n, 0n, 0n]);
             });
@@ -866,7 +880,7 @@ describe("ERC6551", function () {
                 let tierCounts = await createdAccount_.getTierCounts();
 
                 // Account 1's tier count should start with
-                expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
+                expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
 
                 const account3Data =
                     createdAccount3_.interface.encodeFunctionData(
@@ -885,39 +899,30 @@ describe("ERC6551", function () {
                     );
 
                 await createdAccount3_
-                    .connect(accounts_[3])
+                    .connect(accounts_.seeker)
                     .execute(createdAccount_.target, 0, account3Data, 0);
 
                 await createdAccount4_
-                    .connect(accounts_[4])
+                    .connect(accounts_.seeker)
                     .execute(createdAccount_.target, 0, account4Data, 0);
 
                 await createdAccount5_
-                    .connect(accounts_[5])
+                    .connect(accounts_.seeker)
                     .execute(createdAccount_.target, 0, account5Data, 0);
 
                 tierCounts = await createdAccount_.getTierCounts();
 
                 // Account 1's tier count should not be updated
-                expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
+                expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
             });
 
-            it.skip("Should not be able to update a non-existent referral tree entry", async function () {
+            it("Should not be able to update a non-existent referral tree entry", async function () {
+                // Will revert if the caller is an EOA
                 await expect(
-                    createdAccount_.updateReferralTree(1)
-                ).to.be.revertedWith("Cannot update non-existant entry");
-
-                await expect(
-                    createdAccount_.updateReferralTree(2)
-                ).to.be.revertedWith("Cannot update non-existant entry");
-
-                await expect(
-                    createdAccount_.updateReferralTree(3)
-                ).to.be.revertedWith("Cannot update non-existant entry");
-
-                await expect(
-                    createdAccount_.updateReferralTree(4)
-                ).to.be.revertedWith("Cannot update non-existant entry");
+                    createdAccount_
+                        .connect(accounts_.seeker)
+                        .updateReferralTree(1)
+                ).to.be.reverted;
             });
 
             it("checkReferralExistence tier level for the accounts should not be updated and remain at correct tier", async function () {
@@ -970,7 +975,7 @@ describe("ERC6551", function () {
 
             it("Only the protocol should be able to set the tier", async function () {
                 await expect(
-                    createdAccount5_.connect(accounts_[1]).setTier(10)
+                    createdAccount5_.connect(accounts_.seeker).setTier(10)
                 ).to.be.revertedWith("only master or nexus");
             });
 
@@ -978,7 +983,7 @@ describe("ERC6551", function () {
                 let tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's original tier counts should all be level 1
-                expect(tierCount).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
+                expect(tierCount).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
 
                 // Should not be able to set a tier out of range
                 await expect(createdAccount5_.setTier(10)).to.be.revertedWith(
@@ -990,7 +995,7 @@ describe("ERC6551", function () {
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's tier counts should be updated to reflect the change
-                expect(tierCount).to.deep.equal([0n, 3n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([3n, 0n, 1n, 0n, 0n]);
 
                 // Only account 5's tier should be updated
                 const tier = await createdAccount5_.getTier();
@@ -1003,91 +1008,122 @@ describe("ERC6551", function () {
                 let tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's original tier counts should all be tier 1 but 1, which is the tier 3 fir account 5
-                expect(tierCount).to.deep.equal([0n, 3n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([3n, 0n, 1n, 0n, 0n]);
 
                 await createdAccount_.setTier(2);
 
                 tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's tier should not have any changes
-                expect(tierCount).to.deep.equal([0n, 3n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([3n, 0n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's original tier counts should all be tier 1 but 1, which is the tier 3 for account 5
-                expect(tierCount).to.deep.equal([0n, 3n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([3n, 0n, 1n, 0n, 0n]);
 
                 await createdAccount2_.setTier(2);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's should not have any changes
-                expect(tierCount).to.deep.equal([0n, 3n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([3n, 0n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's should have a change at level 2
-                expect(tierCount).to.deep.equal([0n, 2n, 1n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([2n, 1n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount3_.getTierCounts();
 
-                // Account 3's original tier counts should all be tier 1 but 1, which is the tier 3 fior account 5
-                expect(tierCount).to.deep.equal([0n, 2n, 0n, 1n, 0n]);
+                // Account 3's original tier counts should all be tier 1 but 1, which is the tier 3 for account 5
+                expect(tierCount).to.deep.equal([2n, 0n, 1n, 0n, 0n]);
 
                 await createdAccount3_.setTier(2);
 
                 tierCount = await createdAccount3_.getTierCounts();
 
                 // Account 3's should not have any changes
-                expect(tierCount).to.deep.equal([0n, 2n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([2n, 0n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's should have a change at level 2
-                expect(tierCount).to.deep.equal([0n, 1n, 2n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([1n, 2n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's should have a change at level 3
-                expect(tierCount).to.deep.equal([0n, 2n, 1n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([2n, 1n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount4_.getTierCounts();
 
                 // Account 4's original tier counts should be at level 1 but 1, which is the tier 3 for account 5
-                expect(tierCount).to.deep.equal([0n, 1n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([1n, 0n, 1n, 0n, 0n]);
 
                 await createdAccount4_.setTier(2);
 
                 tierCount = await createdAccount4_.getTierCounts();
 
                 // Account 4's should not have any changes
-                expect(tierCount).to.deep.equal([0n, 1n, 0n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([1n, 0n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount_.getTierCounts();
 
                 // Account 1's should have a change at level 3
-                expect(tierCount).to.deep.equal([0n, 0n, 3n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([0n, 3n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount2_.getTierCounts();
 
                 // Account 2's should have a change at level 3
-                expect(tierCount).to.deep.equal([0n, 1n, 2n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([1n, 2n, 1n, 0n, 0n]);
 
                 tierCount = await createdAccount3_.getTierCounts();
 
                 // Account 3's should have a change at level 3
-                expect(tierCount).to.deep.equal([0n, 1n, 1n, 1n, 0n]);
+                expect(tierCount).to.deep.equal([1n, 1n, 1n, 0n, 0n]);
+            });
+
+            it("Should be able to tier up an account after it meets the requirements", async function () {
+                // Revert createdAccount tier back to 1
+                await createdAccount_.setTier(1);
+
+                await nexus_.createProfile(
+                    1,
+                    await accounts_.seeker.getAddress(),
+                    "ProfileLinkAsTokenURI7"
+                );
+
+                const account7 = await nexus_.getHandler(7);
+
+                const createdAccount7 = erc6551_.account.attach(
+                    account7
+                ) as ReferralHandlerERC6551Account;
+
+                // Set referral tree for account 1 at all tier levels to meet the requirements to tier up
+                await createdAccount2_.setTier(1);
+                await createdAccount3_.setTier(2);
+                await createdAccount4_.setTier(3);
+                await createdAccount5_.setTier(4);
+                await createdAccount7.setTier(5);
+
+                await createdAccount_.tierUp();
+
+                const tierLevel = await createdAccount_.getTier();
+
+                // Account 1's tier level should be updated
+                expect(tierLevel).to.equal(2);
             });
 
             it("Only the master should be able to set the nexus contract address", async function () {
                 await expect(
                     createdAccount2_
-                        .connect(accounts_[4])
+                        .connect(accounts_.seeker)
                         .setNexus(ethers.ZeroAddress)
                 ).to.be.revertedWith("only master");
 
                 await createdAccount2_
-                    .connect(accounts_[0])
+                    .connect(accounts_.owner)
                     .setNexus(ethers.ZeroAddress);
 
                 expect(await createdAccount2_.nexus()).to.equal(

@@ -64,7 +64,7 @@ contract TierManager is ITierManager {
      * @notice Check if user is valid for the tier upgrade
      * @param tierCounts Number of referrals of each tier, referred by this person
      * @param account User account(referral handler)
-     * @param tier Desired tier to be upgraded to 
+     * @param tier Desired tier to be upgraded to
      * @dev If it returns true, means user has the requirement for the tier sent as parameter
      */
     function validateUserTier(
@@ -72,36 +72,40 @@ contract TierManager is ITierManager {
         address account,
         uint8 tier
     ) internal view returns (bool) {
-
         require(
             tierUpConditions[tier].xpPoints != 0,
             "Tier conditions not set"
         );
 
         uint64 totalTierCounts;
-        for(uint8 i = 0; i < 5; i++ ){
+        for (uint8 i = 0; i < 5; i++) {
             totalTierCounts += tierCounts[i];
         }
 
-        if (totalTierCounts  < tierUpConditions[tier].novicesReferred)
-            { return false; }
+        if (totalTierCounts < tierUpConditions[tier].novicesReferred) {
+            return false;
+        }
         totalTierCounts -= tierCounts[0];
 
-        if (totalTierCounts < tierUpConditions[tier].adeptsReferred) 
-            { return false; }
+        if (totalTierCounts < tierUpConditions[tier].adeptsReferred) {
+            return false;
+        }
         totalTierCounts -= tierCounts[1];
-        if (totalTierCounts < tierUpConditions[tier].mastersReferred)
-            { return false; }
+
+        if (totalTierCounts < tierUpConditions[tier].mastersReferred) {
+            return false;
+        }
         totalTierCounts -= tierCounts[2];
-        if (totalTierCounts < tierUpConditions[tier].godsReferred) 
-            { return false; }
+
+        if (totalTierCounts < tierUpConditions[tier].godsReferred) {
+            return false;
+        }
         totalTierCounts -= tierCounts[3];
-        if (totalTierCounts < tierUpConditions[tier].godsReferred) 
-            { return false; }
 
         IERC20 xp = IERC20(xpToken);
         if (xp.balanceOf(account) < tierUpConditions[tier].xpPoints)
             return false;
+
         return true;
     }
 
@@ -109,7 +113,7 @@ contract TierManager is ITierManager {
         uint32[5] memory tierCounts,
         address account,
         uint8 tier
-    ) external override view returns (bool) {
+    ) external view override returns (bool) {
         uint8 newTier = tier + 1;
         return validateUserTier(tierCounts, account, newTier); // If it returns true it means user is eligible for an upgrade in tier
     }
