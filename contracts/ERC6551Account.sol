@@ -94,7 +94,11 @@ contract ReferralHandlerERC6551Account is
      * @dev Can be called by anyone
      */
     function tierUp() external returns (bool) {
-        require(getTier() < 5 && canLevel, "Can't increase the tier");
+        // An account with tier 0 (Banned) can't tier up
+        require(
+            getTier() < 5 && getTier() > 0 && canLevel,
+            "Can't increase the tier"
+        );
         require(
             getTierManager().checkTierUpgrade(
                 getTierCounts(),
@@ -282,9 +286,8 @@ contract ReferralHandlerERC6551Account is
             if (_tier == 0) {
                 continue;
             }
-            if (tier != 0) {
-                tierCounts[_tier - 1]++;
-            }
+
+            tierCounts[_tier - 1]++;
         }
         for (uint32 i = 0; i < secondLevelRefs.length; ++i) {
             address referral = secondLevelRefs[i];
@@ -294,9 +297,8 @@ contract ReferralHandlerERC6551Account is
             if (_tier == 0) {
                 continue;
             }
-            if (tier != 0) {
-                tierCounts[_tier - 1]++;
-            }
+
+            tierCounts[_tier - 1]++;
         }
         for (uint32 i = 0; i < thirdLevelRefs.length; ++i) {
             address referral = thirdLevelRefs[i];
@@ -306,9 +308,8 @@ contract ReferralHandlerERC6551Account is
             if (_tier == 0) {
                 continue;
             }
-            if (tier != 0) {
-                tierCounts[_tier - 1]++;
-            }
+
+            tierCounts[_tier - 1]++;
         }
         for (uint32 i = 0; i < fourthLevelRefs.length; ++i) {
             address referral = fourthLevelRefs[i];
@@ -318,9 +319,8 @@ contract ReferralHandlerERC6551Account is
             if (_tier == 0) {
                 continue;
             }
-            if (tier != 0) {
-                tierCounts[_tier - 1]++;
-            }
+
+            tierCounts[_tier - 1]++;
         }
 
         return tierCounts;
