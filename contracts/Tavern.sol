@@ -154,7 +154,6 @@ contract Tavern is ITavern, Pausable {
         nft = IProfileNFT(_nft);
     }
 
-    // CON-01 was fixed 
     function setQuestImplementation(address impl) external onlyOwner {
         questImplementation = impl;
     }
