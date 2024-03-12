@@ -34,7 +34,7 @@ describe("ProfileNFT", function () {
         return await fixture_profile_nft_unit_tests(accounts);
     }
 
-    async function fixture_intergration_tests() {
+    async function fixture_integration_tests() {
         const accounts = await mockAccounts();
         return await fixture_profile_nft_integration_tests(accounts);
     }
@@ -150,7 +150,7 @@ describe("ProfileNFT", function () {
             expect(balance).to.equal(1n);
         });
 
-        it("Only Councelor should be able to change the councelor address", async function () {
+        it("Only counselor should be able to change the counselor address", async function () {
             await expect(
                 profileNFT_
                     .connect(accounts_[1])
@@ -158,7 +158,7 @@ describe("ProfileNFT", function () {
             ).to.be.revertedWith("only Counselor");
         });
 
-        it("Councelor should be able to change the counselor address", async function () {
+        it("counselor should be able to change the counselor address", async function () {
             await profileNFT_
                 .connect(accounts_[0])
                 .setCounselor(await accounts_[1].getAddress());
@@ -168,7 +168,7 @@ describe("ProfileNFT", function () {
             );
         });
 
-        it("Only Councelor should be able to change the nexus address", async function () {
+        it("Only counselor should be able to change the nexus address", async function () {
             await expect(
                 profileNFT_
                     .connect(accounts_[2])
@@ -176,7 +176,7 @@ describe("ProfileNFT", function () {
             ).to.be.revertedWith("only Counselor");
         });
 
-        it("Councelor should be able to change the nexus address", async function () {
+        it("counselor should be able to change the nexus address", async function () {
             await profileNFT_
                 .connect(accounts_[1])
                 .setNexus(await accounts_[2].getAddress());
@@ -188,7 +188,7 @@ describe("ProfileNFT", function () {
 
         let mockToken_: MockToken;
 
-        it("Should not be able to recover tokens if the caller is not the councelor", async function () {
+        it("Should not be able to recover tokens if the caller is not the counselor", async function () {
             mockToken_ = await mockTokenSetup(true);
 
             await expect(
@@ -201,7 +201,7 @@ describe("ProfileNFT", function () {
             ).to.be.revertedWith("only Counselor");
         });
 
-        it("Councelor should be able to recover Native tokens from the contract", async function () {
+        it("counselor should be able to recover Native tokens from the contract", async function () {
             // Self destruct method to simulate force sending native tokens to the contract
             const selfDestruct = await selfDestructSetup(true);
 
@@ -289,7 +289,7 @@ describe("ProfileNFT", function () {
 
         it("Should be deployed correctly", async function () {
             const { accounts, profileNFT, nexus } = await loadFixture(
-                fixture_intergration_tests
+                fixture_integration_tests
             );
 
             expect(await profileNFT.nexus()).to.equal(nexus.target);
@@ -372,7 +372,7 @@ describe("ProfileNFT", function () {
             // Tier counts should be 0 for tier 1
             const tierCountsBefore = await profileCreated.getTierCounts();
 
-            expect(tierCountsBefore).to.deep.equal([0n, 0n, 0n, 0n, 0n]);
+            expect(tierCountsBefore).to.deep.equal([0n, 0n, 0n, 0n, 0n, 0n]);
 
             await nexus_.createProfile(
                 1,
@@ -400,7 +400,7 @@ describe("ProfileNFT", function () {
 
             const tierCountsAfter = await profileCreated.getTierCounts();
 
-            expect(tierCountsAfter).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
+            expect(tierCountsAfter).to.deep.equal([0n, 4n, 0n, 0n, 0n, 0n]);
         });
     });
 });

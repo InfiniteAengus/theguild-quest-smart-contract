@@ -22,7 +22,7 @@ import {
 } from "./helpers/fixtures";
 import { parseEventLogs } from "./helpers/utils";
 
-describe.skip("Tavern", function () {
+describe("Tavern", function () {
     async function mockAccounts(): Promise<Signer[]> {
         const [owner, user1, user2, user3, user4, user5, user6] =
             await ethers.getSigners();
@@ -70,7 +70,7 @@ describe.skip("Tavern", function () {
 
             // TaxManager setup
             await nexus.setTaxManager(taxManager.target);
-            await taxManager.setPlatformTaxReceiver(
+            await taxManager.setPlatformRevenuePool(
                 await accounts[0].getAddress()
             );
 
