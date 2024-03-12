@@ -95,7 +95,7 @@ contract ReferralHandlerERC6551Account is
      * @dev Can be called by anyone
      */
     function tierUp() external returns (bool) {
-        require(getTier() < 4 && canLevel, "Can't increase the tier");
+        require(getTier() < 5 && canLevel, "Can't increase the tier");
         require(
             getTierManager().checkTierUpgrade(getTierCounts(), address(this), tier),
             "Tier upgrade condition not met"
@@ -271,8 +271,8 @@ contract ReferralHandlerERC6551Account is
      * @notice Returns number of referrals for each tier
      * @return Returns array of counts for Tiers 1 to 5 under the user
      */
-    function getTierCounts() public view returns (uint32[5] memory) {
-        uint32[5] memory tierCounts; // Tiers can be 0 to 5, here we account only tiers 1 to 5 
+    function getTierCounts() public view returns (uint32[6] memory) {
+        uint32[6] memory tierCounts; // Tiers can be 0 to 5, here we account only tiers 1 to 5 
         for (uint32 i = 0; i < firstLevelRefs.length; ++i) {
             address referral = firstLevelRefs[i];
             uint8 _tier = firstLevelTiers[referral];

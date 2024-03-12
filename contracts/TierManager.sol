@@ -68,7 +68,7 @@ contract TierManager is ITierManager {
      * @dev If it returns true, means user has the requirement for the tier sent as parameter
      */
     function validateUserTier(
-        uint32[5] memory tierCounts,
+        uint32[6] memory tierCounts,
         address account,
         uint8 tier
     ) internal view returns (bool) {
@@ -79,25 +79,25 @@ contract TierManager is ITierManager {
         );
 
         uint64 totalTierCounts;
-        for(uint8 i = 0; i < 5; i++ ){
+        for(uint8 i = 1; i <= 5; i++ ){
             totalTierCounts += tierCounts[i];
         }
 
         if (totalTierCounts  < tierUpConditions[tier].novicesReferred)
             { return false; }
-        totalTierCounts -= tierCounts[0];
+        totalTierCounts -= tierCounts[1];
 
         if (totalTierCounts < tierUpConditions[tier].adeptsReferred) 
             { return false; }
-        totalTierCounts -= tierCounts[1];
+        totalTierCounts -= tierCounts[2];
+
         if (totalTierCounts < tierUpConditions[tier].mastersReferred)
             { return false; }
-        totalTierCounts -= tierCounts[2];
-        if (totalTierCounts < tierUpConditions[tier].godsReferred) 
-            { return false; }
         totalTierCounts -= tierCounts[3];
+
         if (totalTierCounts < tierUpConditions[tier].godsReferred) 
             { return false; }
+        totalTierCounts -= tierCounts[4];
 
         IERC20 xp = IERC20(xpToken);
         if (xp.balanceOf(account) < tierUpConditions[tier].xpPoints)
@@ -106,7 +106,7 @@ contract TierManager is ITierManager {
     }
 
     function checkTierUpgrade(
-        uint32[5] memory tierCounts,
+        uint32[6] memory tierCounts,
         address account,
         uint8 tier
     ) external override view returns (bool) {
