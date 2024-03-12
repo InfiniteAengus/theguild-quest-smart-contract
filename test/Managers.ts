@@ -274,7 +274,7 @@ describe("Managers", function () {
 
         it("Should be able to validate a user's tier", async function () {
             // Should be able to validate a user's tier
-            let tierCounts = [0n, 0n, 0n, 0n, 0n, 0n];
+            let tierCounts = [0n, 0n, 0n, 0n, 0n];
 
             // Invalid check tier upgrade
             const value = await tierManager.checkTierUpgrade(tierCounts, await accounts_.seeker.getAddress(), 1);
@@ -285,7 +285,7 @@ describe("Managers", function () {
             // Mints xp tokens to the user
             await xpToken.mint(await accounts_.seeker.getAddress(), 1);
 
-            tierCounts = [0n, 1n, 1n, 1n, 1n, 1n];
+            tierCounts = [1n, 1n, 1n, 1n, 1n];
 
             // Valid check tier upgrade
             const value2 = await tierManager.checkTierUpgrade(tierCounts, await accounts_.seeker.getAddress(), 1);

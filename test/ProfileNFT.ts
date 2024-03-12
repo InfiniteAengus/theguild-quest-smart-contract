@@ -372,7 +372,7 @@ describe("ProfileNFT", function () {
             // Tier counts should be 0 for tier 1
             const tierCountsBefore = await profileCreated.getTierCounts();
 
-            expect(tierCountsBefore).to.deep.equal([0n, 0n, 0n, 0n, 0n, 0n]);
+            expect(tierCountsBefore).to.deep.equal([0n, 0n, 0n, 0n, 0n]);
 
             await nexus_.createProfile(
                 1,
@@ -400,7 +400,7 @@ describe("ProfileNFT", function () {
 
             const tierCountsAfter = await profileCreated.getTierCounts();
 
-            expect(tierCountsAfter).to.deep.equal([0n, 4n, 0n, 0n, 0n, 0n]);
+            expect(tierCountsAfter).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
         });
     });
 });
