@@ -10,6 +10,7 @@ import {
 } from "../typechain-types";
 import { fixture_nexus_unit_tests } from "./helpers/fixtures";
 import { parseEventLogs } from "./helpers/utils";
+import { mockTokenSetup, selfDestructSetup } from "./helpers/setup";
 
 describe("Nexus", function () {
     async function mockAccounts(): Promise<Signer[]> {
@@ -184,6 +185,27 @@ describe("Nexus", function () {
             expect(await nexus_.tierManager()).to.equal(
                 await accounts_[1].getAddress()
             );
+        });
+
+        it("Only master should be able to setRegistry", async function () {
+            const registry = await nexus_.Registry();
+
+            await expect(
+                nexus_
+                    .connect(accounts_[0])
+                    .setRegistry(await accounts_[1].getAddress())
+            ).to.be.revertedWith("only master");
+
+            await nexus_
+                .connect(accounts_[1])
+                .setRegistry(await accounts_[1].getAddress());
+
+            expect(await nexus_.Registry()).to.equal(
+                await accounts_[1].getAddress()
+            );
+
+            // Change back the registry
+            await nexus_.connect(accounts_[1]).setRegistry(registry);
         });
 
         it("Only master should be able to view the guardian", async function () {
@@ -412,7 +434,7 @@ describe("Nexus", function () {
 
             const tierCounts = await referredAccount.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
 
             const newProfileAccount = erc6551_.account.attach(
                 newProfileIssuance.handlerAddress
@@ -459,12 +481,12 @@ describe("Nexus", function () {
 
             let tierCounts = await referredAccount.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 2n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
 
             // 1st Depth Referrer
             tierCounts = await depth1Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
 
             const newProfileAccount = erc6551_.account.attach(
                 newProfileIssuance.handlerAddress
@@ -511,17 +533,17 @@ describe("Nexus", function () {
 
             let tierCounts = await referredAccount.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 3n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([3n, 0n, 0n, 0n, 0n]);
 
             // 2nd Depth Referrer
             tierCounts = await depth1Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 2n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
 
             // 1st Depth Referrer
             tierCounts = await depth2Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
 
             const newProfileAccount = erc6551_.account.attach(
                 newProfileIssuance.handlerAddress
@@ -568,22 +590,22 @@ describe("Nexus", function () {
 
             let tierCounts = await referredAccount.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
 
             // 3rd Depth Referrer
             tierCounts = await depth1Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 3n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([3n, 0n, 0n, 0n, 0n]);
 
             // 2nd Depth Referrer
             tierCounts = await depth2Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 2n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
 
             // 1st Depth Referrer
             tierCounts = await depth3Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
 
             const newProfileAccount = erc6551_.account.attach(
                 newProfileIssuance.handlerAddress
@@ -630,27 +652,27 @@ describe("Nexus", function () {
 
             let tierCounts = await referredAccount.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
 
             // 4rd Depth Referrer
             tierCounts = await depth1Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 4n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([4n, 0n, 0n, 0n, 0n]);
 
             // 3nd Depth Referrer
             tierCounts = await depth2Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 3n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([3n, 0n, 0n, 0n, 0n]);
 
             // 2st Depth Referrer
             tierCounts = await depth3Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 2n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([2n, 0n, 0n, 0n, 0n]);
 
             // 1st Depth Referrer
             tierCounts = await depth4Account.getTierCounts();
 
-            expect(tierCounts).to.deep.equal([0n, 1n, 0n, 0n, 0n]);
+            expect(tierCounts).to.deep.equal([1n, 0n, 0n, 0n, 0n]);
 
             const newProfileAccount = erc6551_.account.attach(
                 newProfileIssuance.handlerAddress
@@ -659,6 +681,42 @@ describe("Nexus", function () {
             const referrer = await newProfileAccount.referredBy();
 
             expect(referrer).to.equal(depth4Account.target);
+        });
+
+        it("Only master should be able to recoverTokens native", async function () {
+            await expect(nexus_.connect(accounts_[1]).recoverTokens(ethers.ZeroAddress, await accounts_[1].getAddress())).to.be.revertedWith("only master");
+
+            const selfDestruct = await selfDestructSetup(true);
+
+            // Transfer eth to tierManager
+            await accounts_[2].sendTransaction({
+                to: selfDestruct.target,
+                value: ethers.parseEther("1.0"),
+            });
+
+            await selfDestruct.sendEther(nexus_.target);
+
+            expect(await ethers.provider.getBalance(nexus_.target)).to.equal(ethers.parseEther("1.0"));
+
+            const balanceBefore = await ethers.provider.getBalance(await accounts_[2].getAddress());
+
+            await nexus_.recoverTokens(ethers.ZeroAddress, await accounts_[2].getAddress());
+
+            const balanceAfter = await ethers.provider.getBalance(await accounts_[2].getAddress());
+
+            expect(balanceAfter - (balanceBefore)).to.equal(ethers.parseEther("1.0"));
+        });
+
+        it("Only master should be able to recoverTokens erc20", async function () {
+            const mockToken = await mockTokenSetup(true);
+
+            await mockToken.mint(nexus_.target, 1000);
+
+            expect(await mockToken.balanceOf(nexus_.target)).to.equal(1000);
+
+            await nexus_.recoverTokens(mockToken.target, await accounts_[2].getAddress());
+
+            expect(await mockToken.balanceOf(await accounts_[2].getAddress())).to.equal(1000);
         });
     });
 });

@@ -3,7 +3,7 @@ import {
     EscrowNative,
     ReferralHandlerERC6551Account,
 } from "../../typechain-types";
-import { ERC6551Setup, Nexus6551 } from "./types";
+import { ERC6551Setup, Nexus6551, SeekerTax, SolverTax } from "./types";
 import {
     deployMockExecutes,
     erc6551Setup,
@@ -332,4 +332,122 @@ export async function fixture_rewarder_integration_tests(accounts: Signer[]) {
     return { rewarder, nexus, accounts, taxManager };
 }
 
-async function full_integration_fixture(accounts: Signer[]) {}
+// Default seeker and solver tax values
+let seekerTax: SeekerTax = {
+        referralRewards: 100n,
+        platformRevenue: 200n,
+    },
+    solverTax: SolverTax = {
+        referralRewards: 200n,
+        platformRevenue: 700n,
+        platformTreasury: 100n,
+    },
+    disputeTax = 1000n;
+
+export async function full_integration_fixture(accounts: Signer[]) {
+    const owner = accounts[0];
+    const seeker = accounts[1];
+    const solver = accounts[2];
+    const platformTreasury = accounts[3];
+    const platformRevenue = accounts[4];
+    const taxTreasury = accounts[5];
+    const disputeTreasury = accounts[6];
+
+    const { nexus, erc6551 } = await nexusSetup(true);
+
+    const rewarder = await rewarderSetup(true, nexus, owner);
+
+    const profileNFT = await profileNFTSetup(nexus, true);
+
+    const escrowNativeImplementation = await escrowNativeSetup(true);
+    const escrowTokenImplementation = await escrowTokenSetup(true);
+
+    const questImplementation = await questSetup(true);
+
+    const tavern = await tavernSetup(
+        questImplementation,
+        escrowNativeImplementation,
+        escrowTokenImplementation,
+        profileNFT,
+        nexus,
+        true
+    );
+
+    const xpToken = await xpSetup(true, owner);
+
+    const { tierManager, taxManager } = await managersSetup(true, xpToken);
+
+    // Nexus setup
+    {
+        await nexus.setGuardian(await owner.getAddress());
+        await nexus.setRewarder(rewarder.target);
+        await nexus.setNFT(profileNFT.target);
+        await nexus.setTaxManager(taxManager.target);
+        await nexus.setTierManager(tierManager.target);
+    }
+
+    // Tavern setup
+    {
+        await tavern.setBarkeeper(await owner.getAddress());
+        await tavern.setMediator(await owner.getAddress());
+    }
+
+    // Tax manager address and fees setup
+    {
+        await nexus.setTaxManager(taxManager.target);
+        await taxManager.setPlatformTreasuryPool(
+            await platformTreasury.getAddress()
+        );
+        await taxManager.setPlatformRevenuePool(
+            await platformRevenue.getAddress()
+        );
+        await taxManager.setReferralTaxTreasury(await taxTreasury.getAddress());
+        await taxManager.setDisputeFeesTreasury(
+            await disputeTreasury.getAddress()
+        );
+
+        await taxManager.setSeekerFees(
+            seekerTax.referralRewards,
+            seekerTax.platformRevenue
+        );
+
+        await taxManager.setSolverFees(
+            solverTax.referralRewards,
+            solverTax.platformRevenue,
+            solverTax.platformTreasury
+        );
+
+        await taxManager.setDisputeDepositRate(disputeTax);
+    }
+
+    // Tier manager setup
+    {
+        // Low values for easy testing
+        await tierManager.setConditions(1, 1, 1, 1, 1, 1);
+        await tierManager.setConditions(2, 1, 1, 1, 1, 1);
+        await tierManager.setConditions(3, 1, 1, 1, 1, 1);
+        await tierManager.setConditions(4, 1, 1, 1, 1, 1);
+        await tierManager.setConditions(5, 1, 1, 1, 1, 1);
+    }
+
+    return {
+        accounts: {
+            owner,
+            seeker,
+            solver,
+        },
+        contracts: {
+            nexus,
+            erc6551,
+            rewarder,
+            profileNFT,
+            escrowNativeImplementation,
+            escrowTokenImplementation,
+            questImplementation,
+            tavern,
+            xpToken,
+            tierManager,
+            taxManager,
+        },
+    };
+}

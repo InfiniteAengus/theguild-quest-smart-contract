@@ -15,7 +15,7 @@ import "./interfaces/ITaxManager.sol";
 import "./interfaces/INexus.sol";
 
 /**
- * @title The Guild User Account 
+ * @title The Guild User Account
  * @author @cosmodude
  * @notice Erc6551 Account + Referral Handler
  * @dev Implementation contract, instances are created as clones
@@ -30,7 +30,7 @@ contract ReferralHandlerERC6551Account is
     uint256 private _state;
 
     receive() external payable {}
-    
+
     //
     //
     // Handler part
@@ -43,8 +43,8 @@ contract ReferralHandlerERC6551Account is
 
     bool public initialized;
     bool private canLevel;
-    // Default tier is 1 instead of 0, since solidity 0 can also mean non-existent, all tiers in contract are real tiers 
-    uint8 private tier; // 0 to 5 ( 6 in total ); 0 tier - banned 
+    // Default tier is 1 instead of 0, since solidity 0 can also mean non-existent, all tiers in contract are real tiers
+    uint8 private tier; // 0 to 5 ( 6 in total ); 0 tier - banned
     address public referredBy; // maybe changed to referredBy address
     uint256 public mintTime;
 
@@ -53,7 +53,6 @@ contract ReferralHandlerERC6551Account is
     address[] public secondLevelRefs;
     address[] public thirdLevelRefs;
     address[] public fourthLevelRefs;
-
 
     INexus public nexus;
 
@@ -95,16 +94,24 @@ contract ReferralHandlerERC6551Account is
      * @dev Can be called by anyone
      */
     function tierUp() external returns (bool) {
-        require(getTier() < 4 && canLevel, "Can't increase the tier");
+        // An account with tier 0 (Banned) can't tier up
         require(
-            getTierManager().checkTierUpgrade(getTierCounts(), address(this), tier),
+            getTier() < 5 && getTier() > 0 && canLevel,
+            "Can't increase the tier"
+        );
+        require(
+            getTierManager().checkTierUpgrade(
+                getTierCounts(),
+                address(this),
+                tier
+            ),
             "Tier upgrade condition not met"
         );
         uint8 oldTier = getTier();
         tier = tier + 1;
         nexus.notifyTierUpdate(oldTier, getTier());
         updateReferrersAbove();
-        
+
         return true;
     }
 
@@ -117,12 +124,12 @@ contract ReferralHandlerERC6551Account is
     }
 
     /**
-     * Update the user tier 
+     * Update the user tier
      * @param _tier New tier to be set for user (from 0 to 5)
      */
     function setTier(uint8 _tier) public onlyProtocol {
         require(_tier >= 0 && _tier <= 5, "Invalid Tier");
-        uint8 oldTier = getTier(); 
+        uint8 oldTier = getTier();
         tier = _tier;
         nexus.notifyTierUpdate(oldTier, getTier());
         updateReferrersAbove();
@@ -146,9 +153,7 @@ contract ReferralHandlerERC6551Account is
                     IReferralHandler(thirdRef).updateReferralTree(3);
                     address fourthRef = IReferralHandler(thirdRef).referredBy();
                     if (fourthRef != address(0))
-                        IReferralHandler(fourthRef).updateReferralTree(
-                            4
-                        );
+                        IReferralHandler(fourthRef).updateReferralTree(4);
                 }
             }
         }
@@ -272,38 +277,54 @@ contract ReferralHandlerERC6551Account is
      * @return Returns array of counts for Tiers 1 to 5 under the user
      */
     function getTierCounts() public view returns (uint32[5] memory) {
-        uint32[5] memory tierCounts; // Tiers can be 0 to 5, here we account only tiers 1 to 5 
+        uint32[5] memory tierCounts; // Tiers can be 0 to 5, here we account only tiers 1 to 5
         for (uint32 i = 0; i < firstLevelRefs.length; ++i) {
             address referral = firstLevelRefs[i];
             uint8 _tier = firstLevelTiers[referral];
-            if(tier!=0){
-                tierCounts[_tier]++;
+
+            // If tier is 0, which is blacklisted, then we just skip it
+            if (_tier == 0) {
+                continue;
             }
+
+            tierCounts[_tier - 1]++;
         }
         for (uint32 i = 0; i < secondLevelRefs.length; ++i) {
             address referral = secondLevelRefs[i];
-            uint8 _tier = secondLevelTiers[referral] ;
-            if(tier!=0){
-                tierCounts[_tier]++;
+            uint8 _tier = secondLevelTiers[referral];
+
+            // If tier is 0, which is blacklisted, then we just skip it
+            if (_tier == 0) {
+                continue;
             }
+
+            tierCounts[_tier - 1]++;
         }
         for (uint32 i = 0; i < thirdLevelRefs.length; ++i) {
             address referral = thirdLevelRefs[i];
             uint8 _tier = thirdLevelTiers[referral];
-            if(tier!=0){
-                tierCounts[_tier]++;
+
+            // If tier is 0, which is blacklisted, then we just skip it
+            if (_tier == 0) {
+                continue;
             }
+
+            tierCounts[_tier - 1]++;
         }
         for (uint32 i = 0; i < fourthLevelRefs.length; ++i) {
             address referral = fourthLevelRefs[i];
             uint8 _tier = fourthLevelTiers[referral];
-            if(tier!=0){
-                tierCounts[_tier]++;
+
+            // If tier is 0, which is blacklisted, then we just skip it
+            if (_tier == 0) {
+                continue;
             }
+
+            tierCounts[_tier - 1]++;
         }
+
         return tierCounts;
     }
-
 
     //
     //
@@ -324,7 +345,7 @@ contract ReferralHandlerERC6551Account is
 
         bool success;
         (success, result) = to.call{value: value}(data);
-        
+
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
@@ -334,7 +355,6 @@ contract ReferralHandlerERC6551Account is
         return result;
     }
 
-    
     function isValidSigner(
         address signer,
         bytes calldata
@@ -377,7 +397,7 @@ contract ReferralHandlerERC6551Account is
         assembly {
             extcodecopy(address(), add(footer, 0x20), 0x4d, 0x60)
         }
-        
+
         return abi.decode(footer, (uint256, address, uint256));
     }
 
@@ -397,5 +417,4 @@ contract ReferralHandlerERC6551Account is
     }
 
     // End of Account
-
 }

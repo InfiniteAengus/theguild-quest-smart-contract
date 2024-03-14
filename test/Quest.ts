@@ -22,7 +22,7 @@ import {
 } from "./helpers/fixtures";
 import { parseEventLogs } from "./helpers/utils";
 
-describe.skip("Quest", function () {
+describe("Quest", function () {
     async function mockAccounts(): Promise<Signer[]> {
         const [owner, user1, user2, user3, user4, user5, user6] =
             await ethers.getSigners();
@@ -68,17 +68,11 @@ describe.skip("Quest", function () {
 
             // Tax manager setup
             await nexus.setTaxManager(taxManager.target);
-            await taxManager.setreferralTaxReceiver(
-                await accounts[0].getAddress()
-            );
-            await taxManager.setPlatformTaxReceiver(
-                await accounts[0].getAddress()
-            );
 
-            await taxManager.setPlatformTaxReceiver(
+            await taxManager.setPlatformRevenuePool(
                 await accounts[4].getAddress()
             );
-            await taxManager.setreferralTaxReceiver(
+            await taxManager.setReferralTaxTreasury(
                 await accounts[4].getAddress()
             );
 
@@ -290,10 +284,10 @@ describe.skip("Quest", function () {
             ).to.be.revertedWith("only Seeker");
         });
 
-        it.skip("Should not be able to solve dispute unless dispute has been started", async function () {
+        it("Should not be able to solve dispute unless dispute has been started also since mediator has not been set", async function () {
             await expect(
                 nativeQuestInstance.connect(accounts_[2]).resolveDispute(50)
-            ).to.be.revertedWith("Dispute not started");
+            ).to.be.revertedWith("only mediator");
         });
 
         it("Seeker should be able to start dispute", async function () {
@@ -364,8 +358,8 @@ describe.skip("Quest", function () {
 
         it("Solver share for resolving dispute cant be more than 100", async function () {
             await expect(
-                nativeQuestInstance.connect(accounts_[2]).resolveDispute(101)
-            ).to.be.revertedWith("Share can't be more than 100");
+                nativeQuestInstance.connect(accounts_[2]).resolveDispute(10001)
+            ).to.be.revertedWith("Share can't be more than 10000");
         });
 
         it("Mediator should be able to resolve dispute", async function () {
@@ -466,6 +460,6 @@ describe.skip("Quest", function () {
         });
     });
 
-    // Dependencies contracts aren't quite done yet
-    describe("Integration Tests", function () {});
+
+    describe("Integration Tests", function () { });
 });
