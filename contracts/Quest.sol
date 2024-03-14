@@ -138,11 +138,10 @@ contract Quest is IQuest {
     }
 
     function finishQuest() external onlySolver {
-        // might be changed
         require(started, "quest not started");
 
         finished = true;
-        rewardTime = block.timestamp + tavern.reviewPeriod(); // arbitrary time
+        rewardTime = block.timestamp + tavern.reviewPeriod();
     }
 
     function extend() external onlySeeker {
