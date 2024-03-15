@@ -3,8 +3,6 @@ pragma solidity 0.8.20;
 
 import "./interfaces/ITaxManager.sol";
 
-import "hardhat/console.sol";
-
 library TaxCalculator {
     function _calculateSeekerTax(
         ITaxManager _taxManager,

@@ -4,16 +4,15 @@ pragma solidity 0.8.20;
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IEscrow } from "../interfaces/Quests/IEscrow.sol";
-import { IQuest } from "../interfaces/Quests/IQuest.sol";
-import { IRewarder } from "../interfaces/IRewarder.sol";
+import {IEscrow} from "../interfaces/Quests/IEscrow.sol";
+import {IQuest} from "../interfaces/Quests/IQuest.sol";
+import {IRewarder} from "../interfaces/IRewarder.sol";
 
-import "hardhat/console.sol";
 /**
  * @title Quest Escrow for Native Tokens
  * @notice Stores reward for quest
  * @author @cosmodude
- * @dev Implementation contract, instances are created as clones 
+ * @dev Implementation contract, instances are created as clones
  */
 contract MockEscrow is IEscrow {
     using SafeERC20 for IERC20;
@@ -47,14 +46,14 @@ contract MockEscrow is IEscrow {
     }
 
     function initialize(
-        address, 
+        address,
         uint32 _seekerId,
-        uint32 _solverId, 
+        uint32 _solverId,
         uint256 _paymentAmount
-    ) external payable {   
+    ) external payable {
         require(!initialized, "Already Initialized");
         require(rewarder != address(0), "Rewarder not set");
-        
+
         initialized = true;
         quest = IQuest(msg.sender);
 
@@ -65,21 +64,28 @@ contract MockEscrow is IEscrow {
     }
 
     function processPayment() external {
-        IRewarder(rewarder).handleRewardNative{value: address(this).balance }(solverId, 0);
+        IRewarder(rewarder).handleRewardNative{value: address(this).balance}(
+            solverId,
+            0
+        );
     }
 
     /**
      * @notice process the dispute start
      */
     function processStartDispute() external payable {
-        IRewarder(rewarder).handleStartDisputeNative{value: msg.value}(paymentAmount);
+        IRewarder(rewarder).handleStartDisputeNative{value: msg.value}(
+            paymentAmount
+        );
     }
 
     /**
      * @notice process the dispute resolutionForNativeTokens
      */
     function processResolution(uint32 solverShare) external {
-        IRewarder(rewarder).processResolutionNative{value: address(this).balance }(seekerId, solverId, solverShare);
+        IRewarder(rewarder).processResolutionNative{
+            value: address(this).balance
+        }(seekerId, solverId, solverShare);
     }
 
     receive() external payable {}

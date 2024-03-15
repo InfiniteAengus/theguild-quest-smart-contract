@@ -8,8 +8,6 @@ import {IEscrow} from "./interfaces/Quests/IEscrow.sol";
 import {IQuest} from "./interfaces/Quests/IQuest.sol";
 import {IRewarder} from "./interfaces/IRewarder.sol";
 
-import "hardhat/console.sol";
-
 /**
  * @title Quest Escrow for Native Tokens
  * @notice Stores reward for quest
