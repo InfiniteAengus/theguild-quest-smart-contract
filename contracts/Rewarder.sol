@@ -15,7 +15,7 @@ import "./interfaces/IRewarder.sol";
  * @title Rewarder contract
  * @author @cosmodude
  * @notice Controls the referral and quest reward process
- * @dev Processes native and ERC20 tokens 
+ * @dev Processes native and ERC20 tokens
  */
 contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -50,10 +50,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         address token
     );
 
-    event DisputeDepositPaidNative(
-        address escrow,
-        uint256 deposit
-    );
+    event DisputeDepositPaidNative(address escrow, uint256 deposit);
 
     event DisputeDepositPaidToken(
         address escrow,
@@ -85,7 +82,6 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         _unpause();
     }
 
-
     function getTaxManager() public view whenNotPaused returns (ITaxManager) {
         address taxManager = INexus(nexus).taxManager();
         return ITaxManager(taxManager);
@@ -95,7 +91,10 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
      * @dev Can be called by anyone
      * @param solverId Nft Id of the quest solver
      */
-    function handleRewardNative(uint32 solverId, uint256 amount) external payable whenNotPaused nonReentrant {
+    function handleRewardNative(
+        uint32 solverId,
+        uint256 amount
+    ) external payable whenNotPaused nonReentrant {
         _handleRewardNative(solverId, amount);
     }
 
@@ -108,20 +107,25 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         uint256 taxRateDivisor = taxManager.taxBaseDivisor();
 
         uint256 rewardValue;
-        // in case, want to process less than msg.value 
-        if(_amount > 1) { // for gas optimization (0 comparison is more expensive)
-            
+        // in case, want to process less than msg.value
+        if (_amount >= 1) {
+            // for gas optimization (0 comparison is more expensive)
+
             require(
-                _amount <= msg.value, 
+                _amount <= msg.value,
                 "handleRewardNative: amount bigger then msg.value"
             );
 
             rewardValue = _amount;
-        } else { 
+        } else {
             rewardValue = msg.value;
         }
 
-        (uint256 referralTax, uint256 platformTax, uint256 platformTreasuryTax) = calculateSolverTax(rewardValue);
+        (
+            uint256 referralTax,
+            uint256 platformTax,
+            uint256 platformTreasuryTax
+        ) = calculateSolverTax(rewardValue);
 
         uint256 totalTax = referralTax + platformTax + platformTreasuryTax;
 
@@ -142,15 +146,24 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
             // Referral tax distribution
             // Rewards referrers based on referral tax value from derived payment amount from Escrow
-            rewardReferrers(solverHandler, referralTax, taxRateDivisor, address(0));
-        
+            rewardReferrers(
+                solverHandler,
+                referralTax,
+                taxRateDivisor,
+                address(0)
+            );
+
             // Platform tax distribution
             address platformTaxReceiver = taxManager.platformRevenuePool();
             _processPayment(platformTaxReceiver, address(0), platformTax);
 
             // Platform treasury tax distribution
             address platformTreasuryReceiver = taxManager.platformTreasury();
-            _processPayment(platformTreasuryReceiver, address(0), platformTreasuryTax);
+            _processPayment(
+                platformTreasuryReceiver,
+                address(0),
+                platformTreasuryTax
+            );
         }
     }
 
@@ -164,7 +177,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         address token,
         uint32 solverId,
         uint256 amount
-    ) public whenNotPaused {        
+    ) public whenNotPaused {
         uint256 currentBalance = IERC20(token).balanceOf(address(this));
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
@@ -181,27 +194,35 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
     }
 
     function _handleRewardTokenPayout(
-        ITaxManager _taxManager, 
-        address _token, 
-        address _solverHandler, 
+        ITaxManager _taxManager,
+        address _token,
+        address _solverHandler,
         uint256 _amount
     ) internal {
         uint256 taxRateDivisor = _taxManager.taxBaseDivisor();
-        
-        (uint256 referralTax, uint256 platformTax, uint256 platformTreasuryTax) = calculateSolverTax(_amount);
+
+        (
+            uint256 referralTax,
+            uint256 platformTax,
+            uint256 platformTreasuryTax
+        ) = calculateSolverTax(_amount);
 
         uint256 totalTax = referralTax + platformTax + platformTreasuryTax;
 
         require(totalTax <= _amount, "Invalid tax");
-        
-        emit RewardTokenClaimed(_solverHandler, msg.sender, _amount - totalTax, _token);
+
+        emit RewardTokenClaimed(
+            _solverHandler,
+            msg.sender,
+            _amount - totalTax,
+            _token
+        );
 
         {
-
             // Transfers reward to solver after deducting tax amount
             _processPayment(
-                IReferralHandler(_solverHandler).owner(), 
-                _token, 
+                IReferralHandler(_solverHandler).owner(),
+                _token,
                 _amount - totalTax
             );
 
@@ -209,26 +230,42 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
             // Referral tax distribution
             // Rewards referrers based on referral tax value from derived payment amount from Escrow
-            rewardReferrers(_solverHandler, referralTax, taxRateDivisor, _token);
+            rewardReferrers(
+                _solverHandler,
+                referralTax,
+                taxRateDivisor,
+                _token
+            );
 
             // Platform tax distribution
-            _processPayment(_taxManager.platformRevenuePool(), _token, platformTax);
+            _processPayment(
+                _taxManager.platformRevenuePool(),
+                _token,
+                platformTax
+            );
 
             // Platform treasury tax distribution
-            _processPayment(_taxManager.platformTreasury(), _token, platformTreasuryTax);
+            _processPayment(
+                _taxManager.platformTreasury(),
+                _token,
+                platformTreasuryTax
+            );
         }
-    } 
-
-    function calculateSeekerTax(uint256 _paymentAmount)
-        public
-        view
-        returns (uint256 platformTax_, uint256 referralTax_)
-    {
-        ITaxManager taxManager = getTaxManager();
-        (platformTax_, referralTax_) = TaxCalculator._calculateSeekerTax(taxManager, _paymentAmount);
     }
 
-    function calculateSolverTax(uint256 _paymentAmount)
+    function calculateSeekerTax(
+        uint256 _paymentAmount
+    ) public view returns (uint256 platformTax_, uint256 referralTax_) {
+        ITaxManager taxManager = getTaxManager();
+        (platformTax_, referralTax_) = TaxCalculator._calculateSeekerTax(
+            taxManager,
+            _paymentAmount
+        );
+    }
+
+    function calculateSolverTax(
+        uint256 _paymentAmount
+    )
         public
         view
         returns (
@@ -238,16 +275,13 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         )
     {
         ITaxManager taxManager = getTaxManager();
-        (platformTax_, referralTax_, platformTreasuryTax_) = TaxCalculator._calculateSolverTax
-        (
-            taxManager,
-            _paymentAmount
-        );
+        (platformTax_, referralTax_, platformTreasuryTax_) = TaxCalculator
+            ._calculateSolverTax(taxManager, _paymentAmount);
     }
 
     function handleSeekerTaxNative(
         uint32 _seekerId,
-        uint256 _platformTax, 
+        uint256 _platformTax,
         uint256 _referralTax
     ) public payable whenNotPaused nonReentrant {
         require(
@@ -260,7 +294,11 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         uint256 taxRateDivisor = taxManager.taxBaseDivisor();
         address seekerHandler = nexus.getHandler(_seekerId);
 
-        emit SeekerTaxPaidNative(seekerHandler, msg.sender,  _platformTax + _referralTax);
+        emit SeekerTaxPaidNative(
+            seekerHandler,
+            msg.sender,
+            _platformTax + _referralTax
+        );
 
         // Seeker tax distribution //
 
@@ -270,7 +308,12 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
         // Referral tax distribution
         // Rewards referrers based on referral tax value from derived payment amount from Escrow
-        rewardReferrers(seekerHandler, _referralTax, taxRateDivisor, address(0));
+        rewardReferrers(
+            seekerHandler,
+            _referralTax,
+            taxRateDivisor,
+            address(0)
+        );
     }
 
     function handleSeekerTaxToken(
@@ -279,10 +322,13 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         uint256 _referralTax,
         address token
     ) public whenNotPaused {
-
         uint256 balanceBefore = IERC20(token).balanceOf(address(this));
 
-        IERC20(token).safeTransferFrom(msg.sender, address(this), _platformTax + _referralTax);
+        IERC20(token).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _platformTax + _referralTax
+        );
 
         uint256 balanceAfter = IERC20(token).balanceOf(address(this));
 
@@ -296,7 +342,12 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         uint256 taxRateDivisor = taxManager.taxBaseDivisor();
         address seekerHandler = nexus.getHandler(_seekerId);
 
-        emit SeekerTaxPaidToken(seekerHandler, msg.sender,  _platformTax + _referralTax, token);
+        emit SeekerTaxPaidToken(
+            seekerHandler,
+            msg.sender,
+            _platformTax + _referralTax,
+            token
+        );
         // Seeker tax distribution
 
         // Platform tax distribution
@@ -308,23 +359,32 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         rewardReferrers(seekerHandler, _referralTax, taxRateDivisor, token);
     }
 
-    function handleStartDisputeNative(uint256 paymentAmount) external payable whenNotPaused nonReentrant {
+    function handleStartDisputeNative(
+        uint256 paymentAmount
+    ) external payable whenNotPaused nonReentrant {
         ITaxManager taxManager = getTaxManager();
         uint256 disputeDepositRate = taxManager.disputeDepositRate();
         uint256 baseDivisor = taxManager.taxBaseDivisor();
 
         uint256 deposit = msg.value;
 
-        require(deposit == ((paymentAmount * disputeDepositRate) / baseDivisor), "Wrong dispute deposit");
-        
+        require(
+            deposit == ((paymentAmount * disputeDepositRate) / baseDivisor),
+            "Wrong dispute deposit"
+        );
+
         address disputeTreasury = taxManager.disputeFeesTreasury();
-        
+
         emit DisputeDepositPaidNative(msg.sender, deposit);
 
         _processPayment(disputeTreasury, address(0), deposit);
     }
 
-    function handleStartDisputeToken(uint256 paymentAmount, address token, uint32 seekerId) external whenNotPaused {
+    function handleStartDisputeToken(
+        uint256 paymentAmount,
+        address token,
+        uint32 seekerId
+    ) external whenNotPaused {
         ITaxManager taxManager = getTaxManager();
         uint256 disputeDepositRate = taxManager.disputeDepositRate();
         uint256 baseDivisor = taxManager.taxBaseDivisor();
@@ -360,14 +420,14 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         address seeker = IReferralHandler(seekerHandler).owner();
 
         // Solver at Fault
-        if(solverShare == 0){
+        if (solverShare == 0) {
             _processPayment(seeker, address(0), payment);
         }
         // Seeker at Fault
-        else if(solverShare == 10000){
+        else if (solverShare == 10000) {
             // Tax handled through the handleRewardNative function
             _handleRewardNative(solverId, 0);
-        } 
+        }
         // Arbitrary distribution
         else {
             ITaxManager taxManager = getTaxManager();
@@ -376,9 +436,11 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
             uint256 deposit = ((payment * disputeDepositRate) / baseDivisor);
 
-            // both pay half of the dispute deposit 
-            uint256 seekerPayment = ((payment * (baseDivisor - solverShare)) / baseDivisor) + ((deposit * 5000) / baseDivisor);
-            uint256 solverPayment = ((payment * solverShare) / baseDivisor) - ((deposit * 5000) / baseDivisor);
+            // both pay half of the dispute deposit
+            uint256 seekerPayment = ((payment * (baseDivisor - solverShare)) /
+                baseDivisor) + ((deposit * 5000) / baseDivisor);
+            uint256 solverPayment = ((payment * solverShare) / baseDivisor) -
+                ((deposit * 5000) / baseDivisor);
 
             // Sends to seeker
             _processPayment(seeker, address(0), seekerPayment);
@@ -413,14 +475,14 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         ITaxManager taxManager = getTaxManager();
 
         // Solver at Fault
-        if(solverShare == 0){
+        if (solverShare == 0) {
             _processPayment(seeker, token, payment);
         }
         // Seeker at Fault
-        else if(solverShare == 10000){
+        else if (solverShare == 10000) {
             // Tax handled through the handleRewardToken function
-            _handleRewardTokenPayout(taxManager, token, solverHandler, payment);            
-        } 
+            _handleRewardTokenPayout(taxManager, token, solverHandler, payment);
+        }
         // Arbitrary distribution
         else {
             uint256 baseDivisor = taxManager.taxBaseDivisor();
@@ -428,15 +490,22 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
 
             uint256 deposit = ((payment * disputeDepositRate) / baseDivisor);
 
-            uint256 seekerPayment = ((payment * (baseDivisor - solverShare)) / baseDivisor) + ((deposit * 5000) / baseDivisor);
-            uint256 solverPayment = ((payment * solverShare) / baseDivisor) - ((deposit * 5000) / baseDivisor);
-            
+            uint256 seekerPayment = ((payment * (baseDivisor - solverShare)) /
+                baseDivisor) + ((deposit * 5000) / baseDivisor);
+            uint256 solverPayment = ((payment * solverShare) / baseDivisor) -
+                ((deposit * 5000) / baseDivisor);
+
             // Sends to seeker
             _processPayment(seeker, token, seekerPayment);
-            
+
             // Sends to solver
             // Tax handled through the _handleRewardTokenPayout function
-            _handleRewardTokenPayout(taxManager, token, solverHandler, solverPayment);            
+            _handleRewardTokenPayout(
+                taxManager,
+                token,
+                solverHandler,
+                solverPayment
+            );
         }
     }
 
@@ -450,7 +519,7 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         ITaxManager taxManager = getTaxManager();
         address[4] memory referrals; // Used to store above referrals, saving variable space
         uint256[4] memory rewards;
-        
+
         uint256 leftTax = taxValue;
 
         referrals[0] = IReferralHandler(handler).referredBy();
@@ -507,7 +576,9 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
                                 .getTier();
                             uint256 fourthRewardRate = taxManager
                                 .getReferralRate(4, fourthTier);
-                            rewards[3] = (taxValue * fourthRewardRate) / taxDivisor;
+                            rewards[3] =
+                                (taxValue * fourthRewardRate) /
+                                taxDivisor;
                             leftTax -= rewards[3];
                         }
                     }
@@ -549,7 +620,11 @@ contract Rewarder is IRewarder, Pausable, ReentrancyGuard {
         return;
     }
 
-    function _processPayment(address _receiver, address _token, uint256 _amount) private {
+    function _processPayment(
+        address _receiver,
+        address _token,
+        uint256 _amount
+    ) private {
         if (_token == address(0)) {
             (bool success, ) = payable(_receiver).call{value: _amount}("");
             require(success, "Native token transfer error");
