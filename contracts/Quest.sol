@@ -121,6 +121,7 @@ contract Quest is IQuest {
     function startDispute() external payable onlySeeker {
         require(started, "quest not started");
         require(!beingDisputed, "Dispute started before");
+        require(!rewarded, "Rewarded before");
         beingDisputed = true;
         mediator = tavern.mediator();
         if (token == address(0)) {
@@ -140,11 +141,10 @@ contract Quest is IQuest {
     }
 
     function finishQuest() external onlySolver {
-        // might be changed
         require(started, "quest not started");
 
         finished = true;
-        rewardTime = block.timestamp + tavern.reviewPeriod(); // arbitrary time
+        rewardTime = block.timestamp + tavern.reviewPeriod();
     }
 
     function extend() external onlySeeker {
