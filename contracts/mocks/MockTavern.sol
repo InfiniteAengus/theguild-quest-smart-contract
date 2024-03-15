@@ -4,10 +4,11 @@ pragma solidity 0.8.20;
 import "../interfaces/IProfileNFT.sol";
 import "../interfaces/Quests/IQuest.sol";
 import "../interfaces/INexus.sol";
-import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ITavern } from "../interfaces/Quests/ITavern.sol";
+import {ITavern} from "../interfaces/Quests/ITavern.sol";
+
 /**
  * @title Quest Factory (Tavern)
  * @notice Deploys Quest Contracts and manages them
@@ -15,7 +16,7 @@ import { ITavern } from "../interfaces/Quests/ITavern.sol";
  */
 contract MockTavern is ITavern {
     using SafeERC20 for IERC20;
-    
+
     address public owner;
     address private _barkeeper;
     address public escrowNativeImplementation; // for native blockchain tokens
@@ -73,7 +74,13 @@ contract MockTavern is ITavern {
         address taxManager = INexus(nexus).taxManager();
         require(taxManager != address(0), "TaxManager not set");
 
-        emit QuestCreatedNative(_seekerId, _solverId, address(quest), escrowImpl, _paymentAmount, taxManager);
+        emit QuestCreatedNative(
+            _seekerId,
+            _solverId,
+            address(quest),
+            escrowImpl,
+            _paymentAmount
+        );
 
         quest.initialize(
             _seekerId,
@@ -92,14 +99,21 @@ contract MockTavern is ITavern {
         uint256 _paymentAmount,
         string memory infoURI,
         address _token
-    ) external payable onlyBarkeeper {     
+    ) external payable onlyBarkeeper {
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowTokenImplementation;
         address taxManager = INexus(nexus).taxManager();
 
         require(taxManager != address(0), "TaxManager not set");
 
-        emit QuestCreatedToken(_seekerId, _solverId, address(quest), escrowImpl, _paymentAmount, _token, taxManager);
+        emit QuestCreatedToken(
+            _seekerId,
+            _solverId,
+            address(quest),
+            escrowImpl,
+            _paymentAmount,
+            _token
+        );
 
         quest.initialize(
             _seekerId,
@@ -108,7 +122,7 @@ contract MockTavern is ITavern {
             infoURI,
             escrowImpl,
             _token
-        );   
+        );
     }
 
     // in case of backend problem
@@ -166,7 +180,7 @@ contract MockTavern is ITavern {
     }
 
     function ownerOf(uint32 nftId) external view returns (address) {
-        if(nftId == 1) {
+        if (nftId == 1) {
             return solver;
         } else {
             return seeker;
@@ -175,8 +189,7 @@ contract MockTavern is ITavern {
 
     function confirmNFTOwnership(
         address identity
-    ) public view returns (bool confirmed) {
-    }
+    ) public view returns (bool confirmed) {}
 
     function recoverTokens(
         address _token,

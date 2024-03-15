@@ -1,4 +1,7 @@
-import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import {
+    loadFixture,
+    takeSnapshot,
+} from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { ContractTransactionReceipt, Signer } from "ethers";
@@ -18,7 +21,6 @@ import {
 } from "../typechain-types";
 import {
     fixture_6551,
-    fixture_6551_integration_tests,
     fixture_6551_unit_tests,
     full_integration_fixture,
 } from "./helpers/fixtures";
@@ -1129,6 +1131,267 @@ describe("ERC6551", function () {
                 expect(await createdAccount2_.nexus()).to.equal(
                     ethers.ZeroAddress
                 );
+            });
+        });
+
+        describe.skip("getTierCounts DOS simulation", function () {
+            let accounts_: {
+                    owner: Signer;
+                    seeker: Signer;
+                    solver: Signer;
+                },
+                erc6551_: ERC6551Setup,
+                nexus_: Nexus,
+                mainCreatedAccount: ReferralHandlerERC6551Account;
+
+            let snapshot: any;
+
+            it("Setup contracts and state", async function () {
+                const { contracts, accounts } = await loadFixture(
+                    fixture_integration_tests
+                );
+
+                accounts_ = accounts;
+                erc6551_ = contracts.erc6551;
+                nexus_ = contracts.nexus;
+            });
+
+            it("Create a new main profile which will be used for the DOS simulation", async function () {
+                const trx = await nexus_.createProfile(
+                    0,
+                    await accounts_.seeker.getAddress(),
+                    "ProfileLinkAsTokenURI"
+                );
+
+                const receipt =
+                    (await trx.wait()) as ContractTransactionReceipt;
+
+                expect(receipt).to.be.ok;
+
+                const keys = ["nftId", "handlerAddress"];
+
+                const newProfile = parseEventLogs(
+                    receipt.logs,
+                    nexus_.interface,
+                    "NewProfileIssuance",
+                    keys
+                );
+
+                expect(newProfile.nftId).to.equal("1");
+                expect(newProfile.handlerAddress).to.not.equal(
+                    ethers.ZeroAddress
+                );
+
+                mainCreatedAccount = erc6551_.account.attach(
+                    newProfile.handlerAddress
+                ) as ReferralHandlerERC6551Account;
+
+                snapshot = await takeSnapshot();
+            });
+
+            it.skip("Add 1 account and get gas cost for 1 single layer of referrals", async function () {
+                for (let i = 0; i < 2; i++) {
+                    await nexus_.createProfile(
+                        1,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                }
+
+                const estimateBefore =
+                    await mainCreatedAccount.getTierCounts.estimateGas();
+
+                expect(await mainCreatedAccount.getTierCounts()).to.deep.equal([
+                    2n,
+                    0n,
+                    0n,
+                    0n,
+                    0n,
+                ]);
+
+                for (let i = 0; i < 1; i++) {
+                    await nexus_.createProfile(
+                        1,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                }
+
+                const estimateAfter =
+                    await mainCreatedAccount.getTierCounts.estimateGas();
+
+                expect(await mainCreatedAccount.getTierCounts()).to.deep.equal([
+                    3n,
+                    0n,
+                    0n,
+                    0n,
+                    0n,
+                ]);
+
+                console.log(
+                    "Difference in gas cost",
+                    estimateAfter - estimateBefore
+                );
+            });
+
+            it.skip("Add 6000 accounts to the first layer of referrals for the main account", async function () {
+                snapshot.restore();
+
+                for (let i = 0; i < 6000; i++) {
+                    await nexus_.createProfile(
+                        1,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                    console.log("Created account", i);
+                }
+
+                const estimate =
+                    await mainCreatedAccount.getTierCounts.estimateGas();
+
+                console.log("Gas estimate for getTierCounts", estimate);
+
+                const tierCounts = await mainCreatedAccount.getTierCounts();
+
+                expect(tierCounts).to.deep.equal([6000, 0n, 0n, 0n, 0n]);
+
+                // Attempt to tier up the main account
+                await expect(mainCreatedAccount.tierUp()).to.be.revertedWith(
+                    "Tier upgrade condition not met"
+                );
+            });
+
+            it.skip("Adding accounts to different layers of referrals", async function () {
+                snapshot.restore();
+
+                for (let i = 0; i < 1; i++) {
+                    await nexus_.createProfile(
+                        1,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                }
+
+                let estimateBefore =
+                    await mainCreatedAccount.getTierCounts.estimateGas();
+
+                for (let i = 0; i < 1; i++) {
+                    await nexus_.createProfile(
+                        2,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                }
+
+                console.log(
+                    "Gas estimate for getTierCounts",
+                    (await mainCreatedAccount.getTierCounts.estimateGas()) -
+                        estimateBefore
+                );
+
+                estimateBefore =
+                    await mainCreatedAccount.getTierCounts.estimateGas();
+
+                for (let i = 0; i < 1; i++) {
+                    await nexus_.createProfile(
+                        3,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                }
+
+                console.log(
+                    "Gas estimate for getTierCounts",
+                    (await mainCreatedAccount.getTierCounts.estimateGas()) -
+                        estimateBefore
+                );
+
+                estimateBefore =
+                    await mainCreatedAccount.getTierCounts.estimateGas();
+
+                for (let i = 0; i < 1; i++) {
+                    await nexus_.createProfile(
+                        3,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                }
+
+                console.log(
+                    "Gas estimate for getTierCounts",
+                    (await mainCreatedAccount.getTierCounts.estimateGas()) -
+                        estimateBefore
+                );
+
+                estimateBefore =
+                    await mainCreatedAccount.getTierCounts.estimateGas();
+
+                for (let i = 0; i < 1; i++) {
+                    await nexus_.createProfile(
+                        3,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                }
+
+                console.log(
+                    "Gas estimate for getTierCounts",
+                    (await mainCreatedAccount.getTierCounts.estimateGas()) -
+                        estimateBefore
+                );
+
+                estimateBefore =
+                    await mainCreatedAccount.getTierCounts.estimateGas();
+
+                for (let i = 0; i < 1; i++) {
+                    await nexus_.createProfile(
+                        4,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                }
+
+                console.log(
+                    "Gas estimate for getTierCounts",
+                    (await mainCreatedAccount.getTierCounts.estimateGas()) -
+                        estimateBefore
+                );
+
+                estimateBefore =
+                    await mainCreatedAccount.getTierCounts.estimateGas();
+
+                for (let i = 0; i < 1; i++) {
+                    await nexus_.createProfile(
+                        4,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                }
+
+                console.log(
+                    "Gas estimate for getTierCounts",
+                    (await mainCreatedAccount.getTierCounts.estimateGas()) -
+                        estimateBefore
+                );
+
+                estimateBefore =
+                    await mainCreatedAccount.getTierCounts.estimateGas();
+
+                for (let i = 0; i < 1; i++) {
+                    await nexus_.createProfile(
+                        4,
+                        await accounts_.seeker.getAddress(),
+                        "ProfileLinkAsTokenURI"
+                    );
+                }
+
+                console.log(
+                    "Gas estimate for getTierCounts",
+                    (await mainCreatedAccount.getTierCounts.estimateGas()) -
+                        estimateBefore
+                );
+
+                console.log(await mainCreatedAccount.getTierCounts());
             });
         });
     });
