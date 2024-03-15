@@ -1134,7 +1134,7 @@ describe("ERC6551", function () {
             });
         });
 
-        describe.only("getTierCounts DOS simulation", function () {
+        describe.skip("getTierCounts DOS simulation", function () {
             let accounts_: {
                     owner: Signer;
                     seeker: Signer;
