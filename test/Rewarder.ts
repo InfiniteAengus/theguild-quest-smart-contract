@@ -2062,8 +2062,8 @@ describe("Rewarder", function () {
                     seekerTax.referralRewards
                 );
 
-                expect(seekerTaxAmount[0]).to.equal(referralRewards);
-                expect(seekerTaxAmount[1]).to.equal(platformRevenue);
+                expect(seekerTaxAmount[0]).to.equal(platformRevenue);
+                expect(seekerTaxAmount[1]).to.equal(referralRewards);
             });
 
             it("Should not be able to call recoverTokens unless steward", async function () {

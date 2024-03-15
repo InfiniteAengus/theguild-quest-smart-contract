@@ -52,7 +52,7 @@ contract EscrowToken is IEscrow {
 
         address rewarder = quest.getRewarder();
 
-        (uint256 referralTax, uint256 platformTax) = IRewarder(rewarder)
+        (uint256 platformTax, uint256 referralTax) = IRewarder(rewarder)
             .calculateSeekerTax(paymentAmount);
 
         require(

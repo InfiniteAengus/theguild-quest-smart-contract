@@ -21,7 +21,7 @@ library TaxCalculator {
             (_paymentAmount * seekerFees.platformRevenue) /
             taxRateDivisor;
 
-        return (referralTax_, platformTax_);
+        return (platformTax_, referralTax_);
     }
 
     function _calculateSolverTax(
