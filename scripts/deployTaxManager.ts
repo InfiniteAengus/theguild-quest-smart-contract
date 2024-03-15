@@ -1,7 +1,6 @@
 import { ethers } from "hardhat";
 import { taxManagerSetup } from "../test/helpers/setup";
 import { SeekerTax, SolverTax } from "../test/helpers/types";
-import { TaxManager } from "../typechain-types";
 
 let seekerTax: SeekerTax = {
         referralRewards: 100n,
@@ -20,11 +19,6 @@ async function main() {
     console.log("Deployer address: ", await accounts[0].getAddress());
 
     const taxManager = await taxManagerSetup(true);
-
-    // const TaxManager = await ethers.getContractFactory("TaxManager");
-    // const taxManager = TaxManager.attach(
-    //     "0x82cdd6628fD7285D46605c667Ad0FaB887bDdFeF"
-    // ) as TaxManager;
 
     await taxManager.setPlatformTreasuryPool(await accounts[0].getAddress());
     await taxManager.setPlatformRevenuePool(await accounts[0].getAddress());
