@@ -116,6 +116,7 @@ contract Quest is IQuest {
     function startDispute() external payable onlySeeker {
         require(started, "quest not started");
         require(!beingDisputed, "Dispute started before");
+        require(!rewarded, "Rewarded before");
         beingDisputed = true;
         mediator = tavern.mediator();
         if (token == address(0)){
