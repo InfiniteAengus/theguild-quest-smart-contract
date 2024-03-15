@@ -76,7 +76,7 @@ contract ProfileNFT is ERC721URIStorage {
         require(msg.sender == guardian, "Only Guardian can update Token's URI");
         string memory oldURI = tokenURI(tokenID);
         _setTokenURI(tokenID, _tokenURI);
-        emit NewURI(oldURI, _tokenURI);
+        emit NewURI(oldURI, tokenURI(tokenID));
     }
 
     function setCounselor(address account) public onlyCounselor {
