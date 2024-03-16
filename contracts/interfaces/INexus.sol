@@ -10,4 +10,5 @@ interface INexus {
     function rewarder() external view returns(address);
     function master() external view returns(address);
     function guardian() external view returns(address);
+    function getProfileNFT() external view returns(address);
 }

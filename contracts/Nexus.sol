@@ -76,6 +76,10 @@ contract Nexus is INexus {
         Registry = IERC6551Registry(_registry);
     }
 
+    function getProfileNFT() external view returns (address) {
+        return address(NFT);
+    }
+
     function getHandler(uint32 tokenID) external view returns (address) {
         return NFTToHandler[tokenID];
     }
