@@ -190,7 +190,7 @@ describe("ProfileNFT", function () {
         let mockToken_: MockToken;
 
         it("Should not be able to recover tokens if the caller is not the counselor", async function () {
-            mockToken_ = await mockTokenSetup(true);
+            mockToken_ = await mockTokenSetup("mockToken", "mToken", 18, true);
 
             await expect(
                 profileNFT_
@@ -286,24 +286,30 @@ describe("ProfileNFT", function () {
     });
 
     describe("Integration Tests", function () {
-        let nexus_: Nexus, accounts_: {
-            owner: Signer,
-            seeker: Signer,
-            solver: Signer
-        }, profileNFT_: ProfileNFT;
+        let nexus_: Nexus,
+            accounts_: {
+                owner: Signer;
+                seeker: Signer;
+                solver: Signer;
+            },
+            profileNFT_: ProfileNFT;
 
         it("Should be deployed correctly", async function () {
             const { accounts, contracts } = await loadFixture(
                 fixture_integration_tests
             );
 
-            expect(await contracts.profileNFT.nexus()).to.equal(contracts.nexus.target);
+            expect(await contracts.profileNFT.nexus()).to.equal(
+                contracts.nexus.target
+            );
             expect(await contracts.profileNFT.counselor()).to.equal(
                 await accounts.owner.getAddress()
             );
 
             await contracts.nexus.setNFT(contracts.profileNFT.target);
-            await contracts.nexus.setGuardian(await accounts.owner.getAddress());
+            await contracts.nexus.setGuardian(
+                await accounts.owner.getAddress()
+            );
 
             accounts_ = accounts;
             profileNFT_ = contracts.profileNFT;
@@ -324,11 +330,13 @@ describe("ProfileNFT", function () {
         });
 
         it("Should be able to issue a profile nft to a user through the Nexus contract", async function () {
-            await nexus_.connect(accounts_.owner).createProfile(
-                0,
-                await accounts_.seeker.getAddress(),
-                "https://www.example.com"
-            );
+            await nexus_
+                .connect(accounts_.owner)
+                .createProfile(
+                    0,
+                    await accounts_.seeker.getAddress(),
+                    "https://www.example.com"
+                );
 
             const balance = await profileNFT_.balanceOf(
                 await accounts_.seeker.getAddress()

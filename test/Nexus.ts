@@ -8,7 +8,10 @@ import {
     ProfileNFT,
     Nexus,
 } from "../typechain-types";
-import { fixture_nexus_unit_tests, full_integration_fixture } from "./helpers/fixtures";
+import {
+    fixture_nexus_unit_tests,
+    full_integration_fixture,
+} from "./helpers/fixtures";
 import { parseEventLogs } from "./helpers/utils";
 import { mockTokenSetup, selfDestructSetup } from "./helpers/setup";
 
@@ -287,9 +290,9 @@ describe("Nexus", function () {
         let nexus_: Nexus,
             erc6551_: ERC6551Setup,
             accounts_: {
-                owner: Signer,
-                seeker: Signer,
-                solver: Signer
+                owner: Signer;
+                seeker: Signer;
+                solver: Signer;
             },
             profileNFT_: ProfileNFT,
             createdAccounts: CreatedAccount[] = [];
@@ -693,7 +696,14 @@ describe("Nexus", function () {
         });
 
         it("Only master should be able to recoverTokens native", async function () {
-            await expect(nexus_.connect(accounts_.seeker).recoverTokens(ethers.ZeroAddress, await accounts_.seeker.getAddress())).to.be.revertedWith("only master");
+            await expect(
+                nexus_
+                    .connect(accounts_.seeker)
+                    .recoverTokens(
+                        ethers.ZeroAddress,
+                        await accounts_.seeker.getAddress()
+                    )
+            ).to.be.revertedWith("only master");
 
             const selfDestruct = await selfDestructSetup(true);
 
@@ -705,27 +715,48 @@ describe("Nexus", function () {
 
             await selfDestruct.sendEther(nexus_.target);
 
-            expect(await ethers.provider.getBalance(nexus_.target)).to.equal(ethers.parseEther("1.0"));
+            expect(await ethers.provider.getBalance(nexus_.target)).to.equal(
+                ethers.parseEther("1.0")
+            );
 
-            const balanceBefore = await ethers.provider.getBalance(await accounts_.solver.getAddress());
+            const balanceBefore = await ethers.provider.getBalance(
+                await accounts_.solver.getAddress()
+            );
 
-            await nexus_.recoverTokens(ethers.ZeroAddress, await accounts_.solver.getAddress());
+            await nexus_.recoverTokens(
+                ethers.ZeroAddress,
+                await accounts_.solver.getAddress()
+            );
 
-            const balanceAfter = await ethers.provider.getBalance(await accounts_.solver.getAddress());
+            const balanceAfter = await ethers.provider.getBalance(
+                await accounts_.solver.getAddress()
+            );
 
-            expect(balanceAfter - (balanceBefore)).to.equal(ethers.parseEther("1.0"));
+            expect(balanceAfter - balanceBefore).to.equal(
+                ethers.parseEther("1.0")
+            );
         });
 
         it("Only master should be able to recoverTokens erc20", async function () {
-            const mockToken = await mockTokenSetup(true);
+            const mockToken = await mockTokenSetup(
+                "mockToken",
+                "mToken",
+                18,
+                true
+            );
 
             await mockToken.mint(nexus_.target, 1000);
 
             expect(await mockToken.balanceOf(nexus_.target)).to.equal(1000);
 
-            await nexus_.recoverTokens(mockToken.target, await accounts_.solver.getAddress());
+            await nexus_.recoverTokens(
+                mockToken.target,
+                await accounts_.solver.getAddress()
+            );
 
-            expect(await mockToken.balanceOf(await accounts_.solver.getAddress())).to.equal(1000);
+            expect(
+                await mockToken.balanceOf(await accounts_.solver.getAddress())
+            ).to.equal(1000);
         });
     });
 });
