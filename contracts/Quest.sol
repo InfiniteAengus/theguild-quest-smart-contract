@@ -22,8 +22,9 @@ contract Quest is IQuest {
     // state variables
     bool public initialized;
     bool public started;
-    bool public submitted;
-    bool public extended;
+    bool public extendedOnce;
+    bool public extendedTwice;
+    bool public extendedThrice;
     bool public beingDisputed;
     bool public finished;
     bool public rewarded;
@@ -149,9 +150,16 @@ contract Quest is IQuest {
 
     function extend() external onlySeeker {
         require(finished, "Quest not finished");
-        require(!extended, "Was extended before");
+        require(!extendedThrice, "Max extensions number reached");
         require(!rewarded, "Was rewarded before");
-        extended = true;
+        if(extendedOnce){
+            extendedTwice = true;
+        } 
+        else if (extendedTwice){
+            extendedThrice = true;
+        }
+        else{extendedOnce = true;}
+
         rewardTime += tavern.reviewPeriod();
     }
 

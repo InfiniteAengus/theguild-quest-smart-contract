@@ -27,7 +27,6 @@ contract Tavern is ITavern, Pausable {
     address public mediator; // for disputes
     uint256 public reviewPeriod = 1;
     
-    IProfileNFT private nft;
     address public nexus;
 
     modifier onlyBarkeeper() {
@@ -44,14 +43,12 @@ contract Tavern is ITavern, Pausable {
         address _questImplementation,
         address _escrowNativeImplementation,
         address _escrowTokenImplementation,
-        address _profileNft,
         address _nexus
     ) {
         escrowNativeImplementation = _escrowNativeImplementation;
         escrowTokenImplementation = _escrowTokenImplementation;
         questImplementation = _questImplementation;
         owner = msg.sender;
-        nft = IProfileNFT(_profileNft);
         nexus = _nexus;
     }
 
@@ -147,11 +144,6 @@ contract Tavern is ITavern, Pausable {
         _barkeeper = keeper;
     }
 
-    // in case of serious emergency
-    function setProfileNft(address _nft) external onlyOwner {
-        nft = IProfileNFT(_nft);
-    }
-
     function setQuestImplementation(address impl) external onlyOwner {
         questImplementation = impl;
     }
@@ -181,17 +173,17 @@ contract Tavern is ITavern, Pausable {
     }
 
     function getProfileNFT() public view whenNotPaused returns (address) {
-        return address(nft);
+        return INexus(nexus).getProfileNFT();
     }
 
     function ownerOf(uint32 nftId) external view whenNotPaused returns (address) {
-        return nft.ownerOf(nftId);
+        return IProfileNFT(INexus(nexus).getProfileNFT()).ownerOf(nftId);
     }
 
     function confirmNFTOwnership(
         address identity
     ) public view whenNotPaused returns (bool confirmed) {
-        confirmed = nft.balanceOf(identity) > 0;
+        confirmed = IProfileNFT(INexus(nexus).getProfileNFT()).balanceOf(identity) > 0;
         return confirmed;
     }
 

@@ -76,6 +76,10 @@ contract Nexus is INexus {
         Registry = IERC6551Registry(_registry);
     }
 
+    function getProfileNFT() external view returns (address) {
+        return address(NFT);
+    }
+
     function getHandler(uint32 tokenID) external view returns (address) {
         return NFTToHandler[tokenID];
     }
@@ -142,7 +146,7 @@ contract Nexus is INexus {
         emit NewRegistry(oldRegistry, address(Registry));
     }
 
-    function createProfile(uint32 referrerId, address recipient, string memory profileLink) external onlyGuardian returns (address) {
+    function createProfile(uint32 referrerId, address recipient, string memory profileLink, bytes32 _salt) external onlyGuardian returns (address) {
         uint32 nftId = NFT.issueProfile(recipient, profileLink); 
         require(nftId!= referrerId, "Cannot be its own referrer");
         require(
@@ -150,7 +154,7 @@ contract Nexus is INexus {
             "Referrer should have a valid profile id"
         );
 
-        address handlerAd = Registry.createAccount(accountImplementation, 0, block.chainid, address(NFT), nftId);
+        address handlerAd = Registry.createAccount(accountImplementation, _salt, block.chainid, address(NFT), nftId);
         NFTToHandler[nftId] = handlerAd;
         HandlerToNFT[handlerAd] = nftId;
         handlerStorage[handlerAd] = true;
