@@ -70,8 +70,17 @@ export async function mockNFTSetup(silence: Boolean): Promise<MockNFT> {
     return mockNFT;
 }
 
-export async function mockTokenSetup(silence: Boolean): Promise<MockToken> {
-    const mockToken = await ethers.deployContract("MockToken");
+export async function mockTokenSetup(
+    name: string,
+    symbol: string,
+    decimals: number,
+    silence: Boolean
+): Promise<MockToken> {
+    const mockToken = await ethers.deployContract("MockToken", [
+        name,
+        symbol,
+        decimals,
+    ]);
     await mockToken.waitForDeployment();
 
     if (!silence) {

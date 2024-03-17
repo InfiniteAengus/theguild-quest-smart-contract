@@ -598,7 +598,12 @@ describe("Escrow", function () {
                 );
 
                 // Deploy mock token
-                const mockToken = await mockTokenSetup(true);
+                const mockToken = await mockTokenSetup(
+                    "mockToken",
+                    "mToken",
+                    18,
+                    true
+                );
                 mockToken_ = mockToken;
 
                 // Create a seeker and a solver profile

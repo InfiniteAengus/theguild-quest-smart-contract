@@ -15,12 +15,15 @@ import {
     TaxManager,
     EscrowToken,
     MockToken,
+    Tavern,
 } from "../typechain-types";
 import {
     fixture_profile_nft_integration_tests,
     fixture_quest_unit_tests,
+    full_integration_fixture,
 } from "./helpers/fixtures";
-import { parseEventLogs } from "./helpers/utils";
+import { calculateTaxAmount, parseEventLogs } from "./helpers/utils";
+import { SeekerTax, SolverTax } from "./helpers/types";
 
 describe("Quest", function () {
     async function mockAccounts(): Promise<Signer[]> {
@@ -37,7 +40,7 @@ describe("Quest", function () {
 
     async function fixture_intergration_tests() {
         const accounts = await mockAccounts();
-        return await fixture_profile_nft_integration_tests(accounts);
+        return await full_integration_fixture(accounts);
     }
 
     describe("Unit Tests", function () {
@@ -460,6 +463,138 @@ describe("Quest", function () {
         });
     });
 
+    describe("Integration Tests", function () {
+        let accounts_: {
+                owner: Signer;
+                seeker: Signer;
+                solver: Signer;
+            },
+            nexus: Nexus,
+            tavern: Tavern,
+            quest: Quest;
 
-    describe("Integration Tests", function () { });
+        const PAYMENT_AMOUNT = ethers.parseEther("2");
+
+        let seekerTax: SeekerTax = {
+                referralRewards: 100n,
+                platformRevenue: 200n,
+            },
+            solverTax: SolverTax = {
+                referralRewards: 200n,
+                platformRevenue: 700n,
+                platformTreasury: 100n,
+            },
+            disputeTaxRate = 1000n;
+        const DEFAULT_ACCOUNT_BALANCE = ethers.parseEther("10000000");
+
+        it("Should deploy, create profiles and initialize tavern to create quests", async function () {
+            const { accounts, contracts } = await loadFixture(
+                fixture_intergration_tests
+            );
+
+            accounts_ = accounts;
+            nexus = contracts.nexus;
+            tavern = contracts.tavern;
+            quest = contracts.questImplementation;
+
+            // Create seeker profile to create quest
+            await nexus.createProfile(
+                0,
+                await accounts.seeker.getAddress(),
+                "Seeker"
+            );
+
+            // Create solver profile to accept quest
+            await nexus.createProfile(
+                0,
+                await accounts.solver.getAddress(),
+                "Solver"
+            );
+        });
+
+        let nativeQuestInstance: Quest;
+        let snapshot: any;
+
+        it("Create a native quest through the tavern and be initialized in the same transaction", async function () {
+            await tavern.setBarkeeper(await accounts_.owner.getAddress());
+            await tavern.setMediator(await accounts_.owner.getAddress());
+
+            const trx = await tavern[
+                "createNewQuest(uint32,uint32,uint256,string)"
+            ](1, 2, PAYMENT_AMOUNT, "Quest URI");
+
+            const receipt = (await trx.wait()) as ContractTransactionReceipt;
+
+            expect(receipt).to.be.ok;
+
+            const keys = [
+                "seekerId",
+                "solverId",
+                "quest",
+                "escrowImplementation",
+                "paymentAmount",
+            ];
+
+            const createdQuest = parseEventLogs(
+                receipt.logs,
+                tavern.interface,
+                "QuestCreatedNative",
+                keys
+            );
+
+            expect(createdQuest).to.be.ok;
+
+            expect(createdQuest.seekerId).to.equal(1);
+            expect(createdQuest.solverId).to.equal(2);
+            expect(createdQuest.quest).to.not.equal(ethers.ZeroAddress);
+            expect(createdQuest.paymentAmount).to.equal(PAYMENT_AMOUNT);
+
+            nativeQuestInstance = await ethers.getContractAt(
+                "Quest",
+                createdQuest.quest
+            );
+
+            snapshot = await takeSnapshot();
+        });
+
+        it("Initialized quest values should be correct", async function () {
+            expect(await nativeQuestInstance.initialized()).to.be.true;
+
+            expect(await nativeQuestInstance.seekerId()).to.equal(1);
+            expect(await nativeQuestInstance.solverId()).to.equal(2);
+
+            expect(await nativeQuestInstance.paymentAmount()).to.equal(
+                PAYMENT_AMOUNT
+            );
+
+            expect(await nativeQuestInstance.infoURI()).to.equal("Quest URI");
+
+            expect(await nativeQuestInstance.token()).to.equal(
+                ethers.ZeroAddress
+            );
+        });
+
+        it("Only seeker should be able to start quest", async function () {
+            await expect(
+                nativeQuestInstance.connect(accounts_.solver).startQuest()
+            ).to.be.revertedWith("only Seeker");
+
+            const tax = calculateTaxAmount(
+                PAYMENT_AMOUNT,
+                seekerTax.platformRevenue + seekerTax.referralRewards
+            );
+
+            await nativeQuestInstance.connect(accounts_.seeker).startQuest({
+                value: PAYMENT_AMOUNT + tax,
+            });
+        });
+
+        it("Quest state should be started, and cant be started again", async function () {
+            expect(await nativeQuestInstance.started()).to.be.true;
+
+            await expect(
+                nativeQuestInstance.connect(accounts_.seeker).startQuest()
+            ).to.be.revertedWith("already started");
+        });
+    });
 });
