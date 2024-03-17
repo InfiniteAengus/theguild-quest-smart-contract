@@ -1,0 +1,20 @@
+{
+    "usdc": {
+        "address": "0x9F4CdA2cc928fFba3572B8Fa1981e55091993b06",
+        "name": "Mock USDC",
+        "symbol": "mUSDC",
+        "decimals": 6
+    },
+    "usdt": {
+        "address": "0x1D36FA5Bdc00943e3d8019D3Ef90fD216DE4704E",
+        "name": "Mock USDT",
+        "symbol": "mUSDT",
+        "decimals": 6
+    },
+    "dai": {
+        "address": "0x8A271d5323F7eDb1C76CD5fAc7b16e9EEE99Dd50",
+        "name": "Mock DAI",
+        "symbol": "mDAI",
+        "decimals": 18
+    }
+}
