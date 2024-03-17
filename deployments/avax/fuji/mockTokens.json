@@ -16,5 +16,11 @@
         "name": "Mock DAI",
         "symbol": "mDAI",
         "decimals": 18
+    },
+    "coq": {
+        "address": "0x5a5B133339199B361F0e1Ff79793feD98308704f",
+        "name": "Mock COQ",
+        "symbol": "mCOQ",
+        "decimals": 18
     }
 }

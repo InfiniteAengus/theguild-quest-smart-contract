@@ -19,6 +19,10 @@ async function main() {
 
     console.log("Mock DAI deployed to: ", mockDAI.target);
 
+    const mockCOQ = await mockTokenSetup("Mock COQ", "mCOQ", 18, true);
+
+    console.log("Mock COQ deployed to: ", mockCOQ.target);
+
     const tokens = {
         usdc: {
             address: mockUSDC.target,
@@ -36,6 +40,12 @@ async function main() {
             address: mockDAI.target,
             name: "Mock DAI",
             symbol: "mDAI",
+            decimals: 18,
+        },
+        coq: {
+            address: mockCOQ.target,
+            name: "Mock COQ",
+            symbol: "mCOQ",
             decimals: 18,
         },
     };
