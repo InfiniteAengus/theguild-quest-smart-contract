@@ -94,3 +94,53 @@ export type ReferralRewardsDistribution = {
 };
 
 export type LayerKeys = "layer1" | "layer2" | "layer3" | "layer4";
+
+export type TierConditions = {
+    tier1: {
+        xpPoints: number;
+        novicesReferred: number;
+        adeptsReferred: number;
+        mastersReferred: number;
+        godsReferred: number;
+    };
+    tier2: {
+        xpPoints: number;
+        novicesReferred: number;
+        adeptsReferred: number;
+        mastersReferred: number;
+        godsReferred: number;
+    };
+    tier3: {
+        xpPoints: number;
+        novicesReferred: number;
+        adeptsReferred: number;
+        mastersReferred: number;
+        godsReferred: number;
+    };
+    tier4: {
+        xpPoints: number;
+        novicesReferred: number;
+        adeptsReferred: number;
+        mastersReferred: number;
+        godsReferred: number;
+    };
+    tier5: {
+        xpPoints: number;
+        novicesReferred: number;
+        adeptsReferred: number;
+        mastersReferred: number;
+        godsReferred: number;
+    };
+};
+
+export type NonDeployerConfigAccounts = {
+    nexusGuardian: string;
+    rewarderSteward: string;
+    tavernBarkeeper: string;
+    tavernMediator: string;
+    taxManagerPlatformTreasury: string;
+    taxManagerPlatformRevenuePool: string;
+    taxManagerReferralTaxTreasury: string;
+    taxManagerDisputeFeesTreasury: string;
+    guildXpOwner: string;
+};

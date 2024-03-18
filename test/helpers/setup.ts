@@ -189,7 +189,10 @@ export async function mockEscrowSetup(silence: Boolean) {
 
 // Contract Setups
 
-export async function erc6551Setup(silence: Boolean): Promise<ERC6551Setup> {
+export async function erc6551Setup(
+    deployer: Signer,
+    silence: Boolean
+): Promise<ERC6551Setup> {
     const erc6551Registry = await ethers.deployContract("ERC6551Registry");
 
     await erc6551Registry.waitForDeployment();
@@ -214,8 +217,30 @@ export async function erc6551Setup(silence: Boolean): Promise<ERC6551Setup> {
     };
 }
 
-export async function nexusSetup(silence: Boolean): Promise<Nexus6551> {
-    const erc6551 = await erc6551Setup(silence);
+export async function nexusDeploy(
+    deployer: Signer,
+    account: string,
+    registry: string,
+    silence: Boolean
+): Promise<Nexus> {
+    const nexus = await ethers.deployContract("Nexus", [account, registry], {
+        signer: deployer,
+    });
+
+    await nexus.waitForDeployment();
+
+    if (!silence) {
+        console.log(`Nexus deployed to ${nexus.target}`);
+    }
+
+    return nexus;
+}
+
+export async function nexusSetup(
+    deployer: Signer,
+    silence: Boolean
+): Promise<Nexus6551> {
+    const erc6551 = await erc6551Setup(deployer, silence);
 
     const nexus = await ethers.deployContract("Nexus", [
         erc6551.account.target,
@@ -232,12 +257,13 @@ export async function nexusSetup(silence: Boolean): Promise<Nexus6551> {
 }
 
 export async function profileNFTSetup(
-    nexus: Nexus,
+    deployer: Signer,
+    nexus: string,
     silence: Boolean
 ): Promise<ProfileNFT> {
-    const profileNFT = await ethers.deployContract("ProfileNFT", [
-        nexus.target,
-    ]);
+    const profileNFT = await ethers.deployContract("ProfileNFT", [nexus], {
+        signer: deployer,
+    });
 
     await profileNFT.waitForDeployment();
 
@@ -287,12 +313,13 @@ export async function questSetup(silence: Boolean): Promise<Quest> {
 }
 
 export async function tierManagerSetup(
+    deployer: Signer,
     silence: Boolean,
-    xpToken: GuildXp
+    xpToken: string
 ): Promise<TierManager> {
-    const tierManager = await ethers.deployContract("TierManager", [
-        xpToken.target,
-    ]);
+    const tierManager = await ethers.deployContract("TierManager", [xpToken], {
+        signer: deployer,
+    });
     await tierManager.waitForDeployment();
 
     if (!silence) {
@@ -302,8 +329,10 @@ export async function tierManagerSetup(
     return tierManager;
 }
 
-export async function taxManagerSetup(silence: Boolean) {
-    const taxManager = await ethers.deployContract("TaxManager");
+export async function taxManagerSetup(deployer: Signer, silence: Boolean) {
+    const taxManager = await ethers.deployContract("TaxManager", {
+        signer: deployer,
+    });
     await taxManager.waitForDeployment();
 
     if (!silence) {
@@ -314,11 +343,16 @@ export async function taxManagerSetup(silence: Boolean) {
 }
 
 export async function managersSetup(
+    deployer: Signer,
     silence: Boolean,
     xpToken: GuildXp
 ): Promise<Managers> {
-    const tierManager = await tierManagerSetup(silence, xpToken);
-    const taxManager = await taxManagerSetup(silence);
+    const tierManager = await tierManagerSetup(
+        deployer,
+        silence,
+        xpToken.target as string
+    );
+    const taxManager = await taxManagerSetup(deployer, silence);
 
     return {
         tierManager,
@@ -328,11 +362,9 @@ export async function managersSetup(
 
 export async function xpSetup(
     silence: Boolean,
-    signer: Signer
+    signer: string
 ): Promise<GuildXp> {
-    const guildXp = await ethers.deployContract("GuildXp", [
-        await signer.getAddress(),
-    ]);
+    const guildXp = await ethers.deployContract("GuildXp", [signer]);
     await guildXp.waitForDeployment();
 
     if (!silence) {
@@ -343,14 +375,14 @@ export async function xpSetup(
 }
 
 export async function rewarderSetup(
+    deployer: Signer,
     silence: Boolean,
-    nexus: Nexus,
-    account: Signer
+    nexus: string,
+    account: string
 ): Promise<Rewarder> {
-    const rewarder = await ethers.deployContract("Rewarder", [
-        account,
-        nexus.target,
-    ]);
+    const rewarder = await ethers.deployContract("Rewarder", [account, nexus], {
+        signer: deployer,
+    });
 
     await rewarder.waitForDeployment();
 
@@ -362,20 +394,18 @@ export async function rewarderSetup(
 }
 
 export async function tavernSetup(
-    quest: Quest,
-    escrowNative: EscrowNative,
-    escrowToken: EscrowToken,
-    profileNFT: any,
-    nexus: Nexus,
+    deployer: Signer,
+    quest: string,
+    escrowNative: string,
+    escrowToken: string,
+    nexus: string,
     silence: Boolean
 ): Promise<Tavern> {
-    const tavern = await ethers.deployContract("Tavern", [
-        quest.target,
-        escrowNative.target,
-        escrowToken.target,
-        profileNFT.target,
-        nexus.target,
-    ]);
+    const tavern = await ethers.deployContract(
+        "Tavern",
+        [quest, escrowNative, escrowToken, nexus],
+        { signer: deployer }
+    );
 
     await tavern.waitForDeployment();
 
@@ -386,20 +416,24 @@ export async function tavernSetup(
     return tavern;
 }
 
-export async function setup(silence: Boolean) {
-    const { nexus, erc6551 } = await nexusSetup(silence);
-    const profileNFT = await profileNFTSetup(nexus, silence);
+export async function setup(deployer: Signer, silence: Boolean) {
+    const { nexus, erc6551 } = await nexusSetup(deployer, silence);
+    const profileNFT = await profileNFTSetup(
+        deployer,
+        nexus.target as string,
+        silence
+    );
 
     const escrowNative = await escrowNativeSetup(silence);
     const escrowToken = await escrowTokenSetup(silence);
     const quest = await questSetup(true);
 
     const tavern = await tavernSetup(
-        quest,
-        escrowNative,
-        escrowToken,
-        profileNFT,
-        nexus,
+        deployer,
+        quest.target as string,
+        escrowNative.target as string,
+        escrowToken.target as string,
+        nexus.target as string,
         true
     );
 

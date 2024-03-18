@@ -59,3 +59,8 @@ export function calculateTaxAmount(amount: bigint, taxRate: bigint): bigint {
     const bigTaxRate = BigInt(taxRate);
     return (bigAmount * bigTaxRate) / BigInt(10000);
 }
+
+// Timeout function
+export function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
