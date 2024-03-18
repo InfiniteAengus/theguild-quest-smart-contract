@@ -8,7 +8,8 @@ const env = load({
     INFURA_SECRET_KEY: String,
     DEV_WALLET_PRIVATE_KEY: String,
     ETHERSCAN_API_KEY: String,
-    GUILD_MASTER_KEY: String
+    GUILD_MASTER_KEY: String,
+    INFURA_RPC_URL_AVAX: String
 });
 
 // To enable forking, turn one of these booleans on, and then run your tasks/scripts using ``--network hardhat``
@@ -67,9 +68,10 @@ const config: HardhatUserConfig = {
             gasPrice: 35000000000,
         },
         avalanche:{
-          url: "https://api.avax.network/ext/bc/C/rpc",
+          url: env.INFURA_RPC_URL_AVAX,
           accounts: [env.GUILD_MASTER_KEY],
-          chainId: 43114
+          chainId: 43114,
+          gasPrice: 35000000000
         },
         hardhat: {
             gasPrice: 225000000000,

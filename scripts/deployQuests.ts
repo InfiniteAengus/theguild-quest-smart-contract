@@ -1,6 +1,9 @@
 import { ethers } from "hardhat";
 
 const Nexus = ethers.getAddress("0x7a3a85cDa70C5fBc24D8F84C1920ba0Eff2964Ba");
+const quest = ethers.getAddress("0x477B2B2e874820998939c977B7f7De03D48f1A98");
+const escrowN = ethers.getAddress("0x000a105F222968Df91FB22EF0A61aCB30DE10121");
+const escrowT = ethers.getAddress("0xCB57b07Bb6f03baBA194fb0B150ff6B729348D2d");
 
 
 async function main() {
