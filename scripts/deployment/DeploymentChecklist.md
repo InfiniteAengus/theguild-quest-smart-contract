@@ -54,7 +54,6 @@
         - `Quest` Implementation Address
         - `EscrowNative` Implementation Address
         - `EscrowToken` Implementation Address
-        - `ProfileNFT` Contract Address
         - `Nexus` Contract Address
     - Deploy Tavern - `Tavern.sol`
 8. GuildXp Token Contract Deployment
@@ -87,6 +86,6 @@
     - `setSolverFees()` with Referral Reward Tax, Platform Revenue Tax, and Platform Treasury Tax
     - `setDisputeDepositRate()` with Dispute Tax Amount
 15. Tier Manager Tier Up Condition Setup
-    - Set Conditions for Tiers 1 - 5, includes values for each reference level
+    - Set Conditions for Tiers 1 - 5, including values for each reference level
 16. Tavern Review Period Setup
     - `setReviewPeriod()` with Review Period
