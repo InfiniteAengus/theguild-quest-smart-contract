@@ -109,7 +109,8 @@ describe("Rewarder", function () {
                 await nexus.createProfile(
                     0,
                     await accounts[1].getAddress(),
-                    "Seeker"
+                    "Seeker",
+                    ethers.encodeBytes32String("0")
                 );
                 seeker_ = {
                     handlerAddress: await nexus.getHandler(1),
@@ -124,28 +125,32 @@ describe("Rewarder", function () {
                     await nexus.createProfile(
                         0,
                         await accounts[0].getAddress(),
-                        "Referrer 1"
+                        "Referrer 1",
+                        ethers.encodeBytes32String("0")
                     );
 
                     // Profile ID-3 is Referrer 2
                     await nexus.createProfile(
                         2,
                         await accounts[0].getAddress(),
-                        "Referrer 2"
+                        "Referrer 2",
+                        ethers.encodeBytes32String("0")
                     );
 
                     // Profile ID-4 is Referrer 3
                     await nexus.createProfile(
                         3,
                         await accounts[0].getAddress(),
-                        "Referrer 3"
+                        "Referrer 3",
+                        ethers.encodeBytes32String("0")
                     );
 
                     // Profile ID-5 is Referrer 4
                     await nexus.createProfile(
                         4,
                         await accounts[0].getAddress(),
-                        "Referrer 4"
+                        "Referrer 4",
+                        ethers.encodeBytes32String("0")
                     );
 
                     referrers.push({
@@ -174,7 +179,8 @@ describe("Rewarder", function () {
                 await nexus.createProfile(
                     5,
                     await accounts[2].getAddress(),
-                    "Solver"
+                    "Solver",
+                    ethers.encodeBytes32String("0")
                 );
                 solver_ = {
                     handlerAddress: await nexus.getHandler(6),
@@ -2292,13 +2298,15 @@ describe("Rewarder", function () {
             await nexus.createProfile(
                 0,
                 await accounts[1].getAddress(),
-                "Seeker"
+                "Seeker",
+                ethers.encodeBytes32String("0")
             );
             seeker_ = accounts[1];
             await nexus.createProfile(
                 0,
                 await accounts[2].getAddress(),
-                "Solver"
+                "Solver",
+                ethers.encodeBytes32String("0")
             );
             solver_ = accounts[2];
 

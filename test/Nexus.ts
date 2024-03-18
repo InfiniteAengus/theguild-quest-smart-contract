@@ -230,7 +230,8 @@ describe("Nexus", function () {
                 .createProfile(
                     0,
                     await accounts_[2].getAddress(),
-                    "ProfileLinkGoesHere"
+                    "ProfileLinkGoesHere",
+                    ethers.encodeBytes32String("0")
                 );
 
             const receipt =
@@ -251,7 +252,7 @@ describe("Nexus", function () {
 
             const account = await erc6551_.registry.account(
                 erc6551_.account.target,
-                ethers.ZeroHash,
+                ethers.encodeBytes32String("0"),
                 43112,
                 profileNFT_.target,
                 1
@@ -270,7 +271,8 @@ describe("Nexus", function () {
                     .createProfile(
                         0,
                         await accounts_[2].getAddress(),
-                        "ProfileLinkGoesHere"
+                        "ProfileLinkGoesHere",
+                        ethers.encodeBytes32String("0")
                     )
             ).to.be.revertedWith("only guardian");
         });
@@ -319,7 +321,8 @@ describe("Nexus", function () {
                     .createProfile(
                         0,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkGoesHere"
+                        "ProfileLinkGoesHere",
+                        ethers.encodeBytes32String("0")
                     );
 
                 const receipt =
@@ -356,7 +359,8 @@ describe("Nexus", function () {
                 .createProfile(
                     0,
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkGoesHere"
+                    "ProfileLinkGoesHere",
+                    ethers.encodeBytes32String("0")
                 );
 
             const receipt =
@@ -391,7 +395,8 @@ describe("Nexus", function () {
                 nexus_.connect(accounts_.owner).createProfile(
                     createdAccounts.length + 1, // This value should be the newest mintable nft ID that is not in the createdAccounts array
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkGoesHere"
+                    "ProfileLinkGoesHere",
+                    ethers.encodeBytes32String("0")
                 )
             ).to.be.revertedWith("Cannot be its own referrer");
         });
@@ -403,7 +408,8 @@ describe("Nexus", function () {
                     .createProfile(
                         999,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkGoesHere"
+                        "ProfileLinkGoesHere",
+                        ethers.encodeBytes32String("0")
                     )
             ).to.be.revertedWith("Referrer should have a valid profile id");
         });
@@ -419,7 +425,8 @@ describe("Nexus", function () {
                 .createProfile(
                     1,
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkGoesHere"
+                    "ProfileLinkGoesHere",
+                    ethers.encodeBytes32String("0")
                 );
 
             const receipt =
@@ -465,7 +472,8 @@ describe("Nexus", function () {
                 .createProfile(
                     await depth1Account.getNftId(),
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkGoesHere"
+                    "ProfileLinkGoesHere",
+                    ethers.encodeBytes32String("0")
                 );
 
             const receipt =
@@ -517,7 +525,8 @@ describe("Nexus", function () {
                 .createProfile(
                     await depth2Account.getNftId(),
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkGoesHere"
+                    "ProfileLinkGoesHere",
+                    ethers.encodeBytes32String("0")
                 );
 
             const receipt =
@@ -574,7 +583,8 @@ describe("Nexus", function () {
                 .createProfile(
                     await depth3Account.getNftId(),
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkGoesHere"
+                    "ProfileLinkGoesHere",
+                    ethers.encodeBytes32String("0")
                 );
 
             const receipt =
@@ -636,7 +646,8 @@ describe("Nexus", function () {
                 .createProfile(
                     await depth4Account.getNftId(),
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkGoesHere"
+                    "ProfileLinkGoesHere",
+                    ethers.encodeBytes32String("0")
                 );
 
             const receipt =
