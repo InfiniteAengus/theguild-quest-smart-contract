@@ -99,6 +99,7 @@ contract Nexus is INexus {
     }
 
     function setMaster(address newMaster) public onlyMaster {
+        require(newMaster != address(0), "Setting master to 0 address");
         address oldMaster = master;
         master = newMaster;
         emit NewMaster(oldMaster, master);
