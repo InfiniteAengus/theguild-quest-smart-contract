@@ -1,6 +1,4 @@
-import {
-    loadFixture,
-} from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { ContractTransactionReceipt, Signer } from "ethers";
@@ -362,40 +360,48 @@ describe("Tavern", function () {
         });
     });
 
-
     describe("Integration Tests", function () {
         let accounts_: {
-            owner: Signer;
-            seeker: Signer;
-            solver: Signer;
-        },
+                owner: Signer;
+                seeker: Signer;
+                solver: Signer;
+            },
             rewarder: Rewarder,
             profileNFT: ProfileNFT,
             tavern: Tavern;
 
         it("Tavern should be deployed, and initialized and setup", async function () {
-            const {
-                accounts, contracts
-            } = await loadFixture(fixture_intergration_tests);
-
-            expect(await contracts.tavern.escrowNativeImplementation()).to.equal(
-                contracts.escrowNativeImplementation.target
+            const { accounts, contracts } = await loadFixture(
+                fixture_intergration_tests
             );
+
+            expect(
+                await contracts.tavern.escrowNativeImplementation()
+            ).to.equal(contracts.escrowNativeImplementation.target);
 
             expect(await contracts.tavern.escrowTokenImplementation()).to.equal(
                 contracts.escrowTokenImplementation.target
             );
 
-            expect(await contracts.tavern.questImplementation()).to.equal(contracts.questImplementation.target);
+            expect(await contracts.tavern.questImplementation()).to.equal(
+                contracts.questImplementation.target
+            );
 
-            expect(await contracts.tavern.getProfileNFT()).to.equal(contracts.profileNFT.target);
+            expect(await contracts.tavern.getProfileNFT()).to.equal(
+                contracts.profileNFT.target
+            );
 
-            expect(await contracts.tavern.getBarkeeper()).to.equal(await accounts.owner.getAddress());
+            expect(await contracts.tavern.getBarkeeper()).to.equal(
+                await accounts.owner.getAddress()
+            );
 
-            expect(await contracts.tavern.owner()).to.equal(await accounts.owner.getAddress());
+            expect(await contracts.tavern.owner()).to.equal(
+                await accounts.owner.getAddress()
+            );
 
-            expect(await contracts.tavern.nexus()).to.equal(contracts.nexus.target);
-
+            expect(await contracts.tavern.nexus()).to.equal(
+                contracts.nexus.target
+            );
 
             // Create profiles
             await contracts.nexus.createProfile(
@@ -421,32 +427,37 @@ describe("Tavern", function () {
             await expect(
                 tavern
                     .connect(accounts_.seeker)
-                ["createNewQuest(uint32,uint32,uint256,string)"](
-                    0,
-                    1,
-                    1000,
-                    "Quest URI"
-                )
+                    ["createNewQuest(uint32,uint32,uint256,string)"](
+                        0,
+                        1,
+                        1000,
+                        "Quest URI"
+                    )
             ).to.be.revertedWith("only barkeeper");
 
             // Creates token quest
             await expect(
                 tavern
                     .connect(accounts_.seeker)
-                ["createNewQuest(uint32,uint32,uint256,string,address)"](
-                    0,
-                    1,
-                    1000,
-                    "Quest URI",
-                    ethers.ZeroAddress
-                )
+                    ["createNewQuest(uint32,uint32,uint256,string,address)"](
+                        0,
+                        1,
+                        1000,
+                        "Quest URI",
+                        ethers.ZeroAddress
+                    )
             ).to.be.revertedWith("only barkeeper");
         });
 
         it("Barkeeper should be able to create a new native quest", async function () {
             const trx = await tavern
                 .connect(accounts_.owner)
-            ["createNewQuest(uint32,uint32,uint256,string)"](1, 2, 1000, "Quest URI");
+                ["createNewQuest(uint32,uint32,uint256,string)"](
+                    1,
+                    2,
+                    1000,
+                    "Quest URI"
+                );
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -481,7 +492,13 @@ describe("Tavern", function () {
         it("Barkeeper should be able to create an erc20 token quest", async function () {
             const trx = await tavern
                 .connect(accounts_.owner)
-            ["createNewQuest(uint32,uint32,uint256,string,address)"](1, 2, 1000, "Quest URI", ethers.ZeroAddress);
+                ["createNewQuest(uint32,uint32,uint256,string,address)"](
+                    1,
+                    2,
+                    1000,
+                    "Quest URI",
+                    ethers.ZeroAddress
+                );
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -519,8 +536,12 @@ describe("Tavern", function () {
         });
 
         it("Only barkeeper should be able to changes the paused state", async function () {
-            await expect(tavern.connect(accounts_.seeker).pause()).to.be.revertedWith("only barkeeper")
-            await expect(tavern.connect(accounts_.seeker).unpause()).to.be.revertedWith("only barkeeper")
+            await expect(
+                tavern.connect(accounts_.seeker).pause()
+            ).to.be.revertedWith("only barkeeper");
+            await expect(
+                tavern.connect(accounts_.seeker).unpause()
+            ).to.be.revertedWith("only barkeeper");
         });
 
         it("barkeeper should be able to pause and unpause the contract", async function () {
@@ -532,85 +553,138 @@ describe("Tavern", function () {
         });
 
         it("Only owner should be able to set the barkeeper", async function () {
-            await expect(tavern.connect(accounts_.seeker).setBarkeeper(await accounts_.owner.getAddress())).to.be.revertedWith("only owner")
+            await expect(
+                tavern
+                    .connect(accounts_.seeker)
+                    .setBarkeeper(await accounts_.owner.getAddress())
+            ).to.be.revertedWith("only owner");
         });
 
         it("Owner should be able to set the barkeeper", async function () {
             await tavern.setBarkeeper(await accounts_.seeker.getAddress());
-            expect(await tavern.getBarkeeper()).to.equal(await accounts_.seeker.getAddress());
+            expect(await tavern.getBarkeeper()).to.equal(
+                await accounts_.seeker.getAddress()
+            );
 
             await tavern.setBarkeeper(await accounts_.owner.getAddress());
         });
 
         it("Only owner should be able to set the profileNFT", async function () {
-            await expect(tavern.connect(accounts_.seeker).setProfileNft(await accounts_.owner.getAddress())).to.be.revertedWith("only owner")
+            await expect(
+                tavern
+                    .connect(accounts_.seeker)
+                    .setProfileNft(await accounts_.owner.getAddress())
+            ).to.be.revertedWith("only owner");
         });
 
         it("Owner should be able to set the profileNFT", async function () {
             const originalProfileNFT = await tavern.getProfileNFT();
 
             await tavern.setProfileNft(await accounts_.seeker.getAddress());
-            expect(await tavern.getProfileNFT()).to.equal(await accounts_.seeker.getAddress());
+            expect(await tavern.getProfileNFT()).to.equal(
+                await accounts_.seeker.getAddress()
+            );
 
             await tavern.setProfileNft(originalProfileNFT);
         });
 
-
         it("Only owner should be able to set the questImplementation", async function () {
-            await expect(tavern.connect(accounts_.seeker).setQuestImplementation(await accounts_.owner.getAddress())).to.be.revertedWith("only owner")
+            await expect(
+                tavern
+                    .connect(accounts_.seeker)
+                    .setQuestImplementation(await accounts_.owner.getAddress())
+            ).to.be.revertedWith("only owner");
         });
 
-
         it("Owner should be able to set the questImplementation", async function () {
-            const originalQuestImplementation = await tavern.questImplementation();
+            const originalQuestImplementation =
+                await tavern.questImplementation();
 
-            await tavern.setQuestImplementation(await accounts_.seeker.getAddress());
-            expect(await tavern.questImplementation()).to.equal(await accounts_.seeker.getAddress());
+            await tavern.setQuestImplementation(
+                await accounts_.seeker.getAddress()
+            );
+            expect(await tavern.questImplementation()).to.equal(
+                await accounts_.seeker.getAddress()
+            );
 
             await tavern.setQuestImplementation(originalQuestImplementation);
         });
 
         it("Only owner should be able to set the escrowNativeImplementation", async function () {
-            await expect(tavern.connect(accounts_.seeker).setEscrowNativeImplementation(await accounts_.owner.getAddress())).to.be.revertedWith("only owner")
+            await expect(
+                tavern
+                    .connect(accounts_.seeker)
+                    .setEscrowNativeImplementation(
+                        await accounts_.owner.getAddress()
+                    )
+            ).to.be.revertedWith("only owner");
         });
 
         it("Owner should be able to set the escrowNativeImplementation", async function () {
-            const originalEscrowNativeImplementation = await tavern.escrowNativeImplementation();
+            const originalEscrowNativeImplementation =
+                await tavern.escrowNativeImplementation();
 
-            await tavern.setEscrowNativeImplementation(await accounts_.seeker.getAddress());
-            expect(await tavern.escrowNativeImplementation()).to.equal(await accounts_.seeker.getAddress());
+            await tavern.setEscrowNativeImplementation(
+                await accounts_.seeker.getAddress()
+            );
+            expect(await tavern.escrowNativeImplementation()).to.equal(
+                await accounts_.seeker.getAddress()
+            );
 
-            await tavern.setEscrowNativeImplementation(originalEscrowNativeImplementation);
+            await tavern.setEscrowNativeImplementation(
+                originalEscrowNativeImplementation
+            );
         });
 
         it("Only owner should be able to set the escrowTokenImplementation", async function () {
-            await expect(tavern.connect(accounts_.seeker).setEscrowTokenImplementation(await accounts_.owner.getAddress())).to.be.revertedWith("only owner")
+            await expect(
+                tavern
+                    .connect(accounts_.seeker)
+                    .setEscrowTokenImplementation(
+                        await accounts_.owner.getAddress()
+                    )
+            ).to.be.revertedWith("only owner");
         });
 
         it("Owner should be able to set the escrowTokenImplementation", async function () {
-            const originalEscrowTokenImplementation = await tavern.escrowTokenImplementation();
+            const originalEscrowTokenImplementation =
+                await tavern.escrowTokenImplementation();
 
-            await tavern.setEscrowTokenImplementation(await accounts_.seeker.getAddress());
-            expect(await tavern.escrowTokenImplementation()).to.equal(await accounts_.seeker.getAddress());
+            await tavern.setEscrowTokenImplementation(
+                await accounts_.seeker.getAddress()
+            );
+            expect(await tavern.escrowTokenImplementation()).to.equal(
+                await accounts_.seeker.getAddress()
+            );
 
-            await tavern.setEscrowTokenImplementation(originalEscrowTokenImplementation);
+            await tavern.setEscrowTokenImplementation(
+                originalEscrowTokenImplementation
+            );
         });
 
         it("Only owner should be able to set the mediator", async function () {
-            await expect(tavern.connect(accounts_.seeker).setMediator(await accounts_.owner.getAddress())).to.be.revertedWith("only owner")
+            await expect(
+                tavern
+                    .connect(accounts_.seeker)
+                    .setMediator(await accounts_.owner.getAddress())
+            ).to.be.revertedWith("only owner");
         });
 
         it("Owner should be able to set the mediator", async function () {
             const originalMediator = await tavern.mediator();
 
             await tavern.setMediator(await accounts_.seeker.getAddress());
-            expect(await tavern.mediator()).to.equal(await accounts_.seeker.getAddress());
+            expect(await tavern.mediator()).to.equal(
+                await accounts_.seeker.getAddress()
+            );
 
             await tavern.setMediator(originalMediator);
         });
 
         it("Only owner should be able to set the reviewPeriod", async function () {
-            await expect(tavern.connect(accounts_.seeker).setReviewPeriod(1000)).to.be.revertedWith("only owner")
+            await expect(
+                tavern.connect(accounts_.seeker).setReviewPeriod(1000)
+            ).to.be.revertedWith("only owner");
         });
 
         it("Owner should be able to set the reviewPeriod", async function () {
@@ -623,7 +697,14 @@ describe("Tavern", function () {
         });
 
         it("Only owner should be able to recoverTokens", async function () {
-            await expect(tavern.connect(accounts_.seeker).recoverTokens(ethers.ZeroAddress, await accounts_.owner.getAddress())).to.be.revertedWith("only owner")
+            await expect(
+                tavern
+                    .connect(accounts_.seeker)
+                    .recoverTokens(
+                        ethers.ZeroAddress,
+                        await accounts_.owner.getAddress()
+                    )
+            ).to.be.revertedWith("only owner");
         });
 
         it("Owner should be able to recoverTokens native", async function () {
@@ -637,41 +718,69 @@ describe("Tavern", function () {
 
             await selfDestruct.sendEther(tavern.target);
 
-            const balanceBefore = await ethers.provider.getBalance(tavern.target);
+            const balanceBefore = await ethers.provider.getBalance(
+                tavern.target
+            );
 
             expect(balanceBefore).to.equal(ethers.parseEther("1.0"));
 
-            const ownerBalanceBefore = await ethers.provider.getBalance(await accounts_.seeker.getAddress());
+            const ownerBalanceBefore = await ethers.provider.getBalance(
+                await accounts_.seeker.getAddress()
+            );
 
-            await tavern.recoverTokens(ethers.ZeroAddress, await accounts_.seeker.getAddress());
+            await tavern.recoverTokens(
+                ethers.ZeroAddress,
+                await accounts_.seeker.getAddress()
+            );
 
-            const balanceAfter = await ethers.provider.getBalance(tavern.target);
+            const balanceAfter = await ethers.provider.getBalance(
+                tavern.target
+            );
 
             expect(balanceAfter).to.equal(0);
 
-            const ownerBalanceAfter = await ethers.provider.getBalance(await accounts_.seeker.getAddress());
+            const ownerBalanceAfter = await ethers.provider.getBalance(
+                await accounts_.seeker.getAddress()
+            );
 
-            expect(ownerBalanceAfter).to.equal(ownerBalanceBefore + ethers.parseEther("1.0"));
+            expect(ownerBalanceAfter).to.equal(
+                ownerBalanceBefore + ethers.parseEther("1.0")
+            );
         });
 
         it("Owner should be able to recoverTokens erc20", async function () {
-            const mockToken = await mockTokenSetup(true);
+            const mockToken = await mockTokenSetup(
+                "mockToken",
+                "mToken",
+                18,
+                true
+            );
 
             await mockToken.mint(tavern.target, 1000);
 
             expect(await mockToken.balanceOf(tavern.target)).to.equal(1000);
 
-            expect(await mockToken.balanceOf(await accounts_.owner.getAddress())).to.equal(0);
+            expect(
+                await mockToken.balanceOf(await accounts_.owner.getAddress())
+            ).to.equal(0);
 
-            await tavern.recoverTokens(mockToken.target, await accounts_.owner.getAddress());
+            await tavern.recoverTokens(
+                mockToken.target,
+                await accounts_.owner.getAddress()
+            );
 
             expect(await mockToken.balanceOf(tavern.target)).to.equal(0);
-            expect(await mockToken.balanceOf(await accounts_.owner.getAddress())).to.equal(1000);
+            expect(
+                await mockToken.balanceOf(await accounts_.owner.getAddress())
+            ).to.equal(1000);
         });
 
         it("Get rewarder should revert when contract is paused", async function () {
             await tavern.pause();
-            await expect(tavern.getRewarder()).to.be.revertedWithCustomError(tavern, "EnforcedPause");
+            await expect(tavern.getRewarder()).to.be.revertedWithCustomError(
+                tavern,
+                "EnforcedPause"
+            );
             await tavern.unpause();
         });
 
@@ -681,7 +790,10 @@ describe("Tavern", function () {
 
         it("Get profile nft sjould revert when contract is paused", async function () {
             await tavern.pause();
-            await expect(tavern.getProfileNFT()).to.be.revertedWithCustomError(tavern, "EnforcedPause");
+            await expect(tavern.getProfileNFT()).to.be.revertedWithCustomError(
+                tavern,
+                "EnforcedPause"
+            );
             await tavern.unpause();
         });
 
@@ -691,12 +803,17 @@ describe("Tavern", function () {
 
         it("OwnerOf should revert when contract is paused", async function () {
             await tavern.pause();
-            await expect(tavern.ownerOf(0)).to.be.revertedWithCustomError(tavern, "EnforcedPause");
+            await expect(tavern.ownerOf(0)).to.be.revertedWithCustomError(
+                tavern,
+                "EnforcedPause"
+            );
             await tavern.unpause();
         });
 
         it("OwnerOf should return the owner of the nft", async function () {
-            expect(await tavern.ownerOf(1)).to.equal(await accounts_.seeker.getAddress());
+            expect(await tavern.ownerOf(1)).to.equal(
+                await accounts_.seeker.getAddress()
+            );
         });
     });
 });
