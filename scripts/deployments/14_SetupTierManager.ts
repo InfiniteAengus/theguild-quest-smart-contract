@@ -49,6 +49,7 @@ async function main() {
             tierConditions.tier1.xpPoints,
             tierConditions.tier1.novicesReferred,
             tierConditions.tier1.adeptsReferred,
+            tierConditions.tier1.expertsReferred,
             tierConditions.tier1.mastersReferred,
             tierConditions.tier1.godsReferred
         );
@@ -62,6 +63,7 @@ async function main() {
             tierConditions.tier2.xpPoints,
             tierConditions.tier2.novicesReferred,
             tierConditions.tier2.adeptsReferred,
+            tierConditions.tier2.expertsReferred,
             tierConditions.tier2.mastersReferred,
             tierConditions.tier2.godsReferred
         );
@@ -75,6 +77,7 @@ async function main() {
             tierConditions.tier3.xpPoints,
             tierConditions.tier3.novicesReferred,
             tierConditions.tier3.adeptsReferred,
+            tierConditions.tier3.expertsReferred,
             tierConditions.tier3.mastersReferred,
             tierConditions.tier3.godsReferred
         );
@@ -88,6 +91,7 @@ async function main() {
             tierConditions.tier4.xpPoints,
             tierConditions.tier4.novicesReferred,
             tierConditions.tier4.adeptsReferred,
+            tierConditions.tier4.expertsReferred,
             tierConditions.tier4.mastersReferred,
             tierConditions.tier4.godsReferred
         );
@@ -101,6 +105,7 @@ async function main() {
             tierConditions.tier5.xpPoints,
             tierConditions.tier5.novicesReferred,
             tierConditions.tier5.adeptsReferred,
+            tierConditions.tier5.expertsReferred,
             tierConditions.tier5.mastersReferred,
             tierConditions.tier5.godsReferred
         );

@@ -97,39 +97,44 @@ export type LayerKeys = "layer1" | "layer2" | "layer3" | "layer4";
 
 export type TierConditions = {
     tier1: {
-        xpPoints: number;
-        novicesReferred: number;
-        adeptsReferred: number;
-        mastersReferred: number;
-        godsReferred: number;
+        xpPoints: bigint;
+        novicesReferred: bigint;
+        adeptsReferred: bigint;
+        expertsReferred: bigint;
+        mastersReferred: bigint;
+        godsReferred: bigint;
     };
     tier2: {
-        xpPoints: number;
-        novicesReferred: number;
-        adeptsReferred: number;
-        mastersReferred: number;
-        godsReferred: number;
+        xpPoints: bigint;
+        novicesReferred: bigint;
+        adeptsReferred: bigint;
+        expertsReferred: bigint;
+        mastersReferred: bigint;
+        godsReferred: bigint;
     };
     tier3: {
-        xpPoints: number;
-        novicesReferred: number;
-        adeptsReferred: number;
-        mastersReferred: number;
-        godsReferred: number;
+        xpPoints: bigint;
+        novicesReferred: bigint;
+        adeptsReferred: bigint;
+        expertsReferred: bigint;
+        mastersReferred: bigint;
+        godsReferred: bigint;
     };
     tier4: {
-        xpPoints: number;
-        novicesReferred: number;
-        adeptsReferred: number;
-        mastersReferred: number;
-        godsReferred: number;
+        xpPoints: bigint;
+        novicesReferred: bigint;
+        adeptsReferred: bigint;
+        expertsReferred: bigint;
+        mastersReferred: bigint;
+        godsReferred: bigint;
     };
     tier5: {
-        xpPoints: number;
-        novicesReferred: number;
-        adeptsReferred: number;
-        mastersReferred: number;
-        godsReferred: number;
+        xpPoints: bigint;
+        novicesReferred: bigint;
+        adeptsReferred: bigint;
+        expertsReferred: bigint;
+        mastersReferred: bigint;
+        godsReferred: bigint;
     };
 };
 
