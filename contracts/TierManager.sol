@@ -18,6 +18,7 @@ contract TierManager is ITierManager {
         uint256 xpPoints;
         uint256 novicesReferred;
         uint256 adeptsReferred;
+        uint256 expertsReferred;
         uint256 mastersReferred;
         uint256 godsReferred;
     }
@@ -50,11 +51,13 @@ contract TierManager is ITierManager {
         uint256 xpPoints,
         uint256 novicesReferred,
         uint256 adeptsReferred,
+        uint256 expertsReferred,
         uint256 mastersReferred,
         uint256 godsReferred
     ) external onlyMagistrate {
         tierUpConditions[tier].novicesReferred = novicesReferred;
         tierUpConditions[tier].adeptsReferred = adeptsReferred;
+        tierUpConditions[tier].expertsReferred = expertsReferred;
         tierUpConditions[tier].mastersReferred = mastersReferred;
         tierUpConditions[tier].godsReferred = godsReferred;
         tierUpConditions[tier].xpPoints = xpPoints;
@@ -92,15 +95,20 @@ contract TierManager is ITierManager {
         }
         totalTierCounts -= tierCounts[1];
 
-        if (totalTierCounts < tierUpConditions[tier].mastersReferred) {
+        if (totalTierCounts < tierUpConditions[tier].expertsReferred) {
             return false;
         }
         totalTierCounts -= tierCounts[2];
 
-        if (totalTierCounts < tierUpConditions[tier].godsReferred) {
+        if (totalTierCounts < tierUpConditions[tier].mastersReferred) {
             return false;
         }
         totalTierCounts -= tierCounts[3];
+
+        if (totalTierCounts < tierUpConditions[tier].godsReferred) {
+            return false;
+        }
+        totalTierCounts -= tierCounts[4];
 
         IERC20 xp = IERC20(xpToken);
         if (xp.balanceOf(account) < tierUpConditions[tier].xpPoints)
