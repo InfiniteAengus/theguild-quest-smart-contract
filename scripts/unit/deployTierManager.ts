@@ -1,11 +1,9 @@
 import { ethers } from "hardhat";
 
-const registry = ethers.getAddress("0x000000006551c19487814612e58FE06813775758");
-
-const myWallet = ethers.getAddress("0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1");
+const xp = ethers.getAddress("0x7409F45348b611c981488A137f75a7B3F901B8b5");
 
 async function main() {
-  const tierManager = await ethers.deployContract("TierManager", ["0x88F8916481118cA802aC8116f82c7002602a49BC"]);
+  const tierManager = await ethers.deployContract("TierManager", [xp]);
 
   await tierManager.waitForDeployment();
 
