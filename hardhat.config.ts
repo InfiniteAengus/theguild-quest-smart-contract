@@ -8,6 +8,7 @@ const env = load({
     INFURA_SECRET_KEY: String,
     DEV_WALLET_PRIVATE_KEY: String,
     ETHERSCAN_API_KEY: String,
+    GUILD_MASTER_KEY: String
 });
 
 // To enable forking, turn one of these booleans on, and then run your tasks/scripts using ``--network hardhat``
@@ -65,11 +66,11 @@ const config: HardhatUserConfig = {
             chainId: 43113,
             gasPrice: 35000000000,
         },
-        // avalanche:{
-        //   url: "https://api.avax.network/ext/bc/C/rpc",
-        //   accounts: [env.WALLET_PRIVATE_KEY],
-        //   chainId: 43114
-        // }
+        avalanche:{
+          url: "https://api.avax.network/ext/bc/C/rpc",
+          accounts: [env.GUILD_MASTER_KEY],
+          chainId: 43114
+        },
         hardhat: {
             gasPrice: 225000000000,
             chainId: !forkingData ? 43112 : undefined, //Only specify a chainId if we are not forking
@@ -88,6 +89,7 @@ const config: HardhatUserConfig = {
             spicy: env.ETHERSCAN_API_KEY,
             snowtrace: "snowtrace",
             fuji: "snowtrace",
+            avalanche: "snowtrace",
         },
 
         customChains: [
@@ -103,8 +105,16 @@ const config: HardhatUserConfig = {
                 network: "fuji",
                 chainId: 43113,
                 urls: {
-                    apiURL: "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan",
+                    apiURL: "https://api.routescan.io/v2/network/testnet/evm/43114/etherscan",
                     browserURL: "https://avalanche.testnet.routescan.io",
+                },
+            },
+            {
+                network: "avalanche",
+                chainId: 43113,
+                urls: {
+                    apiURL: "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan",
+                    browserURL: "https://avalanche.routescan.io",
                 },
             },
         ],
