@@ -1,0 +1,16 @@
+{
+    "registry": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "account": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "nexus": "0x8464135c8F25Da09e49BC8782676a84730C318bC",
+    "rewarder": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "profileNFT": "0x663F3ad617193148711d28f5334eE4Ed07016602",
+    "escrows": {
+        "escrowNative": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+        "escrowToken": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
+    },
+    "quest": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+    "tavern": "0x057ef64E23666F000b34aE31332854aCBd1c8544",
+    "xpToken": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+    "taxManager": "0xbdEd0D2bf404bdcBa897a74E6657f1f12e5C6fb6",
+    "tierManager": "0x0116686E2291dbd5e317F47faDBFb43B599786Ef"
+}
