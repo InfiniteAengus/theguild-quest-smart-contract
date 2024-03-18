@@ -19,6 +19,8 @@
     -   [ ] `TierManager` Magistrate - Deployer
     -   [ ] `GuildXP` Owner
 
+    NOTE: Deployer related accounts will need to be configured within the hardhat config file through a .env
+
 -   [ ] Parameters
 
     -   [ ] `TierManager` Tier Conditions
