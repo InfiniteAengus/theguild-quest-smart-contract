@@ -14,6 +14,7 @@ import {
 import {
     fixture_profile_nft_integration_tests,
     fixture_profile_nft_unit_tests,
+    full_integration_fixture,
 } from "./helpers/fixtures";
 import {
     mockFailReceiverSetup,
@@ -36,7 +37,7 @@ describe("ProfileNFT", function () {
 
     async function fixture_integration_tests() {
         const accounts = await mockAccounts();
-        return await fixture_profile_nft_integration_tests(accounts);
+        return await full_integration_fixture(accounts);
     }
 
     // Unit tests to test the ProfileNFT contract
@@ -189,7 +190,7 @@ describe("ProfileNFT", function () {
         let mockToken_: MockToken;
 
         it("Should not be able to recover tokens if the caller is not the counselor", async function () {
-            mockToken_ = await mockTokenSetup(true);
+            mockToken_ = await mockTokenSetup("mockToken", "mToken", 18, true);
 
             await expect(
                 profileNFT_
@@ -285,24 +286,34 @@ describe("ProfileNFT", function () {
     });
 
     describe("Integration Tests", function () {
-        let nexus_: Nexus, accounts_: Signer[], profileNFT_: ProfileNFT;
+        let nexus_: Nexus,
+            accounts_: {
+                owner: Signer;
+                seeker: Signer;
+                solver: Signer;
+            },
+            profileNFT_: ProfileNFT;
 
         it("Should be deployed correctly", async function () {
-            const { accounts, profileNFT, nexus } = await loadFixture(
+            const { accounts, contracts } = await loadFixture(
                 fixture_integration_tests
             );
 
-            expect(await profileNFT.nexus()).to.equal(nexus.target);
-            expect(await profileNFT.counselor()).to.equal(
-                await accounts[0].getAddress()
+            expect(await contracts.profileNFT.nexus()).to.equal(
+                contracts.nexus.target
+            );
+            expect(await contracts.profileNFT.counselor()).to.equal(
+                await accounts.owner.getAddress()
             );
 
-            await nexus.setNFT(profileNFT.target);
-            await nexus.setGuardian(await accounts[0].getAddress());
+            await contracts.nexus.setNFT(contracts.profileNFT.target);
+            await contracts.nexus.setGuardian(
+                await accounts.owner.getAddress()
+            );
 
             accounts_ = accounts;
-            profileNFT_ = profileNFT;
-            nexus_ = nexus;
+            profileNFT_ = contracts.profileNFT;
+            nexus_ = contracts.nexus;
         });
 
         let profileCreated: ReferralHandlerERC6551Account;
@@ -310,29 +321,31 @@ describe("ProfileNFT", function () {
         it("Only nexus contract should be able to issue a profile nft", async function () {
             await expect(
                 profileNFT_
-                    .connect(accounts_[1])
+                    .connect(accounts_.seeker)
                     .issueProfile(
-                        await accounts_[1].getAddress(),
+                        await accounts_.seeker.getAddress(),
                         "https://www.example.com"
                     )
             ).to.be.revertedWith("only nexus");
         });
 
         it("Should be able to issue a profile nft to a user through the Nexus contract", async function () {
-            await nexus_.createProfile(
-                0,
-                await accounts_[1].getAddress(),
-                "https://www.example.com"
-            );
+            await nexus_
+                .connect(accounts_.owner)
+                .createProfile(
+                    0,
+                    await accounts_.seeker.getAddress(),
+                    "https://www.example.com"
+                );
 
             const balance = await profileNFT_.balanceOf(
-                await accounts_[1].getAddress()
+                await accounts_.seeker.getAddress()
             );
 
             expect(balance).to.equal(1);
 
             expect(await profileNFT_.ownerOf(1)).to.equal(
-                await accounts_[1].getAddress()
+                await accounts_.seeker.getAddress()
             );
 
             const handlerAddress = await nexus_.getHandler(1);
@@ -352,7 +365,7 @@ describe("ProfileNFT", function () {
         it("Should not be able to change the URI unless the caller is the Handler contract", async function () {
             await expect(
                 profileNFT_
-                    .connect(accounts_[1])
+                    .connect(accounts_.seeker)
                     .changeURI(1, "https://www.example2.com")
             ).to.be.revertedWith("Only Guardian can update Token's URI");
         });
@@ -360,7 +373,7 @@ describe("ProfileNFT", function () {
         it("Should be able to change the URI if the caller is the Guardian", async function () {
             // Updating the URI
             await profileNFT_
-                .connect(accounts_[0])
+                .connect(accounts_.owner)
                 .changeURI(1, "https://www.example2.com");
 
             const tokenURI = await profileNFT_.tokenURI(1);
@@ -376,25 +389,25 @@ describe("ProfileNFT", function () {
 
             await nexus_.createProfile(
                 1,
-                await accounts_[2].getAddress(),
+                await accounts_.solver.getAddress(),
                 "https://www.example.com"
             );
 
             await nexus_.createProfile(
                 1,
-                await accounts_[3].getAddress(),
+                await accounts_.solver.getAddress(),
                 "https://www.example.com"
             );
 
             await nexus_.createProfile(
                 1,
-                await accounts_[4].getAddress(),
+                await accounts_.solver.getAddress(),
                 "https://www.example.com"
             );
 
             await nexus_.createProfile(
                 1,
-                await accounts_[5].getAddress(),
+                await accounts_.solver.getAddress(),
                 "https://www.example.com"
             );
 

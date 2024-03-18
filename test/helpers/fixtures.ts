@@ -166,7 +166,7 @@ export async function fixture_escrow_unit_tests(accounts: Signer[]) {
         nexus.nexus
     );
 
-    const mockToken = await mockTokenSetup(true);
+    const mockToken = await mockTokenSetup("mockToken", "mToken", 18, true);
 
     const questNative = await mockQuestSetup(
         true,
@@ -239,7 +239,7 @@ export async function fixture_quest_unit_tests(accounts: Signer[]) {
         mockRewarder
     );
 
-    const mockToken = await mockTokenSetup(true);
+    const mockToken = await mockTokenSetup("mockToken", "mToken", 18, true);
 
     return {
         mockTavern,
@@ -263,7 +263,7 @@ export async function fixture_tavern_unit_tests(accounts: Signer[]) {
     const taxManager = await taxManagerSetup(true);
 
     const mockNft = await mockNFTSetup(true);
-    const mockERC20 = await mockTokenSetup(true);
+    const mockERC20 = await mockTokenSetup("mockToken", "mToken", 18, true);
 
     const quest = await questSetup(true);
 
@@ -296,7 +296,7 @@ export async function fixture_rewarder_unit_tests(accounts: Signer[]) {
     const taxManager = await taxManagerSetup(true);
     const nft = await profileNFTSetup(nexus, true);
 
-    const mockToken = await mockTokenSetup(true);
+    const mockToken = await mockTokenSetup("mockToken", "mToken", 18, true);
 
     await nexus.setGuardian(await accounts[0].getAddress());
 

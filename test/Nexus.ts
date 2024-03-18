@@ -8,7 +8,10 @@ import {
     ProfileNFT,
     Nexus,
 } from "../typechain-types";
-import { fixture_nexus_unit_tests } from "./helpers/fixtures";
+import {
+    fixture_nexus_unit_tests,
+    full_integration_fixture,
+} from "./helpers/fixtures";
 import { parseEventLogs } from "./helpers/utils";
 import { mockTokenSetup, selfDestructSetup } from "./helpers/setup";
 
@@ -23,6 +26,11 @@ describe("Nexus", function () {
     async function fixture_unit_tests() {
         const accounts = await mockAccounts();
         return await fixture_nexus_unit_tests(accounts);
+    }
+
+    async function fixture_integration_tests() {
+        const accounts = await mockAccounts();
+        return await full_integration_fixture(accounts);
     }
 
     // Unit tests to test the Nexus contract
@@ -281,32 +289,36 @@ describe("Nexus", function () {
     describe("Integration Tests", function () {
         let nexus_: Nexus,
             erc6551_: ERC6551Setup,
-            accounts_: Signer[],
+            accounts_: {
+                owner: Signer;
+                seeker: Signer;
+                solver: Signer;
+            },
             profileNFT_: ProfileNFT,
             createdAccounts: CreatedAccount[] = [];
 
         it("Able to create multiple accounts through create profile without any address clashing during creation", async function () {
-            const { nexus, erc6551, accounts, profileNFT } = await loadFixture(
-                fixture_unit_tests
+            const { accounts, contracts } = await loadFixture(
+                fixture_integration_tests
             );
 
-            nexus_ = nexus;
-            erc6551_ = erc6551;
+            nexus_ = contracts.nexus;
+            erc6551_ = contracts.erc6551;
             accounts_ = accounts;
-            profileNFT_ = profileNFT;
+            profileNFT_ = contracts.profileNFT;
 
             // Sets the guardian
-            await nexus_.setGuardian(await accounts_[0].getAddress());
+            await nexus_.setGuardian(await accounts_.owner.getAddress());
 
             // Sets NFT
             await nexus_.setNFT(profileNFT_.target);
 
-            for (let i = 1; i < accounts_.length; i++) {
+            for (let i = 1; i < 5; i++) {
                 const handlerAddress = await nexus_
-                    .connect(accounts_[0])
+                    .connect(accounts_.owner)
                     .createProfile(
                         0,
-                        await accounts_[i].getAddress(),
+                        await accounts_.seeker.getAddress(),
                         "ProfileLinkGoesHere"
                     );
 
@@ -329,7 +341,7 @@ describe("Nexus", function () {
                 createdAccounts.push(newProfileIssuance);
             }
 
-            const accountLength = accounts_.length - 1;
+            const accountLength = 5 - 1;
             const uniqueAccounts = new Set(
                 createdAccounts.map((x) => x.handlerAddress)
             );
@@ -340,10 +352,10 @@ describe("Nexus", function () {
 
         it("Should be able to create another account which references the same address", async function () {
             const handlerAddress = await nexus_
-                .connect(accounts_[0])
+                .connect(accounts_.owner)
                 .createProfile(
                     0,
-                    await accounts_[1].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkGoesHere"
                 );
 
@@ -376,9 +388,9 @@ describe("Nexus", function () {
 
         it("Accounts cannot use it's own ID as a referrer", async function () {
             await expect(
-                nexus_.connect(accounts_[0]).createProfile(
+                nexus_.connect(accounts_.owner).createProfile(
                     createdAccounts.length + 1, // This value should be the newest mintable nft ID that is not in the createdAccounts array
-                    await accounts_[1].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkGoesHere"
                 )
             ).to.be.revertedWith("Cannot be its own referrer");
@@ -387,10 +399,10 @@ describe("Nexus", function () {
         it("Accounts should not be able to use an NFT Id which has not been minted as a referrer", async function () {
             await expect(
                 nexus_
-                    .connect(accounts_[0])
+                    .connect(accounts_.owner)
                     .createProfile(
                         999,
-                        await accounts_[1].getAddress(),
+                        await accounts_.seeker.getAddress(),
                         "ProfileLinkGoesHere"
                     )
             ).to.be.revertedWith("Referrer should have a valid profile id");
@@ -403,10 +415,10 @@ describe("Nexus", function () {
 
         it("Creating an account with a referral should add a handler as tier 1 to the referrer's referral tree", async function () {
             const handlerAddress = await nexus_
-                .connect(accounts_[0])
+                .connect(accounts_.owner)
                 .createProfile(
                     1,
-                    await accounts_[1].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkGoesHere"
                 );
 
@@ -449,10 +461,10 @@ describe("Nexus", function () {
 
         it("Should be able to create an account with depthRef of 2 and update referral trees", async function () {
             const handlerAddress = await nexus_
-                .connect(accounts_[0])
+                .connect(accounts_.owner)
                 .createProfile(
                     await depth1Account.getNftId(),
-                    await accounts_[3].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkGoesHere"
                 );
 
@@ -501,10 +513,10 @@ describe("Nexus", function () {
 
         it("Should be able to create an account with depthRef of 3 and update referral trees", async function () {
             const handlerAddress = await nexus_
-                .connect(accounts_[0])
+                .connect(accounts_.owner)
                 .createProfile(
                     await depth2Account.getNftId(),
-                    await accounts_[4].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkGoesHere"
                 );
 
@@ -558,10 +570,10 @@ describe("Nexus", function () {
 
         it("Should be able to create an account with depthRef of 4 and update referral trees", async function () {
             const handlerAddress = await nexus_
-                .connect(accounts_[0])
+                .connect(accounts_.owner)
                 .createProfile(
                     await depth3Account.getNftId(),
-                    await accounts_[5].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkGoesHere"
                 );
 
@@ -620,10 +632,10 @@ describe("Nexus", function () {
 
         it("Should not be updating accounts that are at 5 DepthRef or more", async function () {
             const handlerAddress = await nexus_
-                .connect(accounts_[0])
+                .connect(accounts_.owner)
                 .createProfile(
                     await depth4Account.getNftId(),
-                    await accounts_[6].getAddress(),
+                    await accounts_.seeker.getAddress(),
                     "ProfileLinkGoesHere"
                 );
 
@@ -684,39 +696,67 @@ describe("Nexus", function () {
         });
 
         it("Only master should be able to recoverTokens native", async function () {
-            await expect(nexus_.connect(accounts_[1]).recoverTokens(ethers.ZeroAddress, await accounts_[1].getAddress())).to.be.revertedWith("only master");
+            await expect(
+                nexus_
+                    .connect(accounts_.seeker)
+                    .recoverTokens(
+                        ethers.ZeroAddress,
+                        await accounts_.seeker.getAddress()
+                    )
+            ).to.be.revertedWith("only master");
 
             const selfDestruct = await selfDestructSetup(true);
 
             // Transfer eth to tierManager
-            await accounts_[2].sendTransaction({
+            await accounts_.solver.sendTransaction({
                 to: selfDestruct.target,
                 value: ethers.parseEther("1.0"),
             });
 
             await selfDestruct.sendEther(nexus_.target);
 
-            expect(await ethers.provider.getBalance(nexus_.target)).to.equal(ethers.parseEther("1.0"));
+            expect(await ethers.provider.getBalance(nexus_.target)).to.equal(
+                ethers.parseEther("1.0")
+            );
 
-            const balanceBefore = await ethers.provider.getBalance(await accounts_[2].getAddress());
+            const balanceBefore = await ethers.provider.getBalance(
+                await accounts_.solver.getAddress()
+            );
 
-            await nexus_.recoverTokens(ethers.ZeroAddress, await accounts_[2].getAddress());
+            await nexus_.recoverTokens(
+                ethers.ZeroAddress,
+                await accounts_.solver.getAddress()
+            );
 
-            const balanceAfter = await ethers.provider.getBalance(await accounts_[2].getAddress());
+            const balanceAfter = await ethers.provider.getBalance(
+                await accounts_.solver.getAddress()
+            );
 
-            expect(balanceAfter - (balanceBefore)).to.equal(ethers.parseEther("1.0"));
+            expect(balanceAfter - balanceBefore).to.equal(
+                ethers.parseEther("1.0")
+            );
         });
 
         it("Only master should be able to recoverTokens erc20", async function () {
-            const mockToken = await mockTokenSetup(true);
+            const mockToken = await mockTokenSetup(
+                "mockToken",
+                "mToken",
+                18,
+                true
+            );
 
             await mockToken.mint(nexus_.target, 1000);
 
             expect(await mockToken.balanceOf(nexus_.target)).to.equal(1000);
 
-            await nexus_.recoverTokens(mockToken.target, await accounts_[2].getAddress());
+            await nexus_.recoverTokens(
+                mockToken.target,
+                await accounts_.solver.getAddress()
+            );
 
-            expect(await mockToken.balanceOf(await accounts_[2].getAddress())).to.equal(1000);
+            expect(
+                await mockToken.balanceOf(await accounts_.solver.getAddress())
+            ).to.equal(1000);
         });
     });
 });
