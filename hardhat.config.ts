@@ -107,15 +107,15 @@ const config: HardhatUserConfig = {
                 network: "fuji",
                 chainId: 43113,
                 urls: {
-                    apiURL: "https://api.routescan.io/v2/network/testnet/evm/43114/etherscan",
+                    apiURL: "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan",
                     browserURL: "https://avalanche.testnet.routescan.io",
                 },
             },
             {
                 network: "avalanche",
-                chainId: 43113,
+                chainId: 43114,
                 urls: {
-                    apiURL: "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan",
+                    apiURL: "https://api.routescan.io/v2/network/testnet/evm/43114/etherscan",
                     browserURL: "https://avalanche.routescan.io",
                 },
             },
