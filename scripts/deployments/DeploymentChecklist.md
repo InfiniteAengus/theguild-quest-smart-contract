@@ -92,6 +92,4 @@
     - `setBulkReferralRate()` for referral rates based on tiers and layers
 15. Tier Manager Tier Up Condition Setup
     - Set Conditions for Tiers 1 - 5, including values for each reference level
-16. Tavern Review Period Setup
-    - `setReviewPeriod()` with Review Period
 
