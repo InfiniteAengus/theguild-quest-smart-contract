@@ -4,14 +4,8 @@ import fs from "fs";
 import { nonDeployerConfigAccounts } from "./config/nonDeployerAccounts";
 
 async function main() {
-    const [
-        defaultDeployer,
-        nexusMaster,
-        profileNFTCounselor,
-        tavernOwner,
-        taxManagerCustodian,
-        tierManagerMagistrate,
-    ] = await ethers.getSigners();
+    const [devAccount, defaultDeployer] = await ethers.getSigners();
+
     const network = await ethers.provider.getNetwork();
 
     const rewarderSteward = nonDeployerConfigAccounts.rewarderSteward;

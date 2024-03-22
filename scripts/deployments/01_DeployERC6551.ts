@@ -3,14 +3,7 @@ import { erc6551Setup } from "../../test/helpers/setup";
 import fs from "fs";
 
 async function main() {
-    const [
-        defaultDeployer,
-        nexusMaster,
-        profileNFTCounselor,
-        tavernOwner,
-        taxManagerCustodian,
-        tierManagerMagistrate,
-    ] = await ethers.getSigners();
+    const [devAccount, defaultDeployer] = await ethers.getSigners();
     const network = await ethers.provider.getNetwork();
 
     console.log("Network: ", network.name);

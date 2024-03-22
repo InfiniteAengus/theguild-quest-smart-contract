@@ -11,18 +11,12 @@ import {
 } from "./config/contractParameters";
 
 async function main() {
-    const [
-        defaultDeployer,
-        nexusMaster,
-        profileNFTCounselor,
-        tavernOwner,
-        taxManagerCustodian,
-        tierManagerMagistrate,
-    ] = await ethers.getSigners();
+    const [devAccount, defaultDeployer] = await ethers.getSigners();
+
     const network = await ethers.provider.getNetwork();
 
     console.log("Network: ", network.name);
-    console.log("Deployer address: ", await taxManagerCustodian.getAddress());
+    console.log("Deployer address: ", await defaultDeployer.getAddress());
 
     const addressesData = fs.readFileSync(
         "./deployments/avax/" + network.name + "/addresses.json",
@@ -43,25 +37,25 @@ async function main() {
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setPlatformTreasuryPool(accounts.taxManagerPlatformTreasury);
 
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setPlatformRevenuePool(accounts.taxManagerPlatformRevenuePool);
 
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setReferralTaxTreasury(accounts.taxManagerReferralTaxTreasury);
 
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setDisputeFeesTreasury(accounts.taxManagerDisputeFeesTreasury);
 
     sleep(timeout);
@@ -70,13 +64,13 @@ async function main() {
     // Values are based on the current values on figma
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setSeekerFees(seekerFees.referralRewards, seekerFees.platformRevenue);
 
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setSolverFees(
             solverFees.referralRewards,
             solverFees.platformRevenue,
@@ -86,13 +80,13 @@ async function main() {
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setDisputeDepositRate(disputeDepositRate);
 
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setBulkReferralRate(
             1,
             referralRewardsDistribution.tier1.layer1,
@@ -104,7 +98,7 @@ async function main() {
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setBulkReferralRate(
             2,
             referralRewardsDistribution.tier2.layer1,
@@ -116,7 +110,7 @@ async function main() {
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setBulkReferralRate(
             3,
             referralRewardsDistribution.tier3.layer1,
@@ -128,7 +122,7 @@ async function main() {
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setBulkReferralRate(
             4,
             referralRewardsDistribution.tier4.layer1,
@@ -140,7 +134,7 @@ async function main() {
     sleep(timeout);
 
     await taxManager
-        .connect(taxManagerCustodian)
+        .connect(defaultDeployer)
         .setBulkReferralRate(
             5,
             referralRewardsDistribution.tier5.layer1,

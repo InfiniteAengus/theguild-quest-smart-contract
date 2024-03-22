@@ -3,18 +3,12 @@ import { tierManagerSetup } from "../../test/helpers/setup";
 import fs from "fs";
 
 async function main() {
-    const [
-        defaultDeployer,
-        nexusMaster,
-        profileNFTCounselor,
-        tavernOwner,
-        taxManagerCustodian,
-        tierManagerMagistrate,
-    ] = await ethers.getSigners();
+    const [devAccount, defaultDeployer] = await ethers.getSigners();
+
     const network = await ethers.provider.getNetwork();
 
     console.log("Network: ", network.name);
-    console.log("Deployer address: ", await tierManagerMagistrate.getAddress());
+    console.log("Deployer address: ", await defaultDeployer.getAddress());
 
     const addressesData = fs.readFileSync(
         "./deployments/avax/" + network.name + "/addresses.json",
@@ -24,7 +18,7 @@ async function main() {
     const parsedAddressesData = JSON.parse(addressesData);
 
     const tierManager = await tierManagerSetup(
-        tierManagerMagistrate,
+        defaultDeployer,
         false,
         parsedAddressesData.xpToken
     );

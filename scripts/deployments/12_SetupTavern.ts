@@ -6,18 +6,12 @@ import { NonDeployerConfigAccounts } from "../../test/helpers/types";
 import { reviewPeriod } from "./config/contractParameters";
 
 async function main() {
-    const [
-        defaultDeployer,
-        nexusMaster,
-        profileNFTCounselor,
-        tavernOwner,
-        taxManagerCustodian,
-        tierManagerMagistrate,
-    ] = await ethers.getSigners();
+    const [devAccount, defaultDeployer] = await ethers.getSigners();
+
     const network = await ethers.provider.getNetwork();
 
     console.log("Network: ", network.name);
-    console.log("Deployer address: ", await tavernOwner.getAddress());
+    console.log("Deployer address: ", await defaultDeployer.getAddress());
 
     const addressesData = fs.readFileSync(
         "./deployments/avax/" + network.name + "/addresses.json",
@@ -37,15 +31,17 @@ async function main() {
 
     sleep(timeout);
 
-    await tavern.connect(tavernOwner).setBarkeeper(accounts.tavernBarkeeper);
+    await tavern
+        .connect(defaultDeployer)
+        .setBarkeeper(accounts.tavernBarkeeper);
 
     sleep(timeout);
 
-    await tavern.connect(tavernOwner).setMediator(accounts.tavernMediator);
+    await tavern.connect(defaultDeployer).setMediator(accounts.tavernMediator);
 
     sleep(timeout);
 
-    await tavern.connect(tavernOwner).setReviewPeriod(reviewPeriod);
+    await tavern.connect(defaultDeployer).setReviewPeriod(reviewPeriod);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

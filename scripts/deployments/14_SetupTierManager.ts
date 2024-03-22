@@ -11,18 +11,12 @@ import {
 } from "./config/contractParameters";
 
 async function main() {
-    const [
-        defaultDeployer,
-        nexusMaster,
-        profileNFTCounselor,
-        tavernOwner,
-        taxManagerCustodian,
-        tierManagerMagistrate,
-    ] = await ethers.getSigners();
+    const [devAccount, defaultDeployer] = await ethers.getSigners();
+
     const network = await ethers.provider.getNetwork();
 
     console.log("Network: ", network.name);
-    console.log("Deployer address: ", await tierManagerMagistrate.getAddress());
+    console.log("Deployer address: ", await defaultDeployer.getAddress());
 
     const addressesData = fs.readFileSync(
         "./deployments/avax/" + network.name + "/addresses.json",
@@ -43,7 +37,7 @@ async function main() {
     sleep(timeout);
 
     await tierManager
-        .connect(tierManagerMagistrate)
+        .connect(defaultDeployer)
         .setConditions(
             1,
             tierConditions.tier1.xpPoints,
@@ -57,7 +51,7 @@ async function main() {
     sleep(timeout);
 
     await tierManager
-        .connect(tierManagerMagistrate)
+        .connect(defaultDeployer)
         .setConditions(
             2,
             tierConditions.tier2.xpPoints,
@@ -71,7 +65,7 @@ async function main() {
     sleep(timeout);
 
     await tierManager
-        .connect(tierManagerMagistrate)
+        .connect(defaultDeployer)
         .setConditions(
             3,
             tierConditions.tier3.xpPoints,
@@ -85,7 +79,7 @@ async function main() {
     sleep(timeout);
 
     await tierManager
-        .connect(tierManagerMagistrate)
+        .connect(defaultDeployer)
         .setConditions(
             4,
             tierConditions.tier4.xpPoints,
@@ -99,7 +93,7 @@ async function main() {
     sleep(timeout);
 
     await tierManager
-        .connect(tierManagerMagistrate)
+        .connect(defaultDeployer)
         .setConditions(
             5,
             tierConditions.tier5.xpPoints,
