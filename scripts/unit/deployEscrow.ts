@@ -1,13 +1,26 @@
 import { ethers } from "hardhat";
+import { load } from "ts-dotenv";
+
+const env = load({
+  GUILD_MASTER_PUBLIC_KEY: String
+});
 
 async function main() {
 
-  const escrow = await ethers.deployContract("Escrow", [["0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1", "0x983a7B7D5d22c49887C21C98E6ADAaD6A860FF13"]]);
+  const escrowN = await ethers.deployContract("EscrowNative");
 
-  await escrow.waitForDeployment();
+  await escrowN.waitForDeployment();
 
   console.log(
-    `Escrow deployed to ${escrow.target}`
+    `Escrow Native deployed to ${escrowN.target}`
+  );
+
+  const escrowT = await ethers.deployContract("EscrowToken");
+
+  await escrowT.waitForDeployment();
+
+  console.log(
+    `Escrow Token deployed to ${escrowT.target}`
   );
 }
 

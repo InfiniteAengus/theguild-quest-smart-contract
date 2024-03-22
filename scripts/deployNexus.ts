@@ -1,11 +1,15 @@
 import { ethers } from "hardhat";
+import { load } from "ts-dotenv";
+
+const env = load({
+  GUILD_MASTER_PUBLIC_KEY: String
+});
 
 const registry = ethers.getAddress("0x000000006551c19487814612e58FE06813775758");
 
-const myWallet = ethers.getAddress("0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1");
+const myWallet = env.GUILD_MASTER_PUBLIC_KEY;
 
 async function main() {
-
 
   const account = await ethers.deployContract("ReferralHandlerERC6551Account");
 
@@ -30,7 +34,6 @@ async function main() {
   console.log(
     `Profile NFT deployed to ${nft.target}`
   );
-
 
   await nexus.setNFT(nft.target);
 

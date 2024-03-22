@@ -1,19 +1,16 @@
 import { ethers } from "hardhat";
 
-const registry = ethers.getAddress("0x000000006551c19487814612e58FE06813775758");
+const Nexus = ethers.getAddress("0x7a3a85cDa70C5fBc24D8F84C1920ba0Eff2964Ba");
+const quest = ethers.getAddress("0x477B2B2e874820998939c977B7f7De03D48f1A98");
+const escrowN = ethers.getAddress("0x000a105F222968Df91FB22EF0A61aCB30DE10121");
+const escrowT = ethers.getAddress("0xCB57b07Bb6f03baBA194fb0B150ff6B729348D2d");
 
-const myWallet = ethers.getAddress("0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1");
-
-const ProfileNFT = ethers.getAddress("0x3Fa0c7Fa878046bA80F742C2D947a8A07C52A55D");
-
-const Nexus = ethers.getAddress("0xA43e398EB9C90f4E391562852177D62A248A1aBF");
 
 async function main() {
 
     // address _questImplementation,
     // address _escrowNativeImplementation,
     // address _escrowTokenImplementation,
-    // address _profileNft,
     // address _nexus
   const _questImplementation = await ethers.deployContract("Quest");
 
@@ -39,12 +36,12 @@ async function main() {
     `Escrow Token deployed to ${_escrowTokenImplementation.target}`
   );
 
-  const tavern = await ethers.deployContract("Tavern", [_questImplementation.target, _escrowNativeImplementation.target, _escrowTokenImplementation.target, ProfileNFT, Nexus]);
+  const tavern = await ethers.deployContract("Tavern", [_questImplementation.target, _escrowNativeImplementation.target, _escrowTokenImplementation.target, Nexus]);
 
   await tavern.waitForDeployment();
 
   console.log(
-    `Nexus deployed to ${tavern.target}`
+    `Tavern deployed to ${tavern.target}`
   );
 
  
