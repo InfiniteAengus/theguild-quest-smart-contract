@@ -8,11 +8,7 @@ const env = load({
     INFURA_SECRET_KEY: String,
     DEV_WALLET_PRIVATE_KEY: String,
     ETHERSCAN_API_KEY: String,
-    NEXUS_MASTER_PRIVATE_KEY: String,
-    PROFILE_NFT_COUNSELOR_PRIVATE_KEY: String,
-    TAVERN_OWNER_PRIVATE_KEY: String,
-    TAX_MANAGER_CUSTODIAN_PRIVATE_KEY: String,
-    TIER_MANAGER_MAGISTRATE_PRIVATE_KEY: String,
+    GUILD_MASTER_KEY: String,
 });
 
 // To enable forking, turn one of these booleans on, and then run your tasks/scripts using ``--network hardhat``
@@ -66,14 +62,7 @@ const config: HardhatUserConfig = {
         // },
         fuji: {
             url: "https://api.avax-test.network/ext/bc/C/rpc",
-            accounts: [
-                env.DEV_WALLET_PRIVATE_KEY,
-                env.NEXUS_MASTER_PRIVATE_KEY,
-                env.PROFILE_NFT_COUNSELOR_PRIVATE_KEY,
-                env.TAVERN_OWNER_PRIVATE_KEY,
-                env.TAX_MANAGER_CUSTODIAN_PRIVATE_KEY,
-                env.TIER_MANAGER_MAGISTRATE_PRIVATE_KEY,
-            ],
+            accounts: [env.DEV_WALLET_PRIVATE_KEY, env.GUILD_MASTER_KEY],
             chainId: 43113,
             gasPrice: 35000000000,
         },
