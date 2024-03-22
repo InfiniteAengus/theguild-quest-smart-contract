@@ -1,18 +1,20 @@
 import { NonDeployerConfigAccounts } from "../../../test/helpers/types";
 
-require("dotenv").config();
+import { load } from "ts-dotenv";
 
-const masterPublicKey = process.env.GUILD_MASTER_PUBLIC_KEY as string;
+const env = load({
+    GUILD_MASTER_PUBLIC_KEY: String,
+});
 
 export const nonDeployerConfigAccounts: NonDeployerConfigAccounts = {
     // Addresses to be replaced with actual values
-    nexusGuardian: masterPublicKey,
-    rewarderSteward: masterPublicKey,
-    tavernBarkeeper: masterPublicKey,
-    tavernMediator: masterPublicKey,
-    taxManagerPlatformTreasury: masterPublicKey,
-    taxManagerPlatformRevenuePool: masterPublicKey,
-    taxManagerReferralTaxTreasury: masterPublicKey,
-    taxManagerDisputeFeesTreasury: masterPublicKey,
-    guildXpOwner: masterPublicKey,
+    nexusGuardian: env.GUILD_MASTER_PUBLIC_KEY,
+    rewarderSteward: env.GUILD_MASTER_PUBLIC_KEY,
+    tavernBarkeeper: env.GUILD_MASTER_PUBLIC_KEY,
+    tavernMediator: env.GUILD_MASTER_PUBLIC_KEY,
+    taxManagerPlatformTreasury: env.GUILD_MASTER_PUBLIC_KEY,
+    taxManagerPlatformRevenuePool: env.GUILD_MASTER_PUBLIC_KEY,
+    taxManagerReferralTaxTreasury: env.GUILD_MASTER_PUBLIC_KEY,
+    taxManagerDisputeFeesTreasury: env.GUILD_MASTER_PUBLIC_KEY,
+    guildXpOwner: env.GUILD_MASTER_PUBLIC_KEY,
 };
