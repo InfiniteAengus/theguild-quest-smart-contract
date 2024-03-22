@@ -336,7 +336,8 @@ describe("ERC6551", function () {
                 const handlerAddress = await contracts.nexus.createProfile(
                     0,
                     await accounts.seeker.getAddress(),
-                    "SeekerNFT"
+                    "SeekerNFT",
+                    ethers.encodeBytes32String("0")
                 );
 
                 const receipt =
@@ -409,7 +410,7 @@ describe("ERC6551", function () {
             it("Account created should be the same as the one simulated from registry", async function () {
                 const accountSimulated = await erc6551_.registry.account(
                     erc6551_.account.target.toString(),
-                    ethers.ZeroHash,
+                    ethers.encodeBytes32String("0"),
                     43112,
                     profileNFT_.target.toString(),
                     nftId_
@@ -445,7 +446,8 @@ describe("ERC6551", function () {
                 const handlerAddress = await contracts.nexus.createProfile(
                     0,
                     await accounts.seeker.getAddress(),
-                    "ProfileLinkAsTokenURI1"
+                    "ProfileLinkAsTokenURI1",
+                    ethers.encodeBytes32String("0")
                 );
 
                 const receipt =
@@ -684,7 +686,8 @@ describe("ERC6551", function () {
                 const handlerAddress = await nexus_.createProfile(
                     1,
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkAsTokenURI2"
+                    "ProfileLinkAsTokenURI2",
+                    ethers.encodeBytes32String("0")
                 );
 
                 const receipt =
@@ -743,22 +746,26 @@ describe("ERC6551", function () {
                 await nexus_.createProfile(
                     2,
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkAsTokenURI3"
+                    "ProfileLinkAsTokenURI3",
+                    ethers.encodeBytes32String("0")
                 );
                 await nexus_.createProfile(
                     3,
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkAsTokenURI4"
+                    "ProfileLinkAsTokenURI4",
+                    ethers.encodeBytes32String("0")
                 );
                 await nexus_.createProfile(
                     4,
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkAsTokenURI5"
+                    "ProfileLinkAsTokenURI5",
+                    ethers.encodeBytes32String("0")
                 );
                 await nexus_.createProfile(
                     5,
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkAsTokenURI6"
+                    "ProfileLinkAsTokenURI6",
+                    ethers.encodeBytes32String("0")
                 );
 
                 const account3 = await nexus_.getHandler(3);
@@ -1093,7 +1100,8 @@ describe("ERC6551", function () {
                 await nexus_.createProfile(
                     1,
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkAsTokenURI7"
+                    "ProfileLinkAsTokenURI7",
+                    ethers.encodeBytes32String("0")
                 );
 
                 const account7 = await nexus_.getHandler(7);
@@ -1160,7 +1168,8 @@ describe("ERC6551", function () {
                 const trx = await nexus_.createProfile(
                     0,
                     await accounts_.seeker.getAddress(),
-                    "ProfileLinkAsTokenURI"
+                    "ProfileLinkAsTokenURI",
+                    ethers.encodeBytes32String("0")
                 );
 
                 const receipt =
@@ -1194,7 +1203,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         1,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                 }
 
@@ -1213,7 +1223,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         1,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                 }
 
@@ -1241,7 +1252,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         1,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                     console.log("Created account", i);
                 }
@@ -1268,7 +1280,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         1,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                 }
 
@@ -1279,7 +1292,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         2,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                 }
 
@@ -1296,7 +1310,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         3,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                 }
 
@@ -1313,7 +1328,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         3,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                 }
 
@@ -1330,7 +1346,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         3,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                 }
 
@@ -1347,7 +1364,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         4,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                 }
 
@@ -1364,7 +1382,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         4,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                 }
 
@@ -1381,7 +1400,8 @@ describe("ERC6551", function () {
                     await nexus_.createProfile(
                         4,
                         await accounts_.seeker.getAddress(),
-                        "ProfileLinkAsTokenURI"
+                        "ProfileLinkAsTokenURI",
+                        ethers.encodeBytes32String("0")
                     );
                 }
 

@@ -213,14 +213,16 @@ describe("Escrow", function () {
                 await contracts.nexus.createProfile(
                     0,
                     await accounts.seeker.getAddress(),
-                    "SeekerProfile"
+                    "SeekerProfile",
+                    ethers.encodeBytes32String("0")
                 );
 
                 // Solver Profile - Index 2
                 await contracts.nexus.createProfile(
                     0,
                     await accounts.solver.getAddress(),
-                    "SolverProfile"
+                    "SolverProfile",
+                    ethers.encodeBytes32String("0")
                 );
 
                 // Create a quest
@@ -612,14 +614,16 @@ describe("Escrow", function () {
                 await contracts.nexus.createProfile(
                     0,
                     await accounts.seeker.getAddress(),
-                    "SeekerProfile"
+                    "SeekerProfile",
+                    ethers.encodeBytes32String("0")
                 );
 
                 // Solver Profile - Index 2
                 await contracts.nexus.createProfile(
                     0,
                     await accounts.solver.getAddress(),
-                    "SolverProfile"
+                    "SolverProfile",
+                    ethers.encodeBytes32String("0")
                 );
 
                 // Create a quest

@@ -19,6 +19,8 @@
     -   [ ] `TierManager` Magistrate - Deployer
     -   [ ] `GuildXP` Owner
 
+    NOTE: Deployer related accounts will need to be configured within the hardhat config file through a .env
+
 -   [ ] Parameters
 
     -   [ ] `TierManager` Tier Conditions
@@ -55,6 +57,7 @@
         - `EscrowNative` Implementation Address
         - `EscrowToken` Implementation Address
         - `Nexus` Contract Address
+    - Deployer will be set as `Owner` on the `Tavern` Contract
     - Deploy Tavern - `Tavern.sol`
 8. GuildXp Token Contract Deployment
     - Requires - Owner Address
@@ -72,9 +75,10 @@
     - `setNFT()` with ProfileNFT Contract Address
     - `setTaxManager()` with TaxManager Contract Address
     - `setTierManager()` with TierManager Contract Address
-12. Tavern Admin Addresses Setup
+12. Tavern Admin Addresses and Review Period Setup
     - `setBarkeeper()` with Barkeeper Address
     - `setMediator()` with Mediator Address
+    - `setReviewPeriod()` with Review Period
 13. Tax Manager Addresses Setup
     - `setPlatformTreasuryPool()` with Platform Treasury Address
     - `setPlatformRevenuePool()` with Platform Revenue Pool Address
@@ -85,7 +89,9 @@
     - `setSeekerFees()` with Referral Reward Tax and Platform Revenue Tax
     - `setSolverFees()` with Referral Reward Tax, Platform Revenue Tax, and Platform Treasury Tax
     - `setDisputeDepositRate()` with Dispute Tax Amount
+    - `setBulkReferralRate()` for referral rates based on tiers and layers
 15. Tier Manager Tier Up Condition Setup
     - Set Conditions for Tiers 1 - 5, including values for each reference level
 16. Tavern Review Period Setup
     - `setReviewPeriod()` with Review Period
+

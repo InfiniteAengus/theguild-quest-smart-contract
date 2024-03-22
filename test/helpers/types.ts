@@ -94,3 +94,58 @@ export type ReferralRewardsDistribution = {
 };
 
 export type LayerKeys = "layer1" | "layer2" | "layer3" | "layer4";
+
+export type TierConditions = {
+    tier1: {
+        xpPoints: bigint;
+        novicesReferred: bigint;
+        adeptsReferred: bigint;
+        expertsReferred: bigint;
+        mastersReferred: bigint;
+        godsReferred: bigint;
+    };
+    tier2: {
+        xpPoints: bigint;
+        novicesReferred: bigint;
+        adeptsReferred: bigint;
+        expertsReferred: bigint;
+        mastersReferred: bigint;
+        godsReferred: bigint;
+    };
+    tier3: {
+        xpPoints: bigint;
+        novicesReferred: bigint;
+        adeptsReferred: bigint;
+        expertsReferred: bigint;
+        mastersReferred: bigint;
+        godsReferred: bigint;
+    };
+    tier4: {
+        xpPoints: bigint;
+        novicesReferred: bigint;
+        adeptsReferred: bigint;
+        expertsReferred: bigint;
+        mastersReferred: bigint;
+        godsReferred: bigint;
+    };
+    tier5: {
+        xpPoints: bigint;
+        novicesReferred: bigint;
+        adeptsReferred: bigint;
+        expertsReferred: bigint;
+        mastersReferred: bigint;
+        godsReferred: bigint;
+    };
+};
+
+export type NonDeployerConfigAccounts = {
+    nexusGuardian: string;
+    rewarderSteward: string;
+    tavernBarkeeper: string;
+    tavernMediator: string;
+    taxManagerPlatformTreasury: string;
+    taxManagerPlatformRevenuePool: string;
+    taxManagerReferralTaxTreasury: string;
+    taxManagerDisputeFeesTreasury: string;
+    guildXpOwner: string;
+};

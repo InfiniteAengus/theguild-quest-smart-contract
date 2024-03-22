@@ -335,7 +335,8 @@ describe("ProfileNFT", function () {
                 .createProfile(
                     0,
                     await accounts_.seeker.getAddress(),
-                    "https://www.example.com"
+                    "https://www.example.com",
+                    ethers.encodeBytes32String("0")
                 );
 
             const balance = await profileNFT_.balanceOf(
@@ -390,25 +391,29 @@ describe("ProfileNFT", function () {
             await nexus_.createProfile(
                 1,
                 await accounts_.solver.getAddress(),
-                "https://www.example.com"
+                "https://www.example.com",
+                ethers.encodeBytes32String("0")
             );
 
             await nexus_.createProfile(
                 1,
                 await accounts_.solver.getAddress(),
-                "https://www.example.com"
+                "https://www.example.com",
+                ethers.encodeBytes32String("0")
             );
 
             await nexus_.createProfile(
                 1,
                 await accounts_.solver.getAddress(),
-                "https://www.example.com"
+                "https://www.example.com",
+                ethers.encodeBytes32String("0")
             );
 
             await nexus_.createProfile(
                 1,
                 await accounts_.solver.getAddress(),
-                "https://www.example.com"
+                "https://www.example.com",
+                ethers.encodeBytes32String("0")
             );
 
             const tierCountsAfter = await profileCreated.getTierCounts();

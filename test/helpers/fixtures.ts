@@ -28,17 +28,19 @@ import { Signer } from "ethers";
 import { createAndReturnRegistryAccount } from "./utils";
 
 // For ERC6551 Unit Tests
-export async function fixture_6551(): Promise<ERC6551Setup> {
-    return await erc6551Setup(true);
+export async function fixture_6551(deployer: Signer): Promise<ERC6551Setup> {
+    return await erc6551Setup(deployer, true);
 }
 
-export async function fixture_6551_with_nexus(): Promise<Nexus6551> {
-    return await nexusSetup(true);
+export async function fixture_6551_with_nexus(
+    deployer: Signer
+): Promise<Nexus6551> {
+    return await nexusSetup(deployer, true);
 }
 
 // Fixture for ERC6551 Unit Tests, uses mock a NFT
 export async function fixture_6551_unit_tests(accounts: Signer[]) {
-    const erc6551 = await fixture_6551();
+    const erc6551 = await fixture_6551(accounts[0]);
 
     const mockNft = await mockNFTSetup(true);
 
@@ -80,17 +82,21 @@ export async function fixture_6551_unit_tests(accounts: Signer[]) {
 // Fixture for ERC6551 Integration Tests, integrates the Nexus contract, ProfileNFT contract, and Managers contracts
 // Setups contracts as well as set values for the Nexus and Managers contracts
 export async function fixture_6551_integration_tests(accounts: Signer[]) {
-    const { erc6551, nexus } = await fixture_6551_with_nexus();
+    const { erc6551, nexus } = await fixture_6551_with_nexus(accounts[0]);
 
     await nexus.setGuardian(await accounts[0].getAddress());
 
-    const profileNFT = await profileNFTSetup(nexus, true);
+    const profileNFT = await profileNFTSetup(
+        accounts[0],
+        nexus.target as string,
+        true
+    );
 
     await nexus.setNFT(profileNFT.target);
 
-    const xpToken = await xpSetup(true, accounts[0]);
+    const xpToken = await xpSetup(true, await accounts[0].getAddress());
 
-    const managers = await managersSetup(true, xpToken);
+    const managers = await managersSetup(accounts[0], true, xpToken);
 
     await nexus.setTaxManager(managers.taxManager.target);
     await nexus.setTierManager(managers.tierManager.target);
@@ -116,22 +122,30 @@ export async function fixture_6551_integration_tests(accounts: Signer[]) {
 
 // Fixture for Nexus.sol Unit Tests
 export async function fixture_nexus_unit_tests(accounts: Signer[]) {
-    const { erc6551, nexus } = await nexusSetup(true);
+    const { erc6551, nexus } = await nexusSetup(accounts[0], true);
 
-    const profileNFT = await profileNFTSetup(nexus, true);
+    const profileNFT = await profileNFTSetup(
+        accounts[0],
+        nexus.target as string,
+        true
+    );
 
-    const xpToken = await xpSetup(true, accounts[0]);
+    const xpToken = await xpSetup(true, await accounts[0].getAddress());
 
-    const managers = await managersSetup(true, xpToken);
+    const managers = await managersSetup(accounts[0], true, xpToken);
 
     return { erc6551, nexus, profileNFT, managers, accounts, xpToken };
 }
 
 // Fixture for ProfileNFT.sol Unit Tests
 export async function fixture_profile_nft_unit_tests(accounts: Signer[]) {
-    const { nexus } = await nexusSetup(true);
+    const { nexus } = await nexusSetup(accounts[0], true);
 
-    const profileNFT = await profileNFTSetup(nexus, true);
+    const profileNFT = await profileNFTSetup(
+        accounts[0],
+        nexus.target as string,
+        true
+    );
 
     await profileNFT.setNexus(await accounts[0].getAddress());
 
@@ -142,18 +156,22 @@ export async function fixture_profile_nft_unit_tests(accounts: Signer[]) {
 export async function fixture_profile_nft_integration_tests(
     accounts: Signer[]
 ) {
-    const { nexus } = await nexusSetup(true);
+    const { nexus } = await nexusSetup(accounts[0], true);
 
-    const profileNFT = await profileNFTSetup(nexus, true);
+    const profileNFT = await profileNFTSetup(
+        accounts[0],
+        nexus.target as string,
+        true
+    );
 
     return { profileNFT, accounts, nexus };
 }
 
 // Fixture for the Escrow Contract Unit Tests
 export async function fixture_escrow_unit_tests(accounts: Signer[]) {
-    const nexus = await nexusSetup(true);
+    const nexus = await nexusSetup(accounts[0], true);
 
-    const taxManager = await taxManagerSetup(true);
+    const taxManager = await taxManagerSetup(accounts[0], true);
 
     // Set the tax manager for the nexus
     await nexus.nexus.setTaxManager(taxManager.target);
@@ -221,9 +239,9 @@ export async function fixture_escrow_unit_tests(accounts: Signer[]) {
 export async function fixture_quest_unit_tests(accounts: Signer[]) {
     const escrowNative = await escrowNativeSetup(true);
     const escrowToken = await escrowTokenSetup(true);
-    const taxManager = await taxManagerSetup(true);
+    const taxManager = await taxManagerSetup(accounts[0], true);
 
-    const { nexus } = await nexusSetup(true);
+    const { nexus } = await nexusSetup(accounts[0], true);
 
     const mockRewarder = await mockRewarderSetup(true, accounts[0], nexus);
 
@@ -255,12 +273,12 @@ export async function fixture_quest_unit_tests(accounts: Signer[]) {
 }
 
 export async function fixture_tavern_unit_tests(accounts: Signer[]) {
-    const { nexus } = await nexusSetup(true);
+    const { nexus } = await nexusSetup(accounts[0], true);
 
     const escrowNative = await escrowNativeSetup(true);
     const escrowToken = await escrowTokenSetup(true);
     const mockRewarder = await mockRewarderSetup(true, accounts[0], nexus);
-    const taxManager = await taxManagerSetup(true);
+    const taxManager = await taxManagerSetup(accounts[0], true);
 
     const mockNft = await mockNFTSetup(true);
     const mockERC20 = await mockTokenSetup("mockToken", "mToken", 18, true);
@@ -268,11 +286,11 @@ export async function fixture_tavern_unit_tests(accounts: Signer[]) {
     const quest = await questSetup(true);
 
     const tavern = await tavernSetup(
-        quest,
-        escrowNative,
-        escrowToken,
-        mockNft,
-        nexus,
+        accounts[0],
+        quest.target as string,
+        escrowNative.target as string,
+        escrowToken.target as string,
+        nexus.target as string,
         true
     );
 
@@ -292,11 +310,15 @@ export async function fixture_tavern_unit_tests(accounts: Signer[]) {
 
 // Fixture for Rewarder Contract Unit tests
 export async function fixture_rewarder_unit_tests(accounts: Signer[]) {
-    const { nexus } = await nexusSetup(true);
-    const taxManager = await taxManagerSetup(true);
-    const nft = await profileNFTSetup(nexus, true);
+    const { nexus } = await nexusSetup(accounts[0], true);
+    const taxManager = await taxManagerSetup(accounts[0], true);
+    const nft = await profileNFTSetup(
+        accounts[0],
+        nexus.target as string,
+        true
+    );
 
-    const mockToken = await mockTokenSetup("mockToken", "mToken", 18, true);
+    const mockToken = await mockTokenSetup("mockToken", "mToken", 6, true);
 
     await nexus.setGuardian(await accounts[0].getAddress());
 
@@ -309,7 +331,12 @@ export async function fixture_rewarder_unit_tests(accounts: Signer[]) {
 
     await nexus.setNFT(nft.target);
 
-    const rewarder = await rewarderSetup(true, nexus, accounts[0]);
+    const rewarder = await rewarderSetup(
+        accounts[0],
+        true,
+        nexus.target as string,
+        await accounts[0].getAddress()
+    );
     const mockEscrow = await mockEscrowSetup(true);
 
     await mockEscrow.setRewarder(rewarder.target);
@@ -318,16 +345,25 @@ export async function fixture_rewarder_unit_tests(accounts: Signer[]) {
 }
 
 export async function fixture_rewarder_integration_tests(accounts: Signer[]) {
-    const { nexus } = await nexusSetup(true);
-    const taxManager = await taxManagerSetup(true);
-    const nft = await profileNFTSetup(nexus, true);
+    const { nexus } = await nexusSetup(accounts[0], true);
+    const taxManager = await taxManagerSetup(accounts[0], true);
+    const nft = await profileNFTSetup(
+        accounts[0],
+        nexus.target as string,
+        true
+    );
 
     await nexus.setGuardian(await accounts[0].getAddress());
 
     await nexus.setTaxManager(taxManager.target);
     await nexus.setNFT(nft.target);
 
-    const rewarder = await rewarderSetup(true, nexus, accounts[0]);
+    const rewarder = await rewarderSetup(
+        accounts[0],
+        true,
+        nexus.target as string,
+        await accounts[0].getAddress()
+    );
 
     return { rewarder, nexus, accounts, taxManager };
 }
@@ -353,11 +389,20 @@ export async function full_integration_fixture(accounts: Signer[]) {
     const taxTreasury = accounts[5];
     const disputeTreasury = accounts[6];
 
-    const { nexus, erc6551 } = await nexusSetup(true);
+    const { nexus, erc6551 } = await nexusSetup(owner, true);
 
-    const rewarder = await rewarderSetup(true, nexus, owner);
+    const rewarder = await rewarderSetup(
+        owner,
+        true,
+        nexus.target as string,
+        await owner.getAddress()
+    );
 
-    const profileNFT = await profileNFTSetup(nexus, true);
+    const profileNFT = await profileNFTSetup(
+        owner,
+        nexus.target as string,
+        true
+    );
 
     const escrowNativeImplementation = await escrowNativeSetup(true);
     const escrowTokenImplementation = await escrowTokenSetup(true);
@@ -365,17 +410,21 @@ export async function full_integration_fixture(accounts: Signer[]) {
     const questImplementation = await questSetup(true);
 
     const tavern = await tavernSetup(
-        questImplementation,
-        escrowNativeImplementation,
-        escrowTokenImplementation,
-        profileNFT,
-        nexus,
+        owner,
+        questImplementation.target as string,
+        escrowNativeImplementation.target as string,
+        escrowTokenImplementation.target as string,
+        nexus.target as string,
         true
     );
 
-    const xpToken = await xpSetup(true, owner);
+    const xpToken = await xpSetup(true, await owner.getAddress());
 
-    const { tierManager, taxManager } = await managersSetup(true, xpToken);
+    const { tierManager, taxManager } = await managersSetup(
+        owner,
+        true,
+        xpToken
+    );
 
     // Nexus setup
     {
