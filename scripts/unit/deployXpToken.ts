@@ -1,11 +1,16 @@
 import { ethers } from "hardhat";
+import { load } from "ts-dotenv";
 
 const randomAddress = ethers.Wallet.createRandom().address;
 const myAddress = ethers.getAddress("0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1");
 
+const env = load({
+  GUILD_MASTER_PUBLIC_KEY: String
+});
+
 async function main() {
 
-  const xp = await ethers.deployContract("GuildXp", ["0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1"]);
+  const xp = await ethers.deployContract("GuildXp", [env.GUILD_MASTER_PUBLIC_KEY]);
 
   await xp.waitForDeployment();
 

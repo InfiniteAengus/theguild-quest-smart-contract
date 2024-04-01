@@ -56,7 +56,6 @@
         - `Quest` Implementation Address
         - `EscrowNative` Implementation Address
         - `EscrowToken` Implementation Address
-        - `ProfileNFT` Contract Address
         - `Nexus` Contract Address
     - Deployer will be set as `Owner` on the `Tavern` Contract
     - Deploy Tavern - `Tavern.sol`
@@ -92,4 +91,7 @@
     - `setDisputeDepositRate()` with Dispute Tax Amount
     - `setBulkReferralRate()` for referral rates based on tiers and layers
 15. Tier Manager Tier Up Condition Setup
-    - Set Conditions for Tiers 1 - 5, includes values for each reference level
+    - Set Conditions for Tiers 1 - 5, including values for each reference level
+16. Tavern Review Period Setup
+    - `setReviewPeriod()` with Review Period
+

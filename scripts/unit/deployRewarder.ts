@@ -1,11 +1,16 @@
 import { ethers } from "hardhat";
+import { load } from "ts-dotenv";
 
-const nexus = ethers.getAddress("0xA43e398EB9C90f4E391562852177D62A248A1aBF");
+const env = load({
+  GUILD_MASTER_PUBLIC_KEY: String
+});
 
-const myWallet = ethers.getAddress("0x6f9e2777D267FAe69b0C5A24a402D14DA1fBcaA1");
+const nexus = ethers.getAddress("0x7a3a85cDa70C5fBc24D8F84C1920ba0Eff2964Ba");
+
+const myWallet = env.GUILD_MASTER_PUBLIC_KEY;
 
 async function main() {
-  const rewarder = await ethers.deployContract("Rewarder", [myWallet, "0xA43e398EB9C90f4E391562852177D62A248A1aBF"]);
+  const rewarder = await ethers.deployContract("Rewarder", [myWallet, nexus]);
 
   await rewarder.waitForDeployment();
 

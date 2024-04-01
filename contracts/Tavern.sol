@@ -144,6 +144,10 @@ contract Tavern is ITavern, Pausable {
         _barkeeper = keeper;
     }
 
+    function setNexus(address _nexus) external onlyOwner {
+        nexus = _nexus;
+    }
+
     function setQuestImplementation(address impl) external onlyOwner {
         questImplementation = impl;
     }
