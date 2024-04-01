@@ -17,8 +17,14 @@ async function main() {
 
     const parsedAddressesData = JSON.parse(addressesData);
 
-    const escrowNativeImplementation = await escrowNativeSetup(false);
-    const escrowTokenImplementation = await escrowTokenSetup(false);
+    const escrowNativeImplementation = await escrowNativeSetup(
+        defaultDeployer,
+        false
+    );
+    const escrowTokenImplementation = await escrowTokenSetup(
+        defaultDeployer,
+        false
+    );
 
     parsedAddressesData.escrows = {
         escrowNative: escrowNativeImplementation.target,
