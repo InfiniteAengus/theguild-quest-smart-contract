@@ -377,10 +377,10 @@ describe("Managers", function () {
             await expect(
                 tierManager
                     .connect(accounts_.seeker)
-                    .setConditions(1, 1, 1, 1, 1, 1)
+                    .setConditions(1, 1, 1, 1, 1, 1, 1)
             ).to.be.revertedWith("only magistrate");
 
-            await tierManager.setConditions(1, 1, 1, 1, 1, 1);
+            await tierManager.setConditions(1, 1, 1, 1, 1, 1, 1);
 
             const conditions = await tierManager.tierUpConditions(1);
 

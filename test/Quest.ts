@@ -99,6 +99,7 @@ describe("Quest", function () {
                 1,
                 1000,
                 "Quest URI",
+                3,
                 escrowNative_.target,
                 ethers.ZeroAddress
             );
@@ -126,6 +127,7 @@ describe("Quest", function () {
                     1,
                     1000,
                     "Quest URI",
+                    3,
                     escrowNative_.target,
                     ethers.ZeroAddress
                 )
@@ -139,8 +141,8 @@ describe("Quest", function () {
             await mockTavern_.setMediator(await accounts_[2].getAddress());
 
             const trx = await mockTavern_[
-                "createNewQuest(uint32,uint32,uint256,string)"
-            ](0, 1, 1000, "Quest URI");
+                "createNewQuest(uint32,uint32,uint256,string,uint256)"
+            ](0, 1, 1000, "Quest URI", 3);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -181,8 +183,8 @@ describe("Quest", function () {
 
         it("Should be able to create a token quest through the tavern and be initialized in the same transaction", async function () {
             const trx = await mockTavern_[
-                "createNewQuest(uint32,uint32,uint256,string,address)"
-            ](0, 1, 1000, "Quest URI", mockToken_.target);
+                "createNewQuest(uint32,uint32,uint256,string,uint256,address)"
+            ](0, 1, 1000, "Quest URI", 3, mockToken_.target);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -326,7 +328,7 @@ describe("Quest", function () {
         it("Seeker should be able to extend quest period", async function () {
             await nativeQuestInstance.extend();
 
-            expect(await nativeQuestInstance.extendedOnce()).to.be.true;
+            expect(await nativeQuestInstance.extendedCount()).to.eq(1);
         });
 
         it.skip("Should not be able to extend quest again after extending it", async function () {
@@ -411,7 +413,7 @@ describe("Quest", function () {
 
             await nativeQuestInstance.extend();
 
-            expect(await nativeQuestInstance.extendedOnce()).to.be.true;
+            expect(await nativeQuestInstance.extendedCount()).to.equal(1);
         });
 
         it("Should not be able to receive reward if its not reward time yet", async function () {
@@ -522,8 +524,8 @@ describe("Quest", function () {
             await tavern.setMediator(await accounts_.owner.getAddress());
 
             const trx = await tavern[
-                "createNewQuest(uint32,uint32,uint256,string)"
-            ](1, 2, PAYMENT_AMOUNT, "Quest URI");
+                "createNewQuest(uint32,uint32,uint256,string,uint256)"
+            ](1, 2, PAYMENT_AMOUNT, "Quest URI", 3);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
