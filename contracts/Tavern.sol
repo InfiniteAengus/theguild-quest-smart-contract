@@ -77,6 +77,7 @@ contract Tavern is ITavern, Pausable {
             _seekerId,
             _solverId,
             address(quest),
+            _maxExtensions,
             escrowImpl,
             _paymentAmount
         );
@@ -119,6 +120,7 @@ contract Tavern is ITavern, Pausable {
             _seekerId,
             _solverId,
             address(quest),
+            _maxExtensions,
             escrowImpl,
             _paymentAmount,
             _token
