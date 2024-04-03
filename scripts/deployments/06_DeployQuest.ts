@@ -17,7 +17,7 @@ async function main() {
 
     const parsedAddressesData = JSON.parse(addressesData);
 
-    const questImplementation = await questSetup(false);
+    const questImplementation = await questSetup(defaultDeployer, false);
 
     parsedAddressesData.quest = questImplementation.target;
 

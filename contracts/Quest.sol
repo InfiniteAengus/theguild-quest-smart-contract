@@ -22,14 +22,13 @@ contract Quest is IQuest {
     // state variables
     bool public initialized;
     bool public started;
-    bool public extendedOnce;
-    bool public extendedTwice;
-    bool public extendedThrice;
     bool public beingDisputed;
     bool public finished;
     bool public rewarded;
     bool public withToken;
 
+    uint256 public MAX_EXTENSIONS;
+    uint256 public extendedCount;
     address public escrowImplementation; // native or with token
     uint32 public seekerId;
     uint32 public solverId;
@@ -65,6 +64,7 @@ contract Quest is IQuest {
         uint32 _solverNftId,
         uint256 _paymentAmount,
         string memory _infoURI,
+        uint256 _maxExtensions,
         address _escrowImplementation,
         address _token
     ) external {
@@ -81,6 +81,7 @@ contract Quest is IQuest {
         paymentAmount = _paymentAmount;
 
         infoURI = _infoURI;
+        MAX_EXTENSIONS = _maxExtensions;
     }
 
     function startQuest() external payable onlySeeker {
@@ -91,6 +92,7 @@ contract Quest is IQuest {
         escrow = Clones.clone(escrowImplementation);
 
         if (token == address(0)) {
+            emit QuestStarted(seekerId, solverId, token, paymentAmount, escrow);
             IEscrow(escrow).initialize{value: msg.value}(
                 token,
                 seekerId,
@@ -102,11 +104,14 @@ contract Quest is IQuest {
                 getRewarder()
             ).calculateSeekerTax(paymentAmount);
 
+            emit QuestStarted(seekerId, solverId, token, paymentAmount, escrow);
+
             IERC20(token).transferFrom(
                 msg.sender,
                 escrow,
                 paymentAmount + platformTax + referralTax
             );
+
             IEscrow(escrow).initialize(
                 token,
                 seekerId,
@@ -123,12 +128,16 @@ contract Quest is IQuest {
         require(started, "quest not started");
         require(!beingDisputed, "Dispute started before");
         require(!rewarded, "Rewarded before");
+
         beingDisputed = true;
         mediator = tavern.mediator();
+
         if (token == address(0)) {
+            emit DisputeStarted(seekerId, solverId);
             IEscrow(escrow).processStartDispute{value: msg.value}();
         } else {
             require(msg.value == 0, "Native token sent");
+            emit DisputeStarted(seekerId, solverId);
             IEscrow(escrow).processStartDispute{value: 0}();
         }
     }
@@ -137,7 +146,11 @@ contract Quest is IQuest {
         require(beingDisputed, "Dispute not started");
         require(!rewarded, "Rewarded before");
         require(solverShare <= 10000, "Share can't be more than 10000");
+
         rewarded = true;
+
+        emit DisputeResolved(seekerId, solverId, solverShare);
+
         IEscrow(escrow).processResolution(solverShare);
     }
 
@@ -145,20 +158,23 @@ contract Quest is IQuest {
         require(started, "quest not started");
 
         finished = true;
+
+        emit QuestFinished(seekerId, solverId);
+
         rewardTime = block.timestamp + tavern.reviewPeriod();
     }
 
     function extend() external onlySeeker {
         require(finished, "Quest not finished");
-        require(!extendedThrice, "Max extensions number reached");
+        require(
+            extendedCount < MAX_EXTENSIONS,
+            "Max extensions number reached"
+        );
         require(!rewarded, "Was rewarded before");
-        if(extendedOnce){
-            extendedTwice = true;
-        } 
-        else if (extendedTwice){
-            extendedThrice = true;
-        }
-        else{extendedOnce = true;}
+
+        extendedCount++;
+
+        emit QuestExtended(seekerId, solverId, extendedCount);
 
         rewardTime += tavern.reviewPeriod();
     }
@@ -168,7 +184,11 @@ contract Quest is IQuest {
         require(!rewarded, "Rewarded before");
         require(!beingDisputed, "Is under dispute");
         require(rewardTime <= block.timestamp, "Not reward time yet");
+
         rewarded = true;
+
+        emit RewardReceived(seekerId, solverId, paymentAmount);
+
         IEscrow(escrow).processPayment();
     }
 

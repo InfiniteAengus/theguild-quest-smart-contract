@@ -19,7 +19,7 @@ async function main() {
     const guildXpOwner = nonDeployerConfigAccounts.guildXpOwner;
     const parsedAddressesData = JSON.parse(addressesData);
 
-    const xpToken = await xpSetup(false, guildXpOwner);
+    const xpToken = await xpSetup(defaultDeployer, false, guildXpOwner);
 
     parsedAddressesData.xpToken = xpToken.target;
 

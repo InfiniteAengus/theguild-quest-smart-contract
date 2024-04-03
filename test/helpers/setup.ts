@@ -193,7 +193,9 @@ export async function erc6551Setup(
     deployer: Signer,
     silence: Boolean
 ): Promise<ERC6551Setup> {
-    const erc6551Registry = await ethers.deployContract("ERC6551Registry");
+    const erc6551Registry = await ethers.deployContract("ERC6551Registry", {
+        signer: deployer,
+    });
 
     await erc6551Registry.waitForDeployment();
 
@@ -202,7 +204,10 @@ export async function erc6551Setup(
     }
 
     const erc6551Account = await ethers.deployContract(
-        "ReferralHandlerERC6551Account"
+        "ReferralHandlerERC6551Account",
+        {
+            signer: deployer,
+        }
     );
 
     await erc6551Account.waitForDeployment();
@@ -275,9 +280,12 @@ export async function profileNFTSetup(
 }
 
 export async function escrowNativeSetup(
+    deployer: Signer,
     silence: Boolean
 ): Promise<EscrowNative> {
-    const escrow = await ethers.deployContract("EscrowNative");
+    const escrow = await ethers.deployContract("EscrowNative", {
+        signer: deployer,
+    });
 
     await escrow.waitForDeployment();
 
@@ -288,8 +296,13 @@ export async function escrowNativeSetup(
     return escrow;
 }
 
-export async function escrowTokenSetup(silence: Boolean): Promise<EscrowToken> {
-    const escrow = await ethers.deployContract("EscrowToken");
+export async function escrowTokenSetup(
+    deployer: Signer,
+    silence: Boolean
+): Promise<EscrowToken> {
+    const escrow = await ethers.deployContract("EscrowToken", {
+        signer: deployer,
+    });
 
     await escrow.waitForDeployment();
 
@@ -300,8 +313,11 @@ export async function escrowTokenSetup(silence: Boolean): Promise<EscrowToken> {
     return escrow;
 }
 
-export async function questSetup(silence: Boolean): Promise<Quest> {
-    const quest = await ethers.deployContract("Quest");
+export async function questSetup(
+    deployer: Signer,
+    silence: Boolean
+): Promise<Quest> {
+    const quest = await ethers.deployContract("Quest", { signer: deployer });
 
     await quest.waitForDeployment();
 
@@ -361,10 +377,13 @@ export async function managersSetup(
 }
 
 export async function xpSetup(
+    deployer: Signer,
     silence: Boolean,
     signer: string
 ): Promise<GuildXp> {
-    const guildXp = await ethers.deployContract("GuildXp", [signer]);
+    const guildXp = await ethers.deployContract("GuildXp", [signer], {
+        signer: deployer,
+    });
     await guildXp.waitForDeployment();
 
     if (!silence) {
@@ -424,9 +443,9 @@ export async function setup(deployer: Signer, silence: Boolean) {
         silence
     );
 
-    const escrowNative = await escrowNativeSetup(silence);
-    const escrowToken = await escrowTokenSetup(silence);
-    const quest = await questSetup(true);
+    const escrowNative = await escrowNativeSetup(deployer, silence);
+    const escrowToken = await escrowTokenSetup(deployer, silence);
+    const quest = await questSetup(deployer, true);
 
     const tavern = await tavernSetup(
         deployer,

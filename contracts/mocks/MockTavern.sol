@@ -67,7 +67,8 @@ contract MockTavern is ITavern {
         uint32 _seekerId,
         uint32 _solverId,
         uint256 _paymentAmount,
-        string memory infoURI
+        string memory _infoURI,
+        uint256 _maxExtensions
     ) external payable onlyBarkeeper {
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowNativeImplementation;
@@ -78,6 +79,7 @@ contract MockTavern is ITavern {
             _seekerId,
             _solverId,
             address(quest),
+            _maxExtensions,
             escrowImpl,
             _paymentAmount
         );
@@ -86,7 +88,8 @@ contract MockTavern is ITavern {
             _seekerId,
             _solverId,
             _paymentAmount,
-            infoURI,
+            _infoURI,
+            _maxExtensions,
             escrowImpl,
             address(0)
         );
@@ -98,6 +101,7 @@ contract MockTavern is ITavern {
         uint32 _solverId,
         uint256 _paymentAmount,
         string memory infoURI,
+        uint256 _maxExtensions,
         address _token
     ) external payable onlyBarkeeper {
         IQuest quest = IQuest(Clones.clone(questImplementation));
@@ -110,6 +114,7 @@ contract MockTavern is ITavern {
             _seekerId,
             _solverId,
             address(quest),
+            _maxExtensions,
             escrowImpl,
             _paymentAmount,
             _token
@@ -120,6 +125,7 @@ contract MockTavern is ITavern {
             _solverId,
             _paymentAmount,
             infoURI,
+            _maxExtensions,
             escrowImpl,
             _token
         );

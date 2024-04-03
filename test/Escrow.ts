@@ -227,8 +227,8 @@ describe("Escrow", function () {
 
                 // Create a quest
                 const tx = await contracts.tavern[
-                    "createNewQuest(uint32,uint32,uint256,string)"
-                ](1, 2, PAYMENT_AMOUNT, "Native Integration Quest");
+                    "createNewQuest(uint32,uint32,uint256,string,uint256)"
+                ](1, 2, PAYMENT_AMOUNT, "Native Integration Quest", 3);
 
                 const receipt = (await tx.wait()) as ContractTransactionReceipt;
 
@@ -238,6 +238,7 @@ describe("Escrow", function () {
                     "seekerId",
                     "solver",
                     "quest",
+                    "maxExtension",
                     "escrowImplementation",
                     "paymentAmount",
                 ];
@@ -278,7 +279,7 @@ describe("Escrow", function () {
                 // Get the escrow address
                 const escrowStorage = await ethers.provider.getStorage(
                     questInstance.target,
-                    7
+                    10
                 );
 
                 const escrowAddress = ethers.getAddress(
@@ -628,12 +629,13 @@ describe("Escrow", function () {
 
                 // Create a quest
                 const tx = await contracts.tavern[
-                    "createNewQuest(uint32,uint32,uint256,string,address)"
+                    "createNewQuest(uint32,uint32,uint256,string,uint256,address)"
                 ](
                     1,
                     2,
                     PAYMENT_AMOUNT,
                     "Native Integration Quest",
+                    3,
                     mockToken_.target
                 );
 
@@ -645,6 +647,7 @@ describe("Escrow", function () {
                     "seekerId",
                     "solver",
                     "quest",
+                    "maxExtension",
                     "escrowImplementation",
                     "paymentAmount",
                     "token",
@@ -694,7 +697,7 @@ describe("Escrow", function () {
                 // Get the escrow address
                 const escrowStorage = await ethers.provider.getStorage(
                     questInstance.target,
-                    7
+                    10
                 );
 
                 const escrowAddress = ethers.getAddress(

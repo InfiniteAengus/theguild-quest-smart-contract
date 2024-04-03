@@ -46,11 +46,17 @@ describe("ERC6551", function () {
         return await full_integration_fixture(accounts);
     }
 
+    async function fixture_6551_setup() {
+        const accounts = await mockAccounts();
+
+        return await fixture_6551(accounts[0]);
+    }
+
     // Unit tests to test the ERC6551 Specific Core Requirements
     describe("Unit Tests", function () {
         describe("Registry", function () {
             it("Should be able to create account", async function () {
-                const erc6551 = await loadFixture(fixture_6551);
+                const erc6551 = await loadFixture(fixture_6551_setup);
 
                 // Create account from mock data
                 const accountCreated = await erc6551.registry.createAccount(
@@ -72,7 +78,7 @@ describe("ERC6551", function () {
             });
 
             it("Account should be determinstic and the same as created account", async function () {
-                const erc6551 = await loadFixture(fixture_6551);
+                const erc6551 = await loadFixture(fixture_6551_setup);
 
                 // Precompile account creation address
                 const accountPrecompile = await erc6551.registry.account(
@@ -135,7 +141,7 @@ describe("ERC6551", function () {
         // Only the ERC6551Account Core Requirements are tested here
         describe("Account", function () {
             it("Should support ERC165", async function () {
-                const erc6551 = await loadFixture(fixture_6551);
+                const erc6551 = await loadFixture(fixture_6551_setup);
 
                 // Account should support ERC165
                 expect(await erc6551.account.supportsInterface("0x01ffc9a7")).to

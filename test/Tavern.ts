@@ -108,11 +108,12 @@ describe("Tavern", function () {
             await mockNft_.mint(await accounts_[1].getAddress());
 
             await expect(
-                tavern_["createNewQuest(uint32,uint32,uint256,string)"](
+                tavern_["createNewQuest(uint32,uint32,uint256,string,uint256)"](
                     0,
                     1,
                     1000,
-                    "Quest URI"
+                    "Quest URI",
+                    3
                 )
             ).to.be.revertedWith("only barkeeper");
         });
@@ -137,8 +138,8 @@ describe("Tavern", function () {
 
         it("Barkeeper should be able to create a new native quest", async function () {
             const trx = await tavern_[
-                "createNewQuest(uint32,uint32,uint256,string)"
-            ](0, 1, 1000, "Quest URI");
+                "createNewQuest(uint32,uint32,uint256,string,uint256)"
+            ](0, 1, 1000, "Quest URI", 3);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -148,6 +149,7 @@ describe("Tavern", function () {
                 "solverId",
                 "seekerId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
             ];
@@ -179,8 +181,8 @@ describe("Tavern", function () {
 
         it("Should be able to create an erc20 token quest", async function () {
             const trx = await tavern_[
-                "createNewQuest(uint32,uint32,uint256,string,address)"
-            ](0, 1, 1000, "Quest URI", mockERC20_.target);
+                "createNewQuest(uint32,uint32,uint256,string,uint256,address)"
+            ](0, 1, 1000, "Quest URI", 3, mockERC20_.target);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -190,6 +192,7 @@ describe("Tavern", function () {
                 "solverId",
                 "seekerId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
                 "token",
@@ -242,19 +245,19 @@ describe("Tavern", function () {
             );
         });
 
-        it.skip("Should not be able to set profileNFT unless owner", async function () {
-            await expect(
-                tavern_.connect(accounts_[1]).setProfileNft(mockNft_.target)
-            ).to.be.revertedWith("only owner");
+        // it.skip("Should not be able to set profileNFT unless owner", async function () {
+        //     await expect(
+        //         tavern_.connect(accounts_[1]).setProfileNft(mockNft_.target)
+        //     ).to.be.revertedWith("only owner");
 
-            expect(await tavern_.getProfileNFT()).to.equal(mockNft_.target);
+        //     expect(await tavern_.getProfileNFT()).to.equal(mockNft_.target);
 
-            await tavern_.setProfileNft(await accounts_[1].getAddress());
+        //     await tavern_.setProfileNft(await accounts_[1].getAddress());
 
-            expect(await tavern_.getProfileNFT()).to.equal(
-                await accounts_[1].getAddress()
-            );
-        });
+        //     expect(await tavern_.getProfileNFT()).to.equal(
+        //         await accounts_[1].getAddress()
+        //     );
+        // });
 
         it("Should not be able to setQuestImplementation unless owner", async function () {
             await expect(
@@ -431,11 +434,12 @@ describe("Tavern", function () {
             await expect(
                 tavern
                     .connect(accounts_.seeker)
-                    ["createNewQuest(uint32,uint32,uint256,string)"](
+                    ["createNewQuest(uint32,uint32,uint256,string,uint256)"](
                         0,
                         1,
                         1000,
-                        "Quest URI"
+                        "Quest URI",
+                        3
                     )
             ).to.be.revertedWith("only barkeeper");
 
@@ -443,24 +447,21 @@ describe("Tavern", function () {
             await expect(
                 tavern
                     .connect(accounts_.seeker)
-                    ["createNewQuest(uint32,uint32,uint256,string,address)"](
-                        0,
-                        1,
-                        1000,
-                        "Quest URI",
-                        ethers.ZeroAddress
-                    )
+                    [
+                        "createNewQuest(uint32,uint32,uint256,string,uint256,address)"
+                    ](0, 1, 1000, "Quest URI", 3, ethers.ZeroAddress)
             ).to.be.revertedWith("only barkeeper");
         });
 
         it("Barkeeper should be able to create a new native quest", async function () {
             const trx = await tavern
                 .connect(accounts_.owner)
-                ["createNewQuest(uint32,uint32,uint256,string)"](
+                ["createNewQuest(uint32,uint32,uint256,string,uint256)"](
                     1,
                     2,
                     1000,
-                    "Quest URI"
+                    "Quest URI",
+                    3
                 );
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
@@ -471,6 +472,7 @@ describe("Tavern", function () {
                 "seekerId",
                 "solverId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
             ];
@@ -496,13 +498,9 @@ describe("Tavern", function () {
         it("Barkeeper should be able to create an erc20 token quest", async function () {
             const trx = await tavern
                 .connect(accounts_.owner)
-                ["createNewQuest(uint32,uint32,uint256,string,address)"](
-                    1,
-                    2,
-                    1000,
-                    "Quest URI",
-                    ethers.ZeroAddress
-                );
+                [
+                    "createNewQuest(uint32,uint32,uint256,string,uint256,address)"
+                ](1, 2, 1000, "Quest URI", 3, ethers.ZeroAddress);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -512,6 +510,7 @@ describe("Tavern", function () {
                 "seekerId",
                 "solverId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
                 "token",
@@ -573,24 +572,24 @@ describe("Tavern", function () {
             await tavern.setBarkeeper(await accounts_.owner.getAddress());
         });
 
-        it.skip("Only owner should be able to set the profileNFT", async function () {
-            await expect(
-                tavern
-                    .connect(accounts_.seeker)
-                    .setProfileNft(await accounts_.owner.getAddress())
-            ).to.be.revertedWith("only owner");
-        });
+        // it.skip("Only owner should be able to set the profileNFT", async function () {
+        //     await expect(
+        //         tavern
+        //             .connect(accounts_.seeker)
+        //             .setProfileNft(await accounts_.owner.getAddress())
+        //     ).to.be.revertedWith("only owner");
+        // });
 
-        it.skip("Owner should be able to set the profileNFT", async function () {
-            const originalProfileNFT = await tavern.getProfileNFT();
+        // it.skip("Owner should be able to set the profileNFT", async function () {
+        //     const originalProfileNFT = await tavern.getProfileNFT();
 
-            await tavern.setProfileNft(await accounts_.seeker.getAddress());
-            expect(await tavern.getProfileNFT()).to.equal(
-                await accounts_.seeker.getAddress()
-            );
+        //     await tavern.setProfileNft(await accounts_.seeker.getAddress());
+        //     expect(await tavern.getProfileNFT()).to.equal(
+        //         await accounts_.seeker.getAddress()
+        //     );
 
-            await tavern.setProfileNft(originalProfileNFT);
-        });
+        //     await tavern.setProfileNft(originalProfileNFT);
+        // });
 
         it("Only owner should be able to set the questImplementation", async function () {
             await expect(

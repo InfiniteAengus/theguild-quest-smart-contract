@@ -1,11 +1,11 @@
 //SPDX-License-Identifier: GNU AGPLv3
 pragma solidity 0.8.20;
 
-import { IEscrow } from "../interfaces/Quests/IEscrow.sol";
-import { IRewarder } from "../interfaces/IRewarder.sol";
-import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
-import { IQuest } from "../interfaces/Quests/IQuest.sol";
-import { ITavern } from "../interfaces/Quests/ITavern.sol";
+import {IEscrow} from "../interfaces/Quests/IEscrow.sol";
+import {IRewarder} from "../interfaces/IRewarder.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {IQuest} from "../interfaces/Quests/IQuest.sol";
+import {ITavern} from "../interfaces/Quests/ITavern.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  * @title Quest Implementation
  * @notice Controls the quest flow
  * @author @cosmodude
- * @dev Implementation contract, instances are created as ERC1167 clones 
+ * @dev Implementation contract, instances are created as ERC1167 clones
  */
 
 contract MockQuest is IQuest {
@@ -30,7 +30,7 @@ contract MockQuest is IQuest {
     string public infoURI;
     uint256 public paymentAmount;
     address public rewarder;
-    
+
     address public escrow;
 
     function initialize(
@@ -38,11 +38,10 @@ contract MockQuest is IQuest {
         uint32,
         uint256,
         string memory,
+        uint256,
         address,
         address
-    ) external override {
-
-    }
+    ) external override {}
 
     function initialize(
         uint32 _seekerNftId,
@@ -76,19 +75,25 @@ contract MockQuest is IQuest {
         started = true;
         escrow = Clones.clone(escrowImplementation);
 
-        if(token == address(0)){
+        if (token == address(0)) {
             IEscrow(escrow).initialize{value: msg.value}(
-                token, 
+                token,
                 seekerId,
-                solverId, 
+                solverId,
                 paymentAmount
             );
         } else {
-            (uint256 platformTax, uint256 referralTax) = IRewarder(getRewarder()).calculateSeekerTax(paymentAmount);
+            (uint256 platformTax, uint256 referralTax) = IRewarder(
+                getRewarder()
+            ).calculateSeekerTax(paymentAmount);
 
-            IERC20(token).transferFrom(msg.sender, escrow, paymentAmount + platformTax + referralTax);
+            IERC20(token).transferFrom(
+                msg.sender,
+                escrow,
+                paymentAmount + platformTax + referralTax
+            );
             IEscrow(escrow).initialize(
-                token, 
+                token,
                 seekerId,
                 solverId,
                 paymentAmount
@@ -96,20 +101,15 @@ contract MockQuest is IQuest {
         }
     }
 
-    function startDispute() external payable {
+    function startDispute() external payable {}
+
+    function resolveDispute(uint32 _solverShare) external {
+        IEscrow(escrow).processResolution(_solverShare);
     }
 
-    function resolveDispute(
-        uint32 _solverShare
-    ) external {
-        IEscrow(escrow).processResolution(_solverShare);  
-    }
+    function finishQuest() external {}
 
-    function finishQuest() external {
-    }
-
-    function extend() external {
-    }
+    function extend() external {}
 
     function receiveReward() external {
         IEscrow(escrow).processPayment();
