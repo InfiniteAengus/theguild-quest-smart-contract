@@ -79,6 +79,7 @@ contract MockTavern is ITavern {
             _seekerId,
             _solverId,
             address(quest),
+            _maxExtensions,
             escrowImpl,
             _paymentAmount
         );
@@ -113,6 +114,7 @@ contract MockTavern is ITavern {
             _seekerId,
             _solverId,
             address(quest),
+            _maxExtensions,
             escrowImpl,
             _paymentAmount,
             _token
