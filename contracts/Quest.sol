@@ -82,8 +82,6 @@ contract Quest is IQuest {
 
         infoURI = _infoURI;
         MAX_EXTENSIONS = _maxExtensions;
-
-        emit QuestInitialized(seekerId, solverId, paymentAmount, infoURI);
     }
 
     function startQuest() external payable onlySeeker {
