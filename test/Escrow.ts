@@ -238,6 +238,7 @@ describe("Escrow", function () {
                     "seekerId",
                     "solver",
                     "quest",
+                    "maxExtension",
                     "escrowImplementation",
                     "paymentAmount",
                 ];
@@ -646,6 +647,7 @@ describe("Escrow", function () {
                     "seekerId",
                     "solver",
                     "quest",
+                    "maxExtension",
                     "escrowImplementation",
                     "paymentAmount",
                     "token",

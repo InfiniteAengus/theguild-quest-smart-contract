@@ -149,6 +149,7 @@ describe("Tavern", function () {
                 "solverId",
                 "seekerId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
             ];
@@ -191,6 +192,7 @@ describe("Tavern", function () {
                 "solverId",
                 "seekerId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
                 "token",
@@ -470,6 +472,7 @@ describe("Tavern", function () {
                 "seekerId",
                 "solverId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
             ];
@@ -507,6 +510,7 @@ describe("Tavern", function () {
                 "seekerId",
                 "solverId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
                 "token",

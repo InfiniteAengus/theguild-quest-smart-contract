@@ -152,6 +152,7 @@ describe("Quest", function () {
                 "solverId",
                 "seekerId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
             ];
@@ -194,6 +195,7 @@ describe("Quest", function () {
                 "solverId",
                 "seekerId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
                 "token",
@@ -535,6 +537,7 @@ describe("Quest", function () {
                 "seekerId",
                 "solverId",
                 "quest",
+                "maxExtension",
                 "escrowImplementation",
                 "paymentAmount",
             ];
