@@ -22,13 +22,6 @@ interface IQuest {
 
     function getRewarder() external view returns (address);
 
-    event QuestInitialized(
-        uint32 seekerId,
-        uint32 solverId,
-        uint256 paymentAmount,
-        string infoURI
-    );
-
     event QuestStarted(
         uint32 seekerId,
         uint32 solverId,
