@@ -29,6 +29,8 @@ contract Tavern is ITavern, Pausable {
 
     address public nexus;
 
+    mapping(uint256 => bool) public questExists;
+
     modifier onlyBarkeeper() {
         require(msg.sender == _barkeeper, "only barkeeper");
         _;
@@ -65,8 +67,11 @@ contract Tavern is ITavern, Pausable {
         uint32 _solverId,
         uint256 _paymentAmount,
         string memory infoURI,
-        uint256 _maxExtensions
+        uint256 _maxExtensions,
+        uint256 _questId
     ) external payable onlyBarkeeper {
+        require(!questExists[_questId], "Quest already exists");
+
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowNativeImplementation;
         address taxManager = INexus(nexus).taxManager();
@@ -81,6 +86,8 @@ contract Tavern is ITavern, Pausable {
             escrowImpl,
             _paymentAmount
         );
+
+        questExists[_questId] = true;
 
         quest.initialize(
             _seekerId,
@@ -108,8 +115,11 @@ contract Tavern is ITavern, Pausable {
         uint256 _paymentAmount,
         string memory infoURI,
         uint256 _maxExtensions,
-        address _token
+        address _token,
+        uint256 _questId
     ) external onlyBarkeeper {
+        require(!questExists[_questId], "Quest already exists");
+
         IQuest quest = IQuest(Clones.clone(questImplementation));
         address escrowImpl = escrowTokenImplementation;
         address taxManager = INexus(nexus).taxManager();
@@ -125,6 +135,8 @@ contract Tavern is ITavern, Pausable {
             _paymentAmount,
             _token
         );
+
+        questExists[_questId] = true;
 
         quest.initialize(
             _seekerId,
