@@ -108,13 +108,9 @@ describe("Tavern", function () {
             await mockNft_.mint(await accounts_[1].getAddress());
 
             await expect(
-                tavern_["createNewQuest(uint32,uint32,uint256,string,uint256)"](
-                    0,
-                    1,
-                    1000,
-                    "Quest URI",
-                    3
-                )
+                tavern_[
+                    "createNewQuest(uint32,uint32,uint256,string,uint256,uint256)"
+                ](0, 1, 1000, "Quest URI", 3, 1)
             ).to.be.revertedWith("only barkeeper");
         });
 
@@ -138,8 +134,8 @@ describe("Tavern", function () {
 
         it("Barkeeper should be able to create a new native quest", async function () {
             const trx = await tavern_[
-                "createNewQuest(uint32,uint32,uint256,string,uint256)"
-            ](0, 1, 1000, "Quest URI", 3);
+                "createNewQuest(uint32,uint32,uint256,string,uint256,uint256)"
+            ](0, 1, 1000, "Quest URI", 3, 1);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -181,8 +177,8 @@ describe("Tavern", function () {
 
         it("Should be able to create an erc20 token quest", async function () {
             const trx = await tavern_[
-                "createNewQuest(uint32,uint32,uint256,string,uint256,address)"
-            ](0, 1, 1000, "Quest URI", 3, mockERC20_.target);
+                "createNewQuest(uint32,uint32,uint256,string,uint256,address,uint256)"
+            ](0, 1, 1000, "Quest URI", 3, mockERC20_.target, 2);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -434,13 +430,9 @@ describe("Tavern", function () {
             await expect(
                 tavern
                     .connect(accounts_.seeker)
-                    ["createNewQuest(uint32,uint32,uint256,string,uint256)"](
-                        0,
-                        1,
-                        1000,
-                        "Quest URI",
-                        3
-                    )
+                    [
+                        "createNewQuest(uint32,uint32,uint256,string,uint256,uint256)"
+                    ](0, 1, 1000, "Quest URI", 3, 1)
             ).to.be.revertedWith("only barkeeper");
 
             // Creates token quest
@@ -448,21 +440,17 @@ describe("Tavern", function () {
                 tavern
                     .connect(accounts_.seeker)
                     [
-                        "createNewQuest(uint32,uint32,uint256,string,uint256,address)"
-                    ](0, 1, 1000, "Quest URI", 3, ethers.ZeroAddress)
+                        "createNewQuest(uint32,uint32,uint256,string,uint256,address,uint256)"
+                    ](0, 1, 1000, "Quest URI", 3, ethers.ZeroAddress, 1)
             ).to.be.revertedWith("only barkeeper");
         });
 
         it("Barkeeper should be able to create a new native quest", async function () {
             const trx = await tavern
                 .connect(accounts_.owner)
-                ["createNewQuest(uint32,uint32,uint256,string,uint256)"](
-                    1,
-                    2,
-                    1000,
-                    "Quest URI",
-                    3
-                );
+                [
+                    "createNewQuest(uint32,uint32,uint256,string,uint256,uint256)"
+                ](1, 2, 1000, "Quest URI", 3, 1);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
@@ -499,8 +487,8 @@ describe("Tavern", function () {
             const trx = await tavern
                 .connect(accounts_.owner)
                 [
-                    "createNewQuest(uint32,uint32,uint256,string,uint256,address)"
-                ](1, 2, 1000, "Quest URI", 3, ethers.ZeroAddress);
+                    "createNewQuest(uint32,uint32,uint256,string,uint256,address,uint256)"
+                ](1, 2, 1000, "Quest URI", 3, ethers.ZeroAddress, 2);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 

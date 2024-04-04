@@ -227,8 +227,8 @@ describe("Escrow", function () {
 
                 // Create a quest
                 const tx = await contracts.tavern[
-                    "createNewQuest(uint32,uint32,uint256,string,uint256)"
-                ](1, 2, PAYMENT_AMOUNT, "Native Integration Quest", 3);
+                    "createNewQuest(uint32,uint32,uint256,string,uint256,uint256)"
+                ](1, 2, PAYMENT_AMOUNT, "Native Integration Quest", 3, 1);
 
                 const receipt = (await tx.wait()) as ContractTransactionReceipt;
 
@@ -629,14 +629,15 @@ describe("Escrow", function () {
 
                 // Create a quest
                 const tx = await contracts.tavern[
-                    "createNewQuest(uint32,uint32,uint256,string,uint256,address)"
+                    "createNewQuest(uint32,uint32,uint256,string,uint256,address,uint256)"
                 ](
                     1,
                     2,
                     PAYMENT_AMOUNT,
                     "Native Integration Quest",
                     3,
-                    mockToken_.target
+                    mockToken_.target,
+                    1
                 );
 
                 const receipt = (await tx.wait()) as ContractTransactionReceipt;

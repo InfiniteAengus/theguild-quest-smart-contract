@@ -526,8 +526,8 @@ describe("Quest", function () {
             await tavern.setMediator(await accounts_.owner.getAddress());
 
             const trx = await tavern[
-                "createNewQuest(uint32,uint32,uint256,string,uint256)"
-            ](1, 2, PAYMENT_AMOUNT, "Quest URI", 3);
+                "createNewQuest(uint32,uint32,uint256,string,uint256,uint256)"
+            ](1, 2, PAYMENT_AMOUNT, "Quest URI", 3, 1);
 
             const receipt = (await trx.wait()) as ContractTransactionReceipt;
 
